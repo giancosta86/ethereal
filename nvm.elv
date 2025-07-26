@@ -2,6 +2,8 @@ use str
 use path
 use ./fs
 
+#TODO! What about the .nvmrc/package.json duality? I need a post-cd function
+
 var -boot-script = ~/.nvm/nvm.sh
 
 fn -is-nvm-subpath { |path|

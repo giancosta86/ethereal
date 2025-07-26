@@ -104,12 +104,18 @@ fn -with-temp-object { |temp-path consumer|
   }
 }
 
-fn with-temp-file { |&dir='' consumer|
-  -with-temp-object (temp-file-path &dir=$dir) $consumer
+#TODO! Test the pattern option
+fn with-temp-file { |&dir='' &pattern=$nil consumer|
+  var temp-path = (call $temp-file-path~ (lang:value-as-list $pattern) [&dir=$dir])
+
+  -with-temp-object $temp-path $consumer
 }
 
-fn with-temp-dir { |&dir='' consumer|
-  -with-temp-object (os:temp-dir &dir=$dir) $consumer
+#TODO! Test the pattern option
+fn with-temp-dir { |&dir='' &pattern=$nil consumer|
+  var temp-path = (call $os:temp-dir~ (lang:value-as-list $pattern) [&dir=$dir])
+
+  -with-temp-object $temp-path $consumer
 }
 
 fn wildcard { |includes &excludes=$nil|
