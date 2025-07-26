@@ -1,9 +1,8 @@
 use ../map
 use ../tracer
 
-fn create {
-  var enabled = $false
-
+#TODO! Test the flag!
+fn create { |&enabled=$false|
   var tracer = (tracer:create { put $enabled })
 
   var controls = [
