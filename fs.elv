@@ -1,8 +1,10 @@
 use file
 use os
 use path
+use str
 use ./hash-set
 use ./lang
+use ./map
 
 fn touch { |path|
   print > $path
@@ -118,6 +120,7 @@ fn with-temp-dir { |&dir='' &pattern=$nil consumer|
   -with-temp-object $temp-path $consumer
 }
 
+#TODO: del this?
 fn wildcard { |includes &excludes=$nil|
   fn expand-wildcard { |wildcard|
     eval 'put '$wildcard
@@ -134,4 +137,36 @@ fn wildcard { |includes &excludes=$nil|
   } else {
     expand-wildcard $includes
   }
+}
+
+#TODO! Test this!
+fn potential-ext { |source-path new-ext|
+  var ext = (path:ext $source-path)
+
+  var path-without-ext = $source-path[..-(count $ext)]
+
+  var extension-dot = (lang:ternary (str:has-prefix $new-ext '.') '' '.')
+
+  put $path-without-ext''$extension-dot''$new-ext
+}
+
+#TODO! Test this!
+fn find-duplicates {
+  var files-by-size = [&]
+
+  put **[type:regular] | each { |file|
+    var file-size = (os:stat $file)[size]
+
+    var files-of-given-size = (map:get-value $files-by-size $file-size &default=[])
+
+    set files-by-size = (
+      assoc $files-by-size $file-size [$@files-of-given-size $file]
+    )
+  }
+
+  set files-by-size = (map:filter $files-by-size { |size files-of-this-size|
+    > (count $files-of-this-size) 1
+  })
+
+  put $files-by-size
 }
