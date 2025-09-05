@@ -7,53 +7,57 @@ fn exists-in-bash { |command|
   eq $ok ?(bash -c 'type '$command > $os:dev-null 2>&1)
 }
 
-fn capture-bytes { |&stream=both block|
-  var log-path = (fs:temp-file-path)
-
-  var filtered-block = { $block | only-bytes }
-
+#TODO! Test this!
+fn filter-bytes { |&keep-stream=both block|
   var redirected-block = (map:get-value [
-    &both={ put ?({ $filtered-block > $log-path 2>&1 }) }
+    &both={ $block 2>&1 }
 
-    &out={ put ?({ $filtered-block > $log-path 2>$os:dev-null }) }
+    &out={ $block 2>$os:dev-null }
 
-    &err={ put ?({ $filtered-block > $os:dev-null 2>$log-path }) }
-  ] $stream &default={ fail 'Invalid stream value: '$stream  })
+    &err={ $block 2>&1 >$os:dev-null }
 
-  var outcome = ($redirected-block)
+    &none={ $block >$os:dev-null 2>&1 }
+  ] $keep-stream &default={ fail 'Invalid stream value: '$keep-stream  })
+
+  $redirected-block | only-bytes | slurp
+}
+
+#TODO! Update its tests
+fn capture { |&keep-stream=both block|
+  var exception = $ok
+
+  var output = (
+    filter-bytes &keep-stream=$keep-stream {
+      try {
+        $block
+      } catch e {
+        set exception = $e
+      }
+    }
+  )
 
   put [
-    &outcome=$outcome
-    &log-path=$log-path
-    &get-log={ slurp < $log-path }
-    &clean={
-      fs:rimraf $log-path
-    }
+    &exception=$exception
+    &output=$output
   ]
 }
 
 fn silence { |block|
-  { $block | only-bytes } > $os:dev-null 2>&1
+  filter-bytes &keep-stream=none $block
 }
 
 fn silence-until-error { |&description=$nil block|
-  var capture-result = (capture-bytes &stream=both $block)
-  defer $capture-result[clean]
+  var capture-result = (capture $block)
 
-  if (not $capture-result[outcome]) {
-    var actual-description = (coalesce $description 'Error while running command block!')
-
-    var log-path = $capture-result[log-path]
-    var log-size = (os:stat $log-path)[size]
-
-    if (> $log-size 0) {
-      console:section &emoji=❌ $actual-description {
-        cat $log-path
-      }
-    } else {
-      console:echo ❌ $actual-description
-    }
-
-    fail $capture-result[outcome]
+  if (eq $capture-result[exception] $ok) {
+    return
   }
+
+  var actual-description = (coalesce $description 'Error while running command block!')
+
+  console:section &emoji=❌ $actual-description {
+    echo $capture-result[output]
+  }
+
+  fail $capture-result[exception]
 }
