@@ -79,3 +79,25 @@ fn difference { |source @subtrahends|
 fn symmetric-difference { |left right|
   difference (union $left $right) (intersection $left $right)
 }
+
+#TODO: test this!
+fn from-container { |container|
+  if (eq (kind-of $container) map) {
+    put $container
+  } else {
+    of $@container
+  }
+}
+
+#TODO: test this!
+fn equals { |left-container right-container|
+  if (not-eq (count $left-container) (count $right-container)) {
+    put $false
+    return
+  }
+
+  var left-set = (from-container $left-container)
+  var right-set = (from-container $right-container)
+
+  eq (keys $left-set) (keys $right-set)
+}
