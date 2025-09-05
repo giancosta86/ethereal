@@ -24,20 +24,20 @@ fn filter-bytes { |&keep-stream=both block|
 
 #TODO! Update its tests
 fn capture { |&keep-stream=both block|
-  var exception = $ok
+  var status = $ok
 
   var output = (
     filter-bytes &keep-stream=$keep-stream {
       try {
         $block
       } catch e {
-        set exception = $e
+        set status = $e
       }
     }
   )
 
   put [
-    &exception=$exception
+    &status=$status
     &output=$output
   ]
 }
@@ -49,7 +49,7 @@ fn silence { |block|
 fn silence-until-error { |&description=$nil block|
   var capture-result = (capture $block)
 
-  if (eq $capture-result[exception] $ok) {
+  if (eq $capture-result[status] $ok) {
     return
   }
 
@@ -59,5 +59,5 @@ fn silence-until-error { |&description=$nil block|
     echo $capture-result[output]
   }
 
-  fail $capture-result[exception]
+  fail $capture-result[status]
 }
