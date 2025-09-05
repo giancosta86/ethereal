@@ -62,3 +62,14 @@ fn assoc-non-nil { |map key value|
     put $map
   }
 }
+
+#TODO! Test this!
+fn map { |source key-value-to-value-mapper|
+  entries $source |
+    seq:each-spread { |key value|
+      var new-value = ($key-value-to-value-mapper $key $value)
+
+      put [$key $new-value]
+    } |
+      make-map
+}
