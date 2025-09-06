@@ -80,7 +80,7 @@ fn symmetric-difference { |left right|
   difference (union $left $right) (intersection $left $right)
 }
 
-#TODO: test this!
+#TODO: Keep this? If so, test this!
 fn from-container { |container|
   if (eq (kind-of $container) map) {
     put $container
@@ -89,7 +89,7 @@ fn from-container { |container|
   }
 }
 
-#TODO: test this!
+#TODO: Keep this? If so, test this!
 fn equals { |left-container right-container|
   if (not-eq (count $left-container) (count $right-container)) {
     put $false

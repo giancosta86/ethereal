@@ -42,3 +42,12 @@ fn is-fail { |&with-content=$nil &partial=$true e|
     ==s $content $with-content
   }
 }
+
+#TODO! Test this!
+fn get-fail-message { |potential-exception|
+  if (is-fail $potential-exception) {
+    put $potential-exception[reason][content]
+  } else {
+    put $nil
+  }
+}
