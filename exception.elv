@@ -1,6 +1,11 @@
 use str
 use ./map
 
+#TODO! Test this!
+fn is-exception { |x|
+  eq (kind-of $x) exception
+}
+
 fn is-return { |e|
   var reason = (map:get-value $e reason)
 
