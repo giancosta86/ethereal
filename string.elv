@@ -21,11 +21,9 @@ fn get-minimal { |source|
     to-string [(all $source | each $get-minimal~)]
   } elif (==s $source-kind map) {
     to-string (
-      map:entries $source |
-        seq:each-spread { |key value|
-          put [(get-minimal $key) (get-minimal $value)]
-        } |
-        make-map
+      map:map $source { |key value|
+        put [(get-minimal $key) (get-minimal $value)]
+      }
     )
   } else {
     to-string $source

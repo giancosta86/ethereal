@@ -64,6 +64,7 @@ fn assoc-non-nil { |map key value|
 }
 
 #TODO! Test this!
+#TODO! rewrite most functions referencing make-map, so as to use map:map!
 fn map { |source mapper|
   entries $source |
     seq:each-spread { |key value|
