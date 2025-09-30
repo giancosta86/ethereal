@@ -10,6 +10,7 @@ fn touch { |path|
   print > $path
 }
 
+#TODO! Replace this with remove-all!
 fn rimraf { |path|
   rm -rf $path
 }
