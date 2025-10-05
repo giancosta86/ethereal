@@ -14,36 +14,35 @@ fn empty-to-default { |&default=$nil &trim=$true source|
   seq:empty-to-default &default=$default $actual-source
 }
 
+#TODO! Test this!
 fn get-minimal { |source|
   var source-kind = (kind-of $source)
 
-  if (==s $source-kind list) {
+  if (eq $source-kind list) {
     to-string [(all $source | each $get-minimal~)]
-  } elif (==s $source-kind map) {
-    to-string (
-      map:map $source { |key value|
-        put [(get-minimal $key) (get-minimal $value)]
-      }
-    )
+  } elif (eq $source-kind map) {
+    map:filter-map $source { |key value|
+      put [(get-minimal $key) (get-minimal $value)]
+    } |
+      to-string (all)
   } else {
     to-string $source
   }
 }
 
-#TODO! Test this
-fn indent-lines { |source-string indent|
-  var partial-result = (
-    put $source-string |
-      to-lines |
+#TODO! Test this!
+fn indent-lines { |indent|
+  var slurp-result = (
+    to-lines |
       each { |line|
-        if (!=s $line '') {
-          echo $indent''$line
-        } else {
+        if (eq $line '') {
           echo
+        } else {
+          echo $indent''$line
         }
       } |
       slurp
   )
 
-  put $partial-result[..-1]
+  put $slurp-result[..-1]
 }

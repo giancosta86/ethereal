@@ -12,12 +12,14 @@ fn diff { |&throw=$false left right|
     print $left > $left-path
     print $right > $right-path
 
-    (external diff) --color=always -u $left-path $right-path
-  } catch e {
-    set exception = $e
+    try {
+      (external diff) --color=always --unified $left-path $right-path
+    } catch e {
+      set exception = $e
+    }
   } finally {
-    fs:rimraf $left-path
-    fs:rimraf $right-path
+    os:remove-all $left-path
+    os:remove-all $right-path
   }
 
   if (and $exception $throw) {
