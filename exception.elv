@@ -50,7 +50,7 @@ fn is-fail { |&with-content=$nil &partial=$true e|
 
 #TODO! Test this!
 fn get-fail-message { |potential-exception|
-  if (is-fail $potential-exception) {
+  if (and (has-key $potential-exception reason) (has-key $potential-exception[reason] content)) {
     put $potential-exception[reason][content]
   } else {
     put $nil
