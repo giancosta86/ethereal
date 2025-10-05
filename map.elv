@@ -64,11 +64,20 @@ fn assoc-non-nil { |map key value|
 }
 
 #TODO! Test this!
-#TODO! rewrite most functions referencing make-map, so as to use map:map!
-fn map { |source mapper|
-  entries $source |
-    seq:each-spread { |key value|
-      $mapper $key $value
-    } |
-      make-map
+#TODO! rewrite most functions referencing make-map, so as to use this function!
+fn filter-map { |source mapper|
+  var result-pairs = []
+
+  keys $source |
+    each { |key|
+      var value = $source[$key]
+
+      var new-pair = ($mapper $key $value)
+
+      if (not-eq $new-pair $nil) {
+        set result-pairs = [$@result-pairs $new-pair]
+      }
+    }
+
+  make-map $result-pairs
 }
