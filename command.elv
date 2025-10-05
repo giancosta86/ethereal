@@ -8,7 +8,7 @@ fn exists-in-bash { |command|
 }
 
 #TODO! Test this!
-fn take-bytes { |&keep-stream=both block|
+fn bytes-as-string { |&keep-stream=both block|
   var redirected-block = (map:get-value [
     &both={ $block 2>&1 }
 
@@ -27,7 +27,7 @@ fn capture { |&keep-stream=both block|
   var status = $ok
 
   var output = (
-    take-bytes &keep-stream=$keep-stream {
+    bytes-as-string &keep-stream=$keep-stream {
       try {
         $block
       } catch e {
@@ -43,7 +43,7 @@ fn capture { |&keep-stream=both block|
 }
 
 fn silence { |block|
-  take-bytes &keep-stream=none $block
+  bytes-as-string &keep-stream=none $block
 }
 
 fn silence-until-error { |&description=$nil block|

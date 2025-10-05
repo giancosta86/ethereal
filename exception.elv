@@ -1,58 +1,38 @@
-use str
-use ./map
-
-#TODO! Test this!
 fn is-exception { |x|
   eq (kind-of $x) exception
 }
 
-fn is-return { |e|
-  var reason = (map:get-value $e reason)
-
-  if (not $reason) {
-    put $false
-    return
-  }
-
-  var type = (map:get-value $reason type)
-  var name = (map:get-value $reason name)
-
-  and (eq $type flow) (eq $name return)
-}
-
-fn is-fail { |&with-content=$nil &partial=$true e|
-  var reason = (map:get-value $e reason)
-
-  if (not $reason) {
-    put $false
-    return
-  }
-
-  var type = (map:get-value $reason type)
-  if (not-eq $type fail) {
-    put $false
-    return
-  }
-
-  if (not $with-content) {
-    put $true
-    return
-  }
-
-  var content = (map:get-value $reason content)
-
-  if $partial {
-    str:contains $content $with-content
-  } else {
-    ==s $content $with-content
-  }
-}
-
-#TODO! Test this!
 fn get-fail-message { |potential-exception|
-  if (and (has-key $potential-exception reason) (has-key $potential-exception[reason] content)) {
+  if (
+    and (is-exception $potential-exception) (has-key $potential-exception reason) (has-key $potential-exception[reason] content)
+  ) {
     put $potential-exception[reason][content]
   } else {
     put $nil
   }
+}
+
+fn is-fail { |potential-exception|
+  get-fail-message $potential-exception |
+    not-eq (all) $nil
+}
+
+fn is-return { |potential-exception|
+  if (
+    not (and (is-exception $potential-exception) (has-key $potential-exception reason))
+  ) {
+    put $false
+    return
+  }
+
+  var reason = $potential-exception[reason]
+
+  if (
+    not (and (has-key $reason type) (has-key $reason name))
+  ) {
+    put $false
+    return
+  }
+
+  and (eq $reason[type] flow) (eq $reason[name] return)
 }
