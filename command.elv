@@ -24,21 +24,21 @@ fn bytes-as-string { |&keep-stream=both block|
 
 #TODO! Update its tests
 fn capture { |&keep-stream=both block|
-  var status = $ok
+  var exception = $exception
 
   var output = (
     bytes-as-string &keep-stream=$keep-stream {
       try {
         $block
       } catch e {
-        set status = $e
+        set exception = $e
       }
     }
   )
 
   put [
-    &status=$status
     &output=$output
+    &exception=$exception
   ]
 }
 
