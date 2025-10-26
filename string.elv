@@ -1,3 +1,4 @@
+use re
 use str
 use ./map
 use ./seq
@@ -45,4 +46,9 @@ fn indent-lines { |indent|
   )
 
   put $slurp-result[..-1]
+}
+
+#TODO! Test this!
+fn unstyled { |source|
+  re:replace '\x1b\[[0-9;]*m' '' $source
 }
