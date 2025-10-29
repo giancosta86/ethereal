@@ -23,8 +23,3 @@ fn ensure-put { |&default=$nil|
     put $default
   }
 }
-
-#TODO! Test this, and try to apply it as much as possible!
-fn value-as-list { |value|
-  ternary $value [$value] []
-}
