@@ -1,42 +1,45 @@
-fn is-exception { |x|
-  eq (kind-of $x) exception
+use ./function
+
+fn is-exception { |value|
+  kind-of $value |
+    eq (all) exception
 }
 
-#TODO! Test the argless version!
-fn get-fail-message { |potential-exception|
-  var potential-exception = (
-    [
-      &(num 0)={ one }
-      &(num 1)={ put $arguments[0] }
-    ][(count $arguments)]
-  )
+fn get-reason { |@arguments|
+  var potential-exception = (function:get-single-input $@arguments)
 
   if (
-    and (is-exception $potential-exception) (has-key $potential-exception reason) (has-key $potential-exception[reason] content)
+    and (is-exception $potential-exception) (has-key $potential-exception reason)
   ) {
-    put $potential-exception[reason][content]
+    put $potential-exception[reason]
+  } else {
+    put $nil
+  }
+}
+
+fn get-fail-content { |@arguments|
+  var reason = (get-reason $@arguments)
+
+  if (
+    and $reason (has-key $reason content)
+  ) {
+    put $reason[content]
   } else {
     put $nil
   }
 }
 
 fn is-fail { |potential-exception|
-  get-fail-message $potential-exception |
+  get-fail-content $potential-exception |
     not-eq (all) $nil
 }
 
-fn is-return { |potential-exception|
-  if (
-    not (and (is-exception $potential-exception) (has-key $potential-exception reason))
-  ) {
-    put $false
-    return
-  }
-
-  var reason = $potential-exception[reason]
+fn is-return { |@arguments|
+  var reason = (get-reason $@arguments)
 
   if (
-    not (and (has-key $reason type) (has-key $reason name))
+    and $reason (has-key $reason type) (has-key $reason name) |
+      not (all)
   ) {
     put $false
     return

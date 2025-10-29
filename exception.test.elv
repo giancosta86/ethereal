@@ -1,113 +1,113 @@
 use ./exception
 
-describe 'Testing for the return exception' {
-  describe 'when the return keyword is actually used' {
-    it 'should output $true' {
-      expect-crash {
-        return
-      } |
-        exception:is-return (all) |
+>> 'In the exception module' {
+  >> 'detecting an exception' {
+    >> 'applied to number' {
+      exception:is-exception 90 |
+        should-be $false
+    }
+
+    >> 'applied to divide-by-zero error' {
+      exception:is-exception ?(/ 8 0) |
+        should-be $true
+    }
+
+    >> 'applied to fail' {
+      exception:is-exception ?(fail DODO) |
+        should-be $true
+    }
+
+    >> 'applied to return' {
+      exception:is-exception ?(return) |
         should-be $true
     }
   }
 
-  describe 'when another exception is thrown' {
-    it 'should output $false' {
-      expect-crash {
-        fail 'KABOOM!'
-      } |
-        exception:is-return (all) |
+  >> 'retrieving exception reason' {
+    >> 'applied to number' {
+      exception:get-reason 90 |
+        should-be $nil
+    }
+
+    >> 'applied to divide-by-zero error' {
+      exception:get-reason ?(/ 8 0) |
+        should-not-be $nil
+    }
+
+    >> 'applied to fail' {
+      exception:get-reason ?(fail DODO) |
+        should-not-be $nil
+    }
+
+    >> 'applied to return' {
+      exception:get-reason ?(return) |
+        should-not-be $nil
+    }
+  }
+
+  >> 'retrieving fail content' {
+    >> 'applied to number' {
+      exception:get-fail-content 90 |
+        should-be $nil
+    }
+
+    >> 'applied to divide-by-zero error' {
+      exception:get-fail-content ?(/ 8 0) |
+        should-be $nil
+    }
+
+    >> 'applied to fail' {
+      exception:get-fail-content ?(fail DODO) |
+        should-be DODO
+    }
+
+    >> 'applied to return' {
+      exception:get-fail-content ?(return) |
+        should-be $nil
+    }
+  }
+
+  >> 'detecting fail' {
+    >> 'applied to number' {
+      exception:is-fail 90 |
+        should-be $false
+    }
+
+    >> 'applied to divide-by-zero error' {
+      exception:is-fail ?(/ 8 0) |
+        should-be $false
+    }
+
+    >> 'applied to fail' {
+      exception:is-fail ?(fail DODO) |
+        should-be $true
+    }
+
+    >> 'applied to return' {
+      exception:is-fail ?(return) |
         should-be $false
     }
   }
-}
 
-describe 'Testing for failure' {
-  describe 'when the exception is not a failure' {
-    it 'should output $false' {
-      expect-crash {
-        return
-      } |
-        exception:is-fail (all) |
+  >> 'detecting return' {
+    >> 'applied to number' {
+      exception:is-return 90 |
         should-be $false
     }
-  }
 
-  describe 'when the exception is actually a failure' {
-    describe 'when no content is specified' {
-      it 'should output $true' {
-        expect-crash {
-          fail KABOOM
-        } |
-          exception:is-fail (all) |
-          should-be $true
-      }
+    >> 'applied to divide-by-zero error' {
+      exception:is-return ?(/ 8 0) |
+        should-be $false
     }
 
-    describe 'when no partial match is requested' {
-      describe 'when the actual content is equal to the expected content' {
-        it 'should output $true' {
-          expect-crash {
-            fail KABOOM
-          } |
-            exception:is-fail (all) &with-content=KABOOM &partial=$false |
-              should-be $true
-        }
-      }
-
-      describe 'when the actual content contains the expected content' {
-        it 'should output $false' {
-          expect-crash {
-            fail KABOOM
-          } |
-            exception:is-fail (all) &with-content=BOO &partial=$false |
-              should-be $false
-        }
-      }
-
-      describe 'when the actual content does not contain the expected content' {
-        it 'should output $false' {
-          expect-crash {
-            fail KABOOM
-          } |
-            exception:is-fail (all) &with-content=DODO &partial=$false |
-              should-be $false
-        }
-      }
+    >> 'applied to fail' {
+      exception:is-return ?(fail DODO) |
+        should-be $false
     }
 
-    describe 'when content is specified' {
-      describe 'when a partial match is requested' {
-        describe 'when the actual content is equal to the expected content' {
-          it 'should output $true' {
-            expect-crash {
-            fail KABOOM
-          } |
-            exception:is-fail (all) &with-content=KABOOM &partial=$true |
-              should-be $true
-          }
-        }
-
-        describe 'when the actual content contains the expected content' {
-          it 'should output $true' {
-            expect-crash {
-            fail KABOOM
-          } |
-            exception:is-fail (all) &with-content=BOO &partial=$true |
-              should-be $true
-          }
-        }
-
-        describe 'when the actual content does not contain the expected content' {
-          it 'should output $false' {
-            expect-crash {
-            fail KABOOM
-          } |
-            exception:is-fail (all) &with-content=DODO &partial=$true |
-              should-be $false
-          }
-        }
-      }
+    >> 'applied to return' {
+      exception:is-return ?(return) |
+        should-be $true
     }
   }
 }
