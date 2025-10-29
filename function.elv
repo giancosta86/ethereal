@@ -11,11 +11,9 @@ fn get-single-input { |@arguments|
 }
 
 fn get-input-flow { |@arguments|
-  var arg-count = (count $arguments)
-
   all
 
-  if (> $arg-count 0) {
+  if (> (count $arguments) 0) {
     all $arguments
   }
 }
