@@ -1,8 +1,16 @@
 use ./sha
 
-describe 'SHA256' {
-  it 'should be computed' {
-    sha:compute256 'Hello, world!' |
-      should-be d9014c4624844aa5bac314773d6b689ad467fa4e1d1a50a1b8a99d5a95f72ff5
+>> 'In sha module' {
+  >> 'SHA256' {
+    >> 'for string' {
+      put 'Hello, world!' |
+        sha:compute256 |
+        should-be 315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3
+    }
+
+    >> 'for list' {
+      sha:compute256 [Alpha Beta Gamma] |
+        should-be 5083e706982202ecc44c1f77b09df15412e3df4d736c71c98f2c6bb799a31689
+    }
   }
 }
