@@ -73,4 +73,99 @@ use ./lang
       }
     }
   }
+
+  >> 'minimized value' {
+    >> 'for string' {
+      var value = 'This is a string!'
+
+      lang:minimize $value |
+        should-be &strict $value
+    }
+
+    >> 'for number' {
+      lang:minimize (num 90) |
+        should-be &strict '90'
+    }
+
+    >> 'for boolean' {
+      lang:minimize $true |
+        should-be &strict '$true'
+    }
+
+    >> 'for $nil' {
+      lang:minimize $nil |
+        should-be &strict '$nil'
+    }
+
+    >> 'for exception' {
+      var ex = ?(fail DODO)
+
+      lang:minimize $ex |
+        should-be &strict (to-string $ex)
+    }
+
+    >> 'for list' {
+      lang:minimize [
+        Alpha
+        (num 92)
+        $nil
+        $false
+      ] |
+        should-be &strict [
+          Alpha
+          '92'
+          '$nil'
+          '$false'
+        ]
+    }
+
+    >> 'for multi-level list' {
+      lang:minimize [
+        Alpha
+        [
+          Beta
+          [Gamma (num 95) Delta]
+        ]
+        $nil
+        $false
+      ] |
+        should-be &strict [
+          Alpha
+          [
+            Beta
+            [Gamma 95 Delta]
+          ]
+          '$nil'
+          '$false'
+        ]
+    }
+
+    >> 'for map' {
+      lang:minimize [
+        &alpha=(num 90)
+        &(num 92)=beta
+      ] |
+        should-be &strict [
+          &alpha=90
+          &92=beta
+        ]
+    }
+
+    >> 'for multi-level map' {
+      lang:minimize [
+        &[alpha beta (num 95)]=[
+          gamma
+          [(num 98) epsilon]
+          [&ro=[sigma (num 99)]]
+        ]
+      ] |
+        should-be &strict [
+          &[alpha beta 95]=[
+            gamma
+            [98 epsilon]
+            [&ro=[sigma 99]]
+          ]
+        ]
+    }
+  }
 }
