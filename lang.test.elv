@@ -58,14 +58,16 @@ use ./lang
 >> 'Ensuring that a put is performed' {
   >> 'when a put is performed' {
     >> 'should just do nothing' {
-      { put Hello } | lang:ensure-put &default=World |
+      { put Hello } |
+        lang:ensure-put &default=World |
         should-be Hello
     }
   }
 
   >> 'when no put is performed by the block' {
     >> 'should output the default value' {
-      { } | lang:ensure-put &default=World |
+      { } |
+        lang:ensure-put &default=World |
         should-be World
     }
   }
