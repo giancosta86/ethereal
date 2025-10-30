@@ -1,3 +1,4 @@
+use ./function
 use ./seq
 
 fn get-value { |&default=$nil source key|
@@ -14,13 +15,14 @@ fn entries { |source|
   }
 }
 
-fn values { |map|
-  entries $map |
-    seq:each-spread { |_ value| put $value }
+fn values { |source|
+  keys $source | each { |key|
+    put $source[$key]
+  }
 }
 
-fn merge { |@sources|
-  all $sources |
+fn merge { |@arguments|
+  function:get-input-flow $@arguments |
     each $entries~ |
     seq:reduce [&] { |accumulator entry|
       var key value = (all $entry)
@@ -32,10 +34,8 @@ fn drill-down { |&default=$nil source @properties|
   var current-source = $source
 
   all $properties | each { |property|
-    var value = (get-value $current-source $property)
-
-    if $value {
-      set current-source = $value
+    if (has-key $current-source $property) {
+      set current-source = $current-source[$property]
     } else {
       put $default
       return
@@ -55,16 +55,6 @@ fn filter { |source key-value-predicate|
     make-map
 }
 
-fn assoc-non-nil { |map key value|
-  if $value {
-    assoc $map $key $value
-  } else {
-    put $map
-  }
-}
-
-#TODO! Test this!
-#TODO! rewrite most functions referencing make-map, so as to use this function!
 fn filter-map { |source mapper|
   keys $source |
     each { |key|
