@@ -10,6 +10,26 @@ fn ternary { |condition when-true when-false|
   }
 }
 
+fn get-single-input { |argument-list|
+  var arg-count = (count $argument-list)
+
+  if (== $arg-count 0) {
+    one
+  } elif (== $arg-count 1) {
+    put $argument-list[0]
+  } else {
+    fail 'Arity mismatch! At most 1 argument expected!'
+  }
+}
+
+fn get-input-flow { |argument-list|
+  all
+
+  if (> (count $argument-list) 0) {
+    all $argument-list
+  }
+}
+
 fn ensure-put { |&default=$nil|
   var emitted = $false
 
@@ -26,7 +46,9 @@ fn ensure-put { |&default=$nil|
 
 var -minimal-transforms-by-kind
 
-fn minimize { |value|
+fn minimize { |@arguments|
+  var value = (get-single-input $arguments)
+
   var kind = (kind-of $value)
 
   if (has-key $-minimal-transforms-by-kind $kind) {

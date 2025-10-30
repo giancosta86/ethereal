@@ -1,3 +1,4 @@
+use str
 use ./lang
 
 >> 'In lang module' {
@@ -52,6 +53,64 @@ use ./lang
 
         $block |
           should-be 'Left'
+      }
+    }
+  }
+
+  >> 'getting single input' {
+    >> 'when it is passed as argument list' {
+      lang:get-single-input [Alpha] |
+        should-be Alpha
+    }
+
+    >> 'when it is passed via pipe' {
+      put Alpha |
+        lang:get-single-input [] |
+        should-be Alpha
+    }
+
+    >> 'when multiple args are passed' {
+      >> 'should fail' {
+        throws {
+          lang:get-single-input [Alpha Beta]
+        } |
+          str:contains (all)[reason][content] 'Arity mismatch!'
+      }
+    }
+
+    >> 'when multiple values are passed via pipe' {
+      >> 'should fail' {
+        throws {
+          put Alpha Beta |
+            lang:get-single-input []
+        } |
+          to-string (all) |
+          str:contains (all) 'arity mismatch' |
+          should-be $true
+      }
+    }
+  }
+
+  >> 'getting input flow' {
+    >> 'when multiple arguments in argument list are passed' {
+      lang:get-input-flow [Alpha Beta] |
+        put [(all)] |
+        should-be [Alpha Beta]
+    }
+
+    >> 'when multiple values are passed via pipe' {
+      put Gamma Delta |
+        lang:get-input-flow [] |
+        put [(all)] |
+        should-be [Gamma Delta]
+    }
+
+    >> 'when both argument list and pipe values are passed' {
+      >> 'pipe values are followed by arguments' {
+        put Alpha Beta |
+          lang:get-input-flow [Ro Sigma] |
+          put [(all)] |
+          should-be [Alpha Beta Ro Sigma]
       }
     }
   }
