@@ -1,139 +1,92 @@
+use str
 use ./string
 
-describe 'Converting empty string to default' {
-  describe 'when the string is empty' {
-    describe 'when passing a default value' {
-      it 'should output the default value' {
-        string:empty-to-default &default=90 '' |
-          should-be 90
-      }
+>> 'In string module' {
+  >> 'indenting lines' {
+    >> 'with empty string' {
+      put '' |
+        string:indent-lines '****' |
+        should-be ''
     }
 
-    describe 'when not passing a default value' {
-      it 'should output $nil' {
-        string:empty-to-default '' |
-          should-be $nil
-      }
-    }
-  }
-
-  describe 'when the string contains only whitespaces' {
-    var string-with-spaces = "     \t   "
-
-    describe 'when trimming is enabled' {
-      describe 'when a default value is passed' {
-        it 'should output such default value' {
-          var custom-default = 'Dodo'
-
-          string:empty-to-default &trim &default=$custom-default $string-with-spaces |
-            should-be $custom-default
-        }
-      }
-
-      describe 'when no default value is passed' {
-        it 'should output $nil' {
-          string:empty-to-default &trim $string-with-spaces |
-            should-be $nil
-        }
-      }
+    >> 'with single text line' {
+      put 'Alpha' |
+        string:indent-lines '****' |
+        should-be '****Alpha'
     }
 
-    describe 'when trimming is disabled' {
-      it 'should output the string as it is' {
-        string:empty-to-default $string-with-spaces &trim=$false |
-          should-be $string-with-spaces
-      }
+    >> 'with 2 text lines' {
+        put "Alpha\nBeta" |
+          string:indent-lines '****' |
+          should-be "****Alpha\n****Beta"
+    }
+
+    >> 'with 2 text lines and final empty line' {
+      put "Alpha\nBeta\n" |
+        string:indent-lines '****' |
+        should-be "****Alpha\n****Beta\n"
+    }
+
+    >> 'with 2 text lines and intermediate empty lines' {
+      put "Alpha\n\n\nBeta" |
+        string:indent-lines '****' |
+        should-be "****Alpha\n\n\n****Beta"
+    }
+
+    >> 'with 3 text lines, intermediate empty lines and final empty lines' {
+      put "Alpha\n\n\nBeta\n\n\n\n\nGamma\n\n" |
+        string:indent-lines '****' |
+        should-be "****Alpha\n\n\n****Beta\n\n\n\n\n****Gamma\n\n"
     }
   }
 
-  describe 'when the string has actual characters' {
-    describe 'when passing a default value' {
-      it 'should output the string itself' {
-        string:empty-to-default &default=90 Hello |
-          should-be Hello
-      }
+  >> 'unstyling a string' {
+    >> 'with non-styled string' {
+      var source = 'This is just a basic string'
+
+      string:unstyled $source |
+        should-be $source
     }
 
-    describe 'when not passing a default value' {
-      it 'should output the string itself' {
-        string:empty-to-default Hello |
-          should-be Hello
-      }
-    }
-  }
-}
-
-describe 'Getting the minimal string' {
-  describe 'for a string' {
-    it 'should output the string itself' {
-      string:get-minimal Dodo |
-        should-be Dodo
+    >> 'with styled string' {
+      echo (styled 'Hello' bold italic green), (styled 'this' italic) is just a (styled 'basic test' bold red) |
+        string:unstyled (all) |
+        should-be 'Hello, this is just a basic test'
     }
   }
 
-  describe 'for a number' {
-    it 'should output the number, without "num" prefix' {
-      string:get-minimal (num 90) |
-        should-be '90'
-    }
-  }
+  >> 'fancy string from value' {
+    >> 'applied to single-line string' {
+      var source = 'Hello, world!'
 
-  describe 'for a boolean' {
-    it 'should output the constant itself' {
-      string:get-minimal $true |
-        should-be '$true'
-    }
-  }
-
-  describe 'for $nil' {
-    it 'should return the constant itself' {
-      string:get-minimal $nil |
-        should-be '$nil'
-    }
-  }
-
-  describe 'when converting a list' {
-    it 'should work for a flat list' {
-      string:get-minimal [A (num 92) $false $nil] |
-        should-be '[A 92 ''$false'' ''$nil'']'
+      string:fancy $source |
+        should-be $source"\n"
     }
 
-    it 'should work for nested lists' {
-      string:get-minimal [
-        [
-          (num 98)
-          (num 92)
-          A
-          B
-          $true
-        ]
-        C
-        [
-          [
-            (num 95)
-          ]
-        ]
-      ] |
-        should-be '[''[98 92 A B ''''$true'''']'' C ''[''''[95]'''']'']'
-    }
-  }
+    >> 'applied to multi-line string' {
+      var source = "Hello!\n   world!"
 
-  describe 'when converting a map' {
-    it 'should work for a flat map' {
-      string:get-minimal [
-        &A=(num 90)
-        &B=$true
-        &(num 92)=K
-      ] |
-        should-be '[&92=K &A=90 &B=''$true'']'
+      string:fancy $source |
+        should-be $source"\n"
     }
 
-    it 'should work for nested maps' {
-      string:get-minimal [
-        &X=[(num 92) C]
-        &Y=[&S=(num 32) &T=[90 95]]
-      ] |
-        should-be '[&X=''[92 C]'' &Y=''[&S=32 &T=''''[90 95]'''']'']'
+    >> 'applied to number' {
+      string:fancy (num 90) |
+        should-be "(num 90)\n"
+    }
+
+    >> 'applied to list' {
+      string:fancy [A B C] |
+        should-be "[\n A\n B\n C\n]\n"
+    }
+
+    >> 'applied to exception' {
+      var exception = ?(fail DODO)
+
+      string:fancy $exception |
+        string:unstyled (all) |
+        str:has-prefix (all) "Exception: DODO\n" |
+        should-be $true
     }
   }
 }
