@@ -5,7 +5,6 @@ fn is-empty { |container| == (count $container) 0 }
 
 fn is-non-empty { |container| != (count $container) 0 }
 
-#TODO! Test start-index!
 fn enumerate { |&start-index=0 consumer|
   var index = (num $start-index)
 
@@ -55,10 +54,10 @@ fn get-prefix { |left right|
 }
 
 fn empty-to-default { |&default=$nil source|
-  lang:ternary (> (count $source) 0) $source $default
+  > (count $source) 0 |
+    lang:ternary (all) $source $default
 }
 
-#TODO! Test this!
 fn split-by-chunk-count { |chunk-count|
   if (<= $chunk-count 0) {
     fail 'The chunk count must be > 0! Requested: '$chunk-count
@@ -83,4 +82,9 @@ fn split-by-chunk-count { |chunk-count|
 
   all $chunks |
     keep-if { |chunk| not-eq $chunk [] }
+}
+
+fn value-as-list { |value|
+  not-eq $value $nil |
+    lang:ternary (all) [$value] []
 }
