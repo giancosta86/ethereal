@@ -1,10 +1,9 @@
 use str
-use ./function
+use ./lang
 
 fn compute256 { |@arguments|
-  var value = (function:get-single-input $@arguments)
-
-  print $value |
+  lang:get-single-input $arguments |
+    print (all) |
     sha256sum |
     str:split ' ' (all) |
     take 1
