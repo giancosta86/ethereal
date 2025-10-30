@@ -1,4 +1,5 @@
 use re
+use ./lang
 
 fn indent-lines { |indent|
   var slurp-result = (
@@ -16,19 +17,29 @@ fn indent-lines { |indent|
   put $slurp-result[..-1]
 }
 
-fn unstyled { |source|
-  re:replace '\x1b\[[0-9;]*m' '' $source
+fn unstyled { |@arguments|
+  lang:get-single-input $arguments |
+    re:replace '\x1b\[[0-9;]*m' '' (all)
 }
 
-fn fancy { |value|
+var -fancy-formatters-by-kind = [
+  &string=$echo~
+  &exception=$show~
+]
+
+fn fancy { |@arguments|
+  var value = (lang:get-single-input $arguments)
+
   var kind = (kind-of $value)
 
-  if (eq $kind string) {
-    echo $value
-  } elif (eq $kind exception) {
-    show $value
-  } else {
-    pprint $value
-  } |
+  var formatter = (
+    if (has-key $-fancy-formatters-by-kind $kind) {
+      put $-fancy-formatters-by-kind[$kind]
+    } else {
+      put $pprint~
+    }
+  )
+
+  $formatter $value |
     slurp
 }
