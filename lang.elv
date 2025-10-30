@@ -1,7 +1,3 @@
-fn is-function { |value|
-  ==s (kind-of $value) "fn"
-}
-
 fn ternary { |condition when-true when-false|
   if $condition {
     put $when-true
@@ -29,6 +25,13 @@ fn get-input-flow { |argument-list|
     all $argument-list
   }
 }
+
+fn is-function { |@arguments|
+  get-single-input $arguments |
+    kind-of (all) |
+    ==s (all) "fn"
+}
+
 
 fn ensure-put { |&default=$nil|
   var emitted = $false

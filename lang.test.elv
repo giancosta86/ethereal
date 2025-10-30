@@ -2,33 +2,6 @@ use str
 use ./lang
 
 >> 'In lang module' {
-  >> 'function detector' {
-    >> 'when passing a non-function value' {
-      >> 'should output $false' {
-        lang:is-function 98 |
-          should-be $false
-      }
-    }
-
-    >> 'when passing a function' {
-      >> 'should output $true' {
-        fn my-function { echo 'Hello' }
-
-        lang:is-function $my-function~ |
-          should-be $true
-      }
-    }
-
-    >> 'when passing a code block' {
-      >> 'should output $true' {
-        var code = { echo 'Hello' }
-
-        lang:is-function $code |
-          should-be $true
-      }
-    }
-  }
-
   >> 'ternary selector' {
     >> 'when the condition is true' {
       >> 'should return the left operand' {
@@ -111,6 +84,33 @@ use ./lang
           lang:get-input-flow [Ro Sigma] |
           put [(all)] |
           should-be [Alpha Beta Ro Sigma]
+      }
+    }
+  }
+
+  >> 'function detector' {
+    >> 'when passing a non-function value' {
+      >> 'should output $false' {
+        lang:is-function 98 |
+          should-be $false
+      }
+    }
+
+    >> 'when passing a function' {
+      >> 'should output $true' {
+        fn my-function { echo 'Hello' }
+
+        lang:is-function $my-function~ |
+          should-be $true
+      }
+    }
+
+    >> 'when passing a code block' {
+      >> 'should output $true' {
+        var code = { echo 'Hello' }
+
+        lang:is-function $code |
+          should-be $true
       }
     }
   }
