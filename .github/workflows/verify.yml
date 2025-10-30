@@ -1,9 +1,9 @@
 name: Verify
 
 on:
-  # pull_request:
-  #   types: [opened, reopened, synchronize]
-  #   branches: main
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches: main
 
   workflow_dispatch:
 
@@ -13,4 +13,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: giancosta86/aurora-github/actions/verify-elvish-package@v11
+      - uses: elves/setup-elvish@v1
+        with:
+          elvish-version: 0.21.0
+
+      - shell: elvish {0}
+        run: |
+          use epm
+
+          epm:install github.com/giancosta86/velvet
+
+          use github.com/giancosta86/velvet
+
+          velvet:velvet &must-pass
