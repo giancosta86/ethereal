@@ -1,12 +1,13 @@
-use ./function
+use ./lang
 
-fn is-exception { |value|
-  kind-of $value |
+fn is-exception { |@arguments|
+  lang:get-single-input $arguments |
+    kind-of (all) |
     eq (all) exception
 }
 
 fn get-reason { |@arguments|
-  var potential-exception = (function:get-single-input $@arguments)
+  var potential-exception = (lang:get-single-input $arguments)
 
   if (
     and (is-exception $potential-exception) (has-key $potential-exception reason)
@@ -29,8 +30,8 @@ fn get-fail-content { |@arguments|
   }
 }
 
-fn is-fail { |potential-exception|
-  get-fail-content $potential-exception |
+fn is-fail { |@arguments|
+  get-fail-content $@arguments |
     not-eq (all) $nil
 }
 
