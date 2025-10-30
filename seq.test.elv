@@ -327,6 +327,14 @@ use ./seq
         }
       }
     }
+
+    >> 'when passing a string via pipe' {
+      var source = "This is a\nmultiline test!"
+
+      put $source |
+        seq:empty-to-default |
+        should-be $source
+    }
   }
 
   >> 'splitting by chunk count' {

@@ -1,4 +1,5 @@
 use math
+use ./function
 use ./lang
 
 fn is-empty { |container| == (count $container) 0 }
@@ -53,7 +54,9 @@ fn get-prefix { |left right|
   put $result
 }
 
-fn empty-to-default { |&default=$nil source|
+fn empty-to-default { |&default=$nil @arguments|
+  var source = (function:get-single-input $@arguments)
+
   > (count $source) 0 |
     lang:ternary (all) $source $default
 }
