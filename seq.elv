@@ -1,10 +1,19 @@
 use math
-use ./function
 use ./lang
 
-fn is-empty { |container| == (count $container) 0 }
+fn is-empty { |@arguments|
+  lang:get-single-input $arguments |
+    take 1 |
+    count (all) |
+    == (all) 0
+}
 
-fn is-non-empty { |container| != (count $container) 0 }
+fn is-non-empty { |@arguments|
+  lang:get-single-input $arguments |
+    take 1 |
+    count (all) |
+    != (all) 0
+}
 
 fn enumerate { |&start-index=0 consumer|
   var index = (num $start-index)
@@ -55,7 +64,7 @@ fn get-prefix { |left right|
 }
 
 fn empty-to-default { |&default=$nil @arguments|
-  var source = (function:get-single-input $@arguments)
+  var source = (lang:get-single-input $arguments)
 
   > (count $source) 0 |
     lang:ternary (all) $source $default
@@ -87,7 +96,9 @@ fn split-by-chunk-count { |chunk-count|
     keep-if { |chunk| not-eq $chunk [] }
 }
 
-fn value-as-list { |value|
+fn value-as-list { |@arguments|
+  var value = (lang:get-single-input $arguments)
+
   not-eq $value $nil |
     lang:ternary (all) [$value] []
 }

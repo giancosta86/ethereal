@@ -342,7 +342,7 @@ use ./seq
       >> 'should fail' {
         throws {
           all [Alpha Beta] |
-            seq:split-by-chunk-count -1
+          seq:split-by-chunk-count -1
         } |
           get-fail-content |
           str:contains (all) 'The chunk count must be > 0' |
