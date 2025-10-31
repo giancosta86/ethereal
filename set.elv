@@ -1,40 +1,48 @@
+use ./function
 use ./map
 use ./seq
 
-fn empty {
-  put [&]
+var empty = [
+  &-item-map=[&]
+]
+
+fn of { |@arguments|
+  var item-map = (
+    function:get-input-flow $arguments | each { |item|
+      put [$item $true]
+    } |
+      make-map
+  )
+
+  put [
+    &-item-map=$items
+  ]
 }
 
-fn from {
-  each { |value|
-    put [$value 1]
-  } |
-    make-map
+fn from { |@arguments|
+  function:get-single-input $arguments |
+    all (all) |
+    of
 }
 
-fn of { |first @additional|
-  all [$first $@additional] |
-    from
+fn is-empty { |@arguments|
+  function:get-single-input $arguments |
+    seq:is-empty (all)[-item-map]
 }
 
-fn is-empty { |hash-set|
-  == 0 (keys $hash-set |
-    take 1 |
-    count)
+fn is-non-empty { |@arguments|
+  function:get-single-input $arguments |
+    seq:is-non-empty (all)[-item-map]
 }
 
-fn is-non-empty { |hash-set|
-  != 0 (keys $hash-set |
-    take 1 |
-    count)
-}
-
-fn to-list {
-  put [(keys (one))]
+fn to-list { |@arguments|
+  function:get-single-input $arguments |
+    keys (all)[-item-map]
 }
 
 fn contains { |hash-set item|
-  has-key $hash-set $item
+  function:get-single-input $arguments |
+    has-key (all)[-item-map] $item
 }
 
 fn add { |hash-set first-item @additional-items|
