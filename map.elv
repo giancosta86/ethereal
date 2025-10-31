@@ -1,4 +1,4 @@
-use ./function
+use ./lang
 use ./seq
 
 fn get-value { |&default=$nil source key|
@@ -9,20 +9,24 @@ fn get-value { |&default=$nil source key|
   }
 }
 
-fn entries { |source|
+fn entries { |@arguments|
+  var source = (lang:get-single-input $arguments)
+
   keys $source | each { |key|
     put [$key $source[$key]]
   }
 }
 
-fn values { |source|
+fn values { |@arguments|
+  var source = (lang:get-single-input $arguments)
+
   keys $source | each { |key|
     put $source[$key]
   }
 }
 
 fn merge { |@arguments|
-  function:get-input-flow $@arguments |
+  lang:get-input-flow $arguments |
     each $entries~ |
     seq:reduce [&] { |accumulator entry|
       var key value = (all $entry)
