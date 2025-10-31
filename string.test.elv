@@ -55,35 +55,35 @@ use ./string
     }
   }
 
-  >> 'fancy string from value' {
+  >> 'pretty string from value' {
     >> 'applied to single-line string' {
       var source = 'Hello, world!'
 
-      string:fancy $source |
+      string:pretty $source |
         should-be $source"\n"
     }
 
     >> 'applied to multi-line string' {
       var source = "Hello!\n   world!"
 
-      string:fancy $source |
+      string:pretty $source |
         should-be $source"\n"
     }
 
     >> 'applied to number' {
-      string:fancy (num 90) |
+      string:pretty (num 90) |
         should-be "(num 90)\n"
     }
 
     >> 'applied to list' {
-      string:fancy [A B C] |
+      string:pretty [A B C] |
         should-be "[\n A\n B\n C\n]\n"
     }
 
     >> 'applied to exception' {
       var exception = ?(fail DODO)
 
-      string:fancy $exception |
+      string:pretty $exception |
         string:unstyled (all) |
         str:has-prefix (all) "Exception: DODO\n" |
         should-be $true

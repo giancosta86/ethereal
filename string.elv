@@ -22,19 +22,19 @@ fn unstyled { |@arguments|
     re:replace '\x1b\[[0-9;]*m' '' (all)
 }
 
-var -fancy-formatters-by-kind = [
+var -pretty-formatters-by-kind = [
   &string=$echo~
   &exception=$show~
 ]
 
-fn fancy { |@arguments|
+fn pretty { |@arguments|
   var value = (lang:get-single-input $arguments)
 
   var kind = (kind-of $value)
 
   var formatter = (
-    if (has-key $-fancy-formatters-by-kind $kind) {
-      put $-fancy-formatters-by-kind[$kind]
+    if (has-key $-pretty-formatters-by-kind $kind) {
+      put $-pretty-formatters-by-kind[$kind]
     } else {
       put $pprint~
     }
