@@ -26,7 +26,7 @@ fn values { |@arguments|
 }
 
 fn merge { |@arguments|
-  lang:get-input-flow $arguments |
+  lang:get-inputs $arguments |
     each $entries~ |
     seq:reduce [&] { |accumulator entry|
       var key value = (all $entry)

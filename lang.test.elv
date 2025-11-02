@@ -47,7 +47,7 @@ use ./lang
         throws {
           lang:get-single-input [Alpha Beta]
         } |
-          str:contains (all)[reason][content] 'Arity mismatch!'
+          str:contains (all)[reason][content] 'arity mismatch'
       }
     }
 
@@ -64,26 +64,26 @@ use ./lang
     }
   }
 
-  >> 'getting input flow' {
+  >> 'getting multiple inputs' {
     >> 'when multiple arguments in argument list are passed' {
-      lang:get-input-flow [Alpha Beta] |
+      lang:get-inputs [Alpha Beta] |
         put [(all)] |
         should-be [Alpha Beta]
     }
 
     >> 'when multiple values are passed via pipe' {
       put Gamma Delta |
-        lang:get-input-flow [] |
+        lang:get-inputs [] |
         put [(all)] |
         should-be [Gamma Delta]
     }
 
     >> 'when both argument list and pipe values are passed' {
-      >> 'pipe values are followed by arguments' {
+      >> 'pipe values are ignored' {
         put Alpha Beta |
-          lang:get-input-flow [Ro Sigma] |
+          lang:get-inputs [Ro Sigma] |
           put [(all)] |
-          should-be [Alpha Beta Ro Sigma]
+          should-be [Ro Sigma]
       }
     }
   }

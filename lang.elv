@@ -14,15 +14,15 @@ fn get-single-input { |argument-list|
   } elif (== $arg-count 1) {
     put $argument-list[0]
   } else {
-    fail 'Arity mismatch! At most 1 argument expected!'
+    fail 'arity mismatch: at most 1 argument expected!'
   }
 }
 
-fn get-input-flow { |argument-list|
-  all
-
+fn get-inputs { |argument-list|
   if (> (count $argument-list) 0) {
     all $argument-list
+  } else {
+    all
   }
 }
 
@@ -31,7 +31,6 @@ fn is-function { |@arguments|
     kind-of (all) |
     ==s (all) "fn"
 }
-
 
 fn ensure-put { |&default=$nil|
   var emitted = $false

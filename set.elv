@@ -1,111 +1,157 @@
-use ./function
+use builtin
+use ./lang
 use ./map
 use ./seq
 
 var empty = [
-  &-item-map=[&]
+  &-set-items=[&]
 ]
 
 fn of { |@arguments|
-  var item-map = (
-    function:get-input-flow $arguments | each { |item|
-      put [$item $true]
+  var set-items = (
+    lang:get-inputs $arguments | each { |value|
+      put [$value $true]
     } |
       make-map
   )
 
   put [
-    &-item-map=$items
+    &-set-items=$set-items
   ]
 }
 
+fn to-list { |@arguments|
+  lang:get-single-input $arguments |
+    keys (all)[-set-items] |
+    put [(all)]
+}
+
+fn is-set { |@arguments|
+  var source = (lang:get-single-input $arguments)
+
+  and (eq (kind-of $source) map) (has-key $source -set-items)
+}
+
 fn from { |@arguments|
-  function:get-single-input $arguments |
-    all (all) |
-    of
+  var source = (lang:get-single-input $arguments)
+
+  if (is-set $source) {
+    put [
+      &-set-items=$source[-set-items]
+    ]
+  } else {
+    of (all $source)
+  }
 }
 
 fn is-empty { |@arguments|
-  function:get-single-input $arguments |
-    seq:is-empty (all)[-item-map]
+  lang:get-single-input $arguments |
+    seq:is-empty (all)[-set-items]
 }
 
 fn is-non-empty { |@arguments|
-  function:get-single-input $arguments |
-    seq:is-non-empty (all)[-item-map]
+  lang:get-single-input $arguments |
+    seq:is-non-empty (all)[-set-items]
 }
 
-fn to-list { |@arguments|
-  function:get-single-input $arguments |
-    keys (all)[-item-map]
+fn count { |@arguments|
+  lang:get-single-input $arguments |
+    builtin:count (all)[-set-items]
 }
 
-fn contains { |hash-set item|
-  function:get-single-input $arguments |
-    has-key (all)[-item-map] $item
+fn has-value { |base-set @arguments|
+  var value = (lang:get-single-input $arguments)
+
+  has-key $base-set[-set-items] $value
 }
 
-fn add { |hash-set first-item @additional-items|
-  all [$first-item $@additional-items] |
-    seq:reduce $hash-set { |accumulator item|
-      assoc $accumulator $item $true
-    }
-}
-
-fn remove { |hash-set first-item @additional-items|
-  all [$first-item $@additional-items] |
-    seq:reduce $hash-set { |accumulator item|
-      dissoc $accumulator $item
-    }
-}
-
-fn union { |source @operands|
-  all $operands |
-    seq:reduce $source { |accumulator operand|
-      map:merge $accumulator $operand
-    }
-}
-
-fn intersection { |source @operands|
-  all $operands |
-    seq:reduce $source { |accumulator operand|
-      map:filter $accumulator { |key _|
-        has-key $operand $key
+fn add { |base-set @arguments|
+  var updated-set-items = (
+    lang:get-inputs $arguments |
+      seq:reduce $base-set[-set-items] { |cumulated-items value|
+        assoc $cumulated-items $value $true
       }
-    }
+  )
+
+  put [
+    &-set-items=$updated-set-items
+  ]
 }
 
-fn difference { |source @subtrahends|
-  all $subtrahends |
-    seq:reduce $source { |accumulator subtrahend|
-      map:filter $accumulator { |key _|
-        not (has-key $subtrahend $key)
+fn remove { |base-set @arguments|
+  var updated-set-items = (
+    lang:get-inputs $arguments |
+      seq:reduce $base-set[-set-items] { |cumulated-items value|
+        dissoc $cumulated-items $value
       }
-    }
+  )
+
+  put [
+    &-set-items=$updated-set-items
+  ]
 }
 
-fn symmetric-difference { |left right|
-  difference (union $left $right) (intersection $left $right)
+fn union { |@arguments|
+  var result-items = (
+    lang:get-inputs $arguments |
+      seq:reduce [&] { |cumulated-items operand|
+        map:merge $cumulated-items $operand[-set-items]
+      }
+  )
+
+  put [
+    &-set-items=$result-items
+  ]
 }
 
-#TODO: Keep this? If so, test this!
-fn from-container { |container|
-  if (eq (kind-of $container) map) {
-    put $container
-  } else {
-    of $@container
-  }
-}
+fn intersection { |@arguments|
+  var operands = [(lang:get-inputs $arguments)]
 
-#TODO: Keep this? If so, test this!
-fn equals { |left-container right-container|
-  if (not-eq (count $left-container) (count $right-container)) {
-    put $false
+  if (seq:is-empty $operands) {
+    put $empty
     return
   }
 
-  var left-set = (from-container $left-container)
-  var right-set = (from-container $right-container)
+  var result-items = (
+    all $operands |
+      drop 1 |
+      seq:reduce $operands[0][-set-items] { |cumulated-items operand|
+        map:filter $cumulated-items { |key _|
+          has-key $operand[-set-items] $key
+        }
+      }
+  )
 
-  eq (keys $left-set) (keys $right-set)
+  put [
+    &-set-items=$result-items
+  ]
+}
+
+fn difference { |@arguments|
+  var operands = [(lang:get-inputs $arguments)]
+
+  if (seq:is-empty $operands) {
+    put $empty
+    return
+  }
+
+  var result-items = (
+    all $operands |
+      drop 1 |
+      seq:reduce $operands[0][-set-items] { |cumulated-items operand|
+        map:filter $cumulated-items { |key _|
+          not (has-key $operand[-set-items] $key)
+        }
+      }
+  )
+
+  put [
+    &-set-items=$result-items
+  ]
+}
+
+fn symmetric-difference { |@arguments|
+  var left right = (lang:get-inputs $arguments)
+
+  difference (union $left $right) (intersection $left $right)
 }
