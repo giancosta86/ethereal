@@ -77,3 +77,7 @@ set -minimal-transforms-by-kind = [
       make-map
   }
 ]
+
+fn no-output {
+  all | only-bytes
+}
