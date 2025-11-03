@@ -22,439 +22,357 @@ fn -create-temp-tree { |temp-root|
   ]
 }
 
-describe 'The touch operation' {
-  var temp-directory = (os:temp-dir)
-  defer { fs:rimraf $temp-directory }
+>> 'In fs module' {
+  >> 'requesting a temp file path' {
+    >> 'when not passing a pattern' {
+      >> 'should use the default pattern' {
+        var temp-path = (fs:temp-file-path)
+        defer { os:remove-all $temp-path }
 
-  var file-path = (path:join $temp-directory DODO)
-  fs:touch $file-path
+        path:base $temp-path |
+          str:has-prefix (all) 'elvish-' |
+          should-be $true
+      }
+    }
 
-  it 'should create a file' {
-    os:is-regular $file-path |
-      should-be $true
-  }
+    >> 'when passing a custom pattern' {
+      var custom-prefix = 'alpha-'
+      var custom-suffix = '-omega'
 
-  it 'should create an empty file' {
-    put (os:stat $file-path)[size] |
-      should-be 0
-  }
-}
+      var temp-path = (fs:temp-file-path &prefix=$custom-prefix'*'$custom-suffix)
+      defer { os:remove-all $temp-path }
 
-describe 'The rimraf operation' {
-  describe 'when applied to a missing path' {
-    it 'should just do nothing' {
-      fs:rimraf '<SOME INEXISTENT MISSING FILE>'
+      >> 'should have the requested prefix' {
+        path:base $temp-path |
+          str:has-prefix (all) $custom-prefix |
+          should-be $true
+      }
+
+      >> 'should have the requested suffix' {
+        path:base $temp-path |
+          str:has-suffix (all) $custom-suffix |
+          should-be $true
+      }
     }
   }
 
-  describe 'when applied to a file' {
-    it 'should delete the file' {
-      var temp-path = (fs:temp-file-path)
+  >> 'consuming a temp file path' {
+    >> 'should delete the temp path available only within the consumer' {
+      var actual-path
 
-      os:is-regular $temp-path |
-        should-be $true
+      fs:with-temp-file { |temp-path|
+        os:is-regular $temp-path |
+          should-be $true
 
-      fs:rimraf $temp-path
+        set actual-path = $temp-path
+      }
 
-      os:is-regular $temp-path |
+      os:is-regular $actual-path |
         should-be $false
     }
-  }
 
-  describe 'when applied to a directory' {
-    describe 'if the directory is empty' {
-      it 'should delete it' {
-        var temp-directory = (os:temp-dir)
+    >> 'should support a custom pattern' {
+      var custom-prefix = 'alpha-'
+      var custom-suffix = '-omega'
 
-        os:is-dir $temp-directory |
+      fs:with-temp-file &prefix=$custom-prefix'*'$custom-suffix { |temp-path|
+        str:has-prefix $temp-path $custom-prefix |
           should-be $true
 
-        fs:rimraf $temp-directory
+        str:has-suffix $temp-path $custom-suffix |
+          should-be $true
+      }
+    }
+  }
 
-        os:is-dir $temp-directory |
-          should-be $false
+  >> 'consuming a temp directory path' {
+    >> 'should make the temp path available only within the consumer' {
+      var actual-path
+
+      fs:with-temp-dir { |temp-dir|
+        os:is-dir $temp-dir |
+          should-be $true
+
+        set actual-path = $temp-dir
+      }
+
+      os:is-dir $actual-path |
+        should-be $false
+    }
+
+    >> 'should support a custom pattern' {
+      var custom-prefix = 'alpha-'
+      var custom-suffix = '-omega'
+
+      fs:with-temp-dir &prefix=$custom-prefix'*'$custom-suffix { |temp-path|
+        str:has-prefix $temp-path $custom-prefix |
+          should-be $true
+
+        str:has-suffix $temp-path $custom-suffix |
+          should-be $true
+      }
+    }
+  }
+
+  >> 'the touch operation' {
+    fs:with-temp-dir { |temp-directory|
+      var file-path = (path:join $temp-directory DODO)
+      fs:touch $file-path
+
+      >> 'should create a file' {
+        os:is-regular $file-path |
+          should-be $true
+      }
+
+      >> 'should create an empty file' {
+        put (os:stat $file-path)[size] |
+          should-be 0
+      }
+    }
+  }
+
+  >> 'the copy operation' {
+    >> 'should copy a file' {
+      fs:with-temp-file { |sigma-path|
+        fs fs:with-temp-file { |tau-path|
+          print Sigma > $sigma-path
+
+          fs:copy $sigma-path $tau-path
+
+          os:is-regular $sigma-path |
+            should-be $true
+
+          slurp < $tau-path |
+            should-be Sigma
+        }
       }
     }
 
-    describe 'if the directory contains files and directories' {
-      it 'should delete the entire tree' {
-        var temp-directory = (os:temp-dir)
-
+    >> 'should copy a directory' {
+      fs:with-temp-dir { |temp-directory|
         var temp-tree = (-create-temp-tree $temp-directory)
 
-        os:is-regular $temp-tree[alpha-file] |
+        var omega-path = (path:join $temp-directory omega)
+
+        fs:copy $temp-tree[beta-dir] $omega-path
+
+        os:is-dir $temp-tree[beta-dir] |
           should-be $true
 
-        os:is-regular $temp-tree[delta-file] |
+        os:is-dir $omega-path |
           should-be $true
 
-        fs:rimraf $temp-directory
+        var omega-content-path = (path:join $omega-path gamma delta)
 
-        os:is-dir $temp-directory |
-          should-be $false
+        slurp < $omega-content-path |
+          should-be Delta
       }
     }
   }
-}
 
-describe 'The copy operation' {
-  it 'should copy a file' {
-    var sigma-path = (fs:temp-file-path)
-    var tau-path = (fs:temp-file-path)
+  >> 'the move operation' {
+    >> 'should move a file' {
+      fs:with-temp-file { |sigma-path|
+        fs:with-temp-file { |tau-path|
+          print Sigma > $sigma-path
 
-    print Sigma > $sigma-path
+          fs:move $sigma-path $tau-path
 
-    fs:copy $sigma-path $tau-path
+          os:is-regular $sigma-path |
+            should-be $false
 
-    os:is-regular $sigma-path |
-      should-be $true
+          slurp < $tau-path |
+            should-be Sigma
+        }
+      }
+    }
 
-    slurp < $tau-path |
-      should-be Sigma
-  }
+    >> 'should move a directory' {
+      fs:with-temp-dir { |temp-directory|
+        var temp-tree = (-create-temp-tree $temp-directory)
 
-  it 'should copy a directory' {
-    var temp-directory = (os:temp-dir)
-    defer { fs:rimraf $temp-directory }
+        var omega-path = (path:join $temp-directory omega)
 
-    var temp-tree = (-create-temp-tree $temp-directory)
+        fs:move $temp-tree[beta-dir] $omega-path
 
-    var omega-path = (path:join $temp-directory omega)
+        os:is-dir $temp-tree[beta-dir] |
+          should-be $false
 
-    fs:copy $temp-tree[beta-dir] $omega-path
+        os:is-dir $omega-path |
+          should-be $true
 
-    os:is-dir $temp-tree[beta-dir] |
-      should-be $true
+        var omega-content-path = (path:join $omega-path gamma delta)
 
-    os:is-dir $omega-path |
-      should-be $true
-
-    var omega-content-path = (path:join $omega-path gamma delta)
-
-    slurp < $omega-content-path |
-      should-be Delta
-  }
-}
-
-describe 'The move operation' {
-  it 'should move a file' {
-    var sigma-path = (fs:temp-file-path)
-    var tau-path = (fs:temp-file-path)
-
-    print Sigma > $sigma-path
-
-    fs:move $sigma-path $tau-path
-
-    os:is-regular $sigma-path |
-      should-be $false
-
-    slurp < $tau-path |
-      should-be Sigma
-  }
-
-  it 'should move a directory' {
-    var temp-directory = (os:temp-dir)
-    defer { fs:rimraf $temp-directory }
-
-    var temp-tree = (-create-temp-tree $temp-directory)
-
-    var omega-path = (path:join $temp-directory omega)
-
-    fs:move $temp-tree[beta-dir] $omega-path
-
-    os:is-dir $temp-tree[beta-dir] |
-      should-be $false
-
-    os:is-dir $omega-path |
-      should-be $true
-
-    var omega-content-path = (path:join $omega-path gamma delta)
-
-    slurp < $omega-content-path |
-      should-be Delta
-  }
-}
-
-describe 'Requesting a temp file path' {
-  describe 'when not passing a pattern' {
-    it 'should use the default pattern' {
-      var default-prefix = 'elvish-'
-
-      var temp-path = (fs:temp-file-path)
-
-      path:base $temp-path |
-        str:has-prefix (all) $default-prefix |
-        should-be $true
+        slurp < $omega-content-path |
+          should-be Delta
+      }
     }
   }
 
-  describe 'when passing a custom pattern' {
-    var custom-prefix = 'alpha-'
-    var custom-suffix = '-omega'
+  >> 'the mkcd command' {
+    >> 'when the target directory does not exist' {
+      fs:with-temp-dir { |test-root|
+        tmp pwd = $test-root
 
-    var temp-path = (fs:temp-file-path $custom-prefix'*'$custom-suffix)
+        var components = [alpha beta gamma delta]
 
-    it 'should have the requested prefix' {
-      path:base $temp-path |
-        str:has-prefix (all) $custom-prefix |
-        should-be $true
+        fs:mkcd $@components
+
+        >> 'should create that directory and its parents' {
+          path:join $test-root $@components |
+            os:is-dir (all) |
+            should-be $true
+        }
+
+        >> 'should move to that directory' {
+          path:base $pwd |
+            should-be $components[-1]
+        }
+      }
     }
 
-    it 'should have the requested suffix' {
-      path:base $temp-path |
-        str:has-suffix (all) $custom-suffix |
-        should-be $true
-    }
-  }
-}
+    >> 'when the target directory already exists' {
+      >> 'should just move to that directory' {
+        fs:with-temp-dir { |test-root|
+          tmp pwd = $test-root
 
-describe 'The mkcd command' {
-  describe 'when the target directory does not exist' {
-    var test-root = (os:temp-dir)
-    defer { fs:rimraf $test-root }
+          var components = [ro sigma tau]
 
-    tmp pwd = $test-root
+          os:mkdir-all (path:join $@components)
 
-    var components = [alpha beta gamma delta]
+          fs:mkcd $@components
 
-    fs:mkcd $@components
-
-    it 'should create that directory and its parents' {
-      os:is-dir (path:join $test-root $@components) |
-        should-be $true
-    }
-
-    it 'should move to that directory' {
-      path:base $pwd |
-        should-be $components[-1]
+          path:base $pwd |
+            should-be $components[-1]
+        }
+      }
     }
   }
 
-  describe 'when the target directory already exists' {
-    it 'should just move to that directory' {
-      var test-root = (os:temp-dir)
-      defer { fs:rimraf $test-root }
+  >> 'opening a file sandbox' {
+    >> 'in the end' {
+      >> 'if the path existed' {
+        >> 'after modification' {
+          >> 'should restore the original file' {
+            fs:with-temp-file { |test-file|
+              var original-content = 'My sample text'
+              print $original-content > $test-file
 
-      tmp pwd = $test-root
+              fs:with-file-sandbox $test-file {
+                print ASD > $test-file
 
-      var components = [ro sigma tau]
-
-      os:mkdir-all (path:join $@components)
-
-      fs:mkcd $@components
-
-      path:base $pwd |
-        should-be $components[-1]
-    }
-  }
-}
-
-describe 'Opening a file sandbox' {
-  describe 'in the end' {
-    describe 'if the path existed' {
-      describe 'after modification' {
-        it 'should restore the original file' {
-          fs:with-temp-file { |test-file|
-            var original-content = 'My sample text'
-            print $original-content > $test-file
-
-            fs:with-file-sandbox $test-file {
-              print ASD > $test-file
+                slurp < $test-file |
+                  should-be ASD
+              }
 
               slurp < $test-file |
-                should-be ASD
+                should-be $original-content
             }
+          }
+        }
 
-            slurp < $test-file |
-              should-be $original-content
+        >> 'after deletion' {
+          >> 'should restore the original file' {
+            fs:with-temp-file { |test-file|
+              fs:with-file-sandbox $test-file {
+                os:remove-all $test-file
+
+                os:is-regular $test-file |
+                  should-be $false
+              }
+
+              os:is-regular $test-file |
+                should-be $true
+            }
           }
         }
       }
 
-      describe 'after deletion' {
-        it 'should restore the original file' {
-          fs:with-temp-file { |test-file|
-            fs:with-file-sandbox $test-file {
-              fs:rimraf $test-file
-            }
+      >> 'if the path did not exist' {
+        >> 'should remove the file' {
+          var test-file = SOME_INEXISTING_FILE
+
+          fs:with-file-sandbox $test-file {
+            echo Some text > $test-file
 
             os:is-regular $test-file |
               should-be $true
           }
+
+          os:is-regular $test-file |
+            should-be $false
         }
-      }
-    }
-
-    describe 'if the path did not exist' {
-      it 'should remove the file' {
-        var test-file = SOME_INEXISTING_FILE
-
-        fs:with-file-sandbox $test-file {
-          echo Some text > $test-file
-        }
-
-        os:is-regular $test-file |
-          should-be $false
       }
     }
   }
-}
 
-describe 'Opening a directory sandbox' {
-  describe 'in the end' {
-    describe 'if the path existed' {
-      it 'should restore the tree as it was' {
-        fs:with-temp-dir { |temp-dir|
-          cd $temp-dir
+  >> 'Opening a directory sandbox' {
+    >> 'in the end' {
+      >> 'if the path existed' {
+        >> 'should restore the tree as it was' {
+          fs:with-temp-dir { |temp-dir|
+            cd $temp-dir
 
-          var sigma = sigma.txt
-          print Sigma > $sigma
-
-          slurp < $sigma |
-            should-be Sigma
-
-          var a = A
-
-          var b = (path:join $a B)
-
-          fs:with-dir-sandbox . {
-            print LOL > $sigma
-
-            os:mkdir-all $b
-
-            var c = (path:join $b C.txt)
-            touch $c
+            var sigma = sigma.txt
+            print Sigma > $sigma
 
             slurp < $sigma |
-              should-be LOL
+              should-be Sigma
 
-            os:is-regular $c |
-              should-be $true
-          }
+            var a = A
 
-          slurp < $sigma |
-            should-be Sigma
+            var b = (path:join $a B)
 
-          os:is-dir $a |
-            should-be $false
-        }
-      }
-    }
+            fs:with-dir-sandbox . {
+              print LOL > $sigma
 
-    describe 'if the path did not exist' {
-      it 'should remove the entire tree' {
-        fs:with-temp-dir { |temp-dir|
-          cd $temp-dir
+              os:mkdir-all $b
 
-          var a = A
+              var c = (path:join $b C.txt)
+              touch $c
 
-          var b = (path:join $a B)
+              slurp < $sigma |
+                should-be LOL
 
-          os:is-dir $a |
-            should-be $false
+              os:is-regular $c |
+                should-be $true
+            }
 
-          fs:with-dir-sandbox $a {
-            os:mkdir-all $b
+            slurp < $sigma |
+              should-be Sigma
 
             os:is-dir $a |
-              should-be $true
-
-            os:is-dir $b |
-              should-be $true
+              should-be $false
           }
-
-          os:is-dir $a |
-            should-be $false
         }
       }
-    }
-  }
-}
 
-describe 'Consuming a temp file path' {
-  it 'should make the temp path available' {
-    fs:with-temp-file { |temp-path|
-      os:is-regular $temp-path |
-        should-be $true
-    }
-  }
+      >> 'if the path did not exist' {
+        >> 'should remove the entire tree' {
+          fs:with-temp-dir { |temp-dir|
+            cd $temp-dir
 
-  it 'should delete the temp path in the end' {
-    var actual-path
+            var a = A
 
-    fs:with-temp-file { |temp-path|
-      set actual-path = $temp-path
-    }
+            var b = (path:join $a B)
 
-    os:is-regular $actual-path |
-      should-be $false
-  }
-}
+            os:is-dir $a |
+              should-be $false
 
-describe 'Consuming a temp directory path' {
-  it 'should make the temp path available' {
-    fs:with-temp-dir { |temp-dir|
-      os:is-dir $temp-dir |
-        should-be $true
-    }
-  }
+            fs:with-dir-sandbox $a {
+              os:mkdir-all $b
 
-  it 'should delete the temp path in the end' {
-    var actual-path
+              os:is-dir $a |
+                should-be $true
 
-    fs:with-temp-dir { |temp-dir|
-      set actual-path = $temp-dir
-    }
+              os:is-dir $b |
+                should-be $true
+            }
 
-    os:is-dir $actual-path |
-      should-be $false
-  }
-}
-
-describe 'Using a wildcard string to get a file list' {
-  fn -with-test-tree { |block|
-    fs:with-temp-dir { |temp-dir|
-      tmp pwd = $temp-dir
-
-      fs:touch A.elv
-      fs:touch B.elv
-
-      var q-dir = (path:join P Q)
-      os:mkdir-all $q-dir
-
-      fs:touch (path:join $q-dir R.elv)
-
-      $block
-    }
-  }
-
-  describe 'when only passing the includes wildcard' {
-    it 'should display the matching paths' {
-      -with-test-tree {
-        put [(
-          fs:wildcard '**.elv' |
-            order
-        )] |
-          should-be [
-            A.elv
-            B.elv
-            P/Q/R.elv
-          ]
-      }
-    }
-  }
-
-  describe 'when passing an excluding wildcard' {
-    it 'should return only the acceptable paths' {
-      -with-test-tree {
-        put [(
-          fs:wildcard '**.elv' &excludes='**B.elv' |
-            order
-        )] |
-          should-be [
-            A.elv
-            P/Q/R.elv
-          ]
+            os:is-dir $a |
+              should-be $false
+          }
+        }
       }
     }
   }

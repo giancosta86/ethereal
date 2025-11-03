@@ -5,14 +5,42 @@ use str
 use ./hash-set
 use ./lang
 use ./map
+use ./seq
+
+fn temp-file-path { |&dir='' &pattern=$nil|
+  var temp-file = (
+    os:temp-file &dir=$dir (all (seq:value-as-list $pattern))
+  )
+  file:close $temp-file
+
+  put $temp-file[name]
+}
+
+fn with-temp-file { |&dir='' &pattern=$nil consumer|
+  var temp-path = (temp-file-path &dir=$dir &pattern=$pattern)
+
+  try {
+    $consumer $temp-path |
+      lang:no-output
+  } finally {
+    os:remove-all $temp-path
+  }
+}
+
+fn with-temp-dir { |&dir='' &pattern=$nil consumer|
+  var temp-path = (os:temp-dir &dir=$dir (all (seq:value-as-list $pattern)))
+
+  try {
+    $consumer $temp-path |
+      lang:no-output
+  } finally {
+    set pwd = (path:dir $temp-path)
+    os:remove-all $temp-path
+  }
+}
 
 fn touch { |path|
   print > $path
-}
-
-#TODO! Replace this with remove-all!
-fn rimraf { |path|
-  rm -rf $path
 }
 
 fn copy { |from to|
@@ -21,13 +49,6 @@ fn copy { |from to|
 
 fn move { |from to|
   mv $from $to
-}
-
-fn temp-file-path { |&dir='' @pattern|
-  var temp-file = (os:temp-file &dir=$dir $@pattern)
-  file:close $temp-file
-
-  put $temp-file[name]
 }
 
 fn mkcd { |&perm=0o755 @components|
@@ -59,13 +80,14 @@ fn -with-path-sandbox { |inputs|
   }
 
   try {
-    $block
+    $block |
+      lang:no-output
   } finally {
     var parent-dir = (path:dir $path)
 
-    tmp pwd = (lang:ternary (os:is-dir $parent-dir) $parent-dir $pwd)
+    set pwd = (lang:ternary (os:is-dir $parent-dir) $parent-dir $pwd)
 
-    rimraf $path
+    os:remove-all $path
 
     if $backup-path {
       move $backup-path $path
@@ -93,51 +115,6 @@ fn with-dir-sandbox { |&backup-suffix='.orig' path block|
     &error-message='The path must be a directory!'
     &block=$block
   ]
-}
-
-fn -with-temp-object { |temp-path consumer|
-  try {
-    $consumer $temp-path
-  } finally {
-    if (os:is-dir $temp-path) {
-      set pwd = (path:dir $temp-path)
-    }
-
-    rimraf $temp-path
-  }
-}
-
-#TODO! Test the pattern option
-fn with-temp-file { |&dir='' &pattern=$nil consumer|
-  var temp-path = (call $temp-file-path~ (lang:value-as-list $pattern) [&dir=$dir])
-
-  -with-temp-object $temp-path $consumer
-}
-
-#TODO! Test the pattern option
-fn with-temp-dir { |&dir='' &pattern=$nil consumer|
-  var temp-path = (call $os:temp-dir~ (lang:value-as-list $pattern) [&dir=$dir])
-
-  -with-temp-object $temp-path $consumer
-}
-
-#TODO: del this?
-fn wildcard { |includes &excludes=$nil|
-  fn expand-wildcard { |wildcard|
-    eval 'put '$wildcard
-  }
-
-  if $excludes {
-    var exclude-set = (
-      expand-wildcard $excludes |
-        hash-set:from
-    )
-
-    wildcard $includes &excludes=$nil |
-      keep-if { |path| not (hash-set:contains $exclude-set $path) }
-  } else {
-    expand-wildcard $includes
-  }
 }
 
 #TODO! Test this!
