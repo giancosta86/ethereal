@@ -3,7 +3,5 @@
 
   "maintainers": ["Gianluca Costa <gianluca@gianlucacosta.info>"],
 
-  "homepage": "https://github.com/giancosta86/ethereal",
-
-  "dependencies": []
+  "homepage": "https://github.com/giancosta86/ethereal"
 }
