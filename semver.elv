@@ -110,7 +110,7 @@ fn parse { |@arguments|
 }
 
 fn to-string { |@arguments|
-  var version = (lang:get-single-input $version)
+  var version = (lang:get-single-input $arguments)
 
   var result = $version[major]'.'$version[minor]'.'$version[patch]
 
@@ -138,7 +138,7 @@ fn is-new-major { |@arguments|
 }
 
 fn less-than { |left right|
-  for component [major minor path] {
+  for component [major minor patch] {
     if (< $left[$component] $right[$component]) {
       put $true
       return
@@ -148,15 +148,15 @@ fn less-than { |left right|
     }
   }
 
-  for component [pre-release build] {
-    if (<s $left[$component] $right[$component]) {
-      put $true
-      return
-    } elif (>s $left[$component] $right[$component]) {
-      put $false
-      return
-    }
+  if (not $left[pre-release]) {
+    put $false
+    return
   }
 
-  put $false
+  if (and $left[pre-release] (not $right[pre-release])) {
+    put $true
+    return
+  }
+
+  <s $left[pre-release] $right[pre-release]
 }
