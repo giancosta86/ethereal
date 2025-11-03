@@ -1,10 +1,73 @@
 use re
+use str
 use ./lang
-use ./string
+use ./seq
 
-var -pattern = '^v?(?P<major>0|[1-9]\d*)(?:\.(?P<minor>0|[1-9]\d*)(?:\.(?P<patch>0|[1-9]\d*))?)?(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<build>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
+var -numeric-component-fragment = [
+  '0'
+  '|'
+  '[1-9]\d*'
+]
 
-fn parse { |source|
+var -pre-release-fragment = [
+  $@-numeric-component-fragment
+  '|'
+  '\d*[a-zA-Z-][0-9a-zA-Z-]*'
+]
+
+var -build-fragment = '[0-9a-zA-Z-]+'
+
+var -pattern = (
+  all [
+    '^'
+    'v?'
+    '(?P<major>'
+      $@-numeric-component-fragment
+    ')'
+    '(?:'
+      '\.'
+      '(?P<minor>'
+        $@-numeric-component-fragment
+      ')'
+      '(?:'
+        '\.'
+        '(?P<patch>'
+          $@-numeric-component-fragment
+        ')'
+      ')?'
+    ')?'
+    '(?:'
+      '-'
+      '(?P<prerelease>'
+        '(?:'
+          $@-pre-release-fragment
+        ')'
+        '(?:'
+          '\.'
+          '(?:'
+            $@-pre-release-fragment
+          ')'
+        ')*'
+      ')'
+    ')?'
+    '(?:'
+      '\+'
+      '(?P<build>'
+        $-build-fragment
+        '(?:'
+          '\.'
+          $-build-fragment
+        ')*'
+      ')'
+    ')?'
+    '$'
+  ] |
+    str:join ''
+)
+
+fn parse { |@arguments|
+  var source = (lang:get-single-input $arguments)
+
   var match = (
     re:find $-pattern $source |
       lang:ensure-put
@@ -17,19 +80,38 @@ fn parse { |source|
   var groups = $match[groups]
 
   put [
-    &major=(put $groups[1][text] | num (all))
+    &major=(
+      put $groups[1][text] |
+      num (all)
+    )
 
-    &minor=(string:empty-to-default $groups[2][text] &default=0 | num (all))
+    &minor=(
+      put $groups[2][text] |
+        seq:empty-to-default &default=0 |
+        num (all)
+    )
 
-    &patch=(string:empty-to-default $groups[3][text] &default=0 | num (all))
+    &patch=(
+      put $groups[3][text] |
+        seq:empty-to-default &default=0 |
+        num (all)
+    )
 
-    &pre-release=(string:empty-to-default $groups[4][text])
+    &pre-release=(
+      str:trim-space $groups[4][text] |
+        seq:empty-to-default
+    )
 
-    &build=(string:empty-to-default $groups[5][text])
+    &build=(
+      str:trim-space $groups[5][text] |
+        seq:empty-to-default
+    )
   ]
 }
 
-fn to-string { |version|
+fn to-string { |@arguments|
+  var version = (lang:get-single-input $version)
+
   var result = $version[major]'.'$version[minor]'.'$version[patch]
 
   if $version[pre-release] {
@@ -43,42 +125,38 @@ fn to-string { |version|
   put $result
 }
 
-fn is-stable { |version|
+fn is-stable { |@arguments|
+  var version = (lang:get-single-input $arguments)
+
   not (or $version[pre-release] $version[build])
 }
 
-fn stable-less-than { |left right|
-  if (not (is-stable $left)) {
-    fail 'Non-stable left operand: '(to-string $left)
-  }
+fn is-new-major { |@arguments|
+  var version = (lang:get-single-input $arguments)
 
-  if (not (is-stable $right)) {
-    fail 'Non-stable right operand: '(to-string $right)
-  }
-
-  if (< $left[major] $right[major]) {
-    put $true
-    return
-  }
-
-  if (> $left[major] $right[major]) {
-    put $false
-    return
-  }
-
-  if (< $left[minor] $right[minor]) {
-    put $true
-    return
-  }
-
-  if (> $left[minor] $right[minor]) {
-    put $false
-    return
-  }
-
-  < $left[patch] $right[patch]
+  and (== $version[minor] 0) (== $version[patch] 0) (is-stable $version)
 }
 
-fn is-new-major { |version|
-  and (== $version[minor] 0) (== $version[patch] 0) (is-stable $version)
+fn less-than { |left right|
+  for component [major minor path] {
+    if (< $left[$component] $right[$component]) {
+      put $true
+      return
+    } elif (> $left[$component] $right[$component]) {
+      put $false
+      return
+    }
+  }
+
+  for component [pre-release build] {
+    if (<s $left[$component] $right[$component]) {
+      put $true
+      return
+    } elif (>s $left[$component] $right[$component]) {
+      put $false
+      return
+    }
+  }
+
+  put $false
 }
