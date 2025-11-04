@@ -2,10 +2,37 @@ use file
 use os
 use path
 use str
-use ./hash-set
 use ./lang
 use ./map
 use ./seq
+use ./set
+
+#TODO! Test this!
+fn ensure-not-in-directory { |directory-path|
+  var abs-path = (path:abs $directory-path)
+
+  echo ABS-PATH >&2
+  echo 🔎🔎🔎🔎🔎🔎 >&2
+  echo $abs-path >&2
+  echo 🔎🔎🔎🔎🔎🔎 >&2
+  echo >&2
+
+  echo PWD >&2
+  echo 🏡🏡🏡🏡🏡🏡 >&2
+  echo $pwd >&2
+  echo 🏡🏡🏡🏡🏡🏡 >&2
+  echo >&2
+
+  while (str:has-prefix $pwd $abs-path) {
+    cd ..
+
+    echo PWD >&2
+    echo 🏡🏡🏡🏡🏡🏡 >&2
+    echo $pwd >&2
+    echo 🏡🏡🏡🏡🏡🏡 >&2
+    echo >&2
+  }
+}
 
 fn temp-file-path { |&dir='' &pattern=$nil|
   var temp-file = (
@@ -20,8 +47,7 @@ fn with-temp-file { |&dir='' &pattern=$nil consumer|
   var temp-path = (temp-file-path &dir=$dir &pattern=$pattern)
 
   try {
-    $consumer $temp-path |
-      lang:no-output
+    $consumer $temp-path
   } finally {
     os:remove-all $temp-path
   }
@@ -31,10 +57,10 @@ fn with-temp-dir { |&dir='' &pattern=$nil consumer|
   var temp-path = (os:temp-dir &dir=$dir (all (seq:value-as-list $pattern)))
 
   try {
-    $consumer $temp-path |
-      lang:no-output
+    $consumer $temp-path
   } finally {
-    set pwd = (path:dir $temp-path)
+    ensure-not-in-directory $temp-path
+
     os:remove-all $temp-path
   }
 }
@@ -59,34 +85,24 @@ fn mkcd { |&perm=0o755 @components|
   cd $actual-path
 }
 
-fn -with-path-sandbox { |inputs|
-  var path = (path:abs $inputs[path])
-  var backup-suffix = $inputs[backup-suffix]
-  var test-path-is-ok = $inputs[test-path-is-ok]
-  var test-path-is-wrong = $inputs[test-path-is-wrong]
-  var error-message = $inputs[error-message]
-  var block = $inputs[block]
+fn with-file-sandbox { |path block|
+  if (os:is-dir $path) {
+    fail 'The path must be a regular file!'
+  }
 
   var backup-path
 
-  if ($test-path-is-ok $path) {
-    set backup-path = $path''$backup-suffix
+  if (os:is-regular $path) {
+    set backup-path = (temp-file-path)
 
     copy $path $backup-path
-  } elif ($test-path-is-wrong $path) {
-    fail $error-message
   } else {
     set backup-path = $nil
   }
 
   try {
-    $block |
-      lang:no-output
+    $block
   } finally {
-    var parent-dir = (path:dir $path)
-
-    set pwd = (lang:ternary (os:is-dir $parent-dir) $parent-dir $pwd)
-
     os:remove-all $path
 
     if $backup-path {
@@ -95,26 +111,49 @@ fn -with-path-sandbox { |inputs|
   }
 }
 
-fn with-file-sandbox { |&backup-suffix='.orig' path block|
-  -with-path-sandbox [
-    &path=$path
-    &backup-suffix=$backup-suffix
-    &test-path-is-ok=$os:is-regular~
-    &test-path-is-wrong=$os:is-dir~
-    &error-message='The path must be a regular file!'
-    &block=$block
-  ]
-}
+fn with-dir-sandbox { |path block|
+  var abs-path = (path:abs $path)
 
-fn with-dir-sandbox { |&backup-suffix='.orig' path block|
-  -with-path-sandbox [
-    &path=$path
-    &backup-suffix=$backup-suffix
-    &test-path-is-ok=$os:is-dir~
-    &test-path-is-wrong=$os:is-regular~
-    &error-message='The path must be a directory!'
-    &block=$block
-  ]
+  if (os:is-regular $abs-path) {
+    fail 'The path must be a directory!'
+  }
+
+  if (eq $abs-path /) {
+    fail 'Cannot apply a sandbox to the file system root!'
+  }
+
+  var backup-path
+
+  if (os:is-dir $abs-path) {
+    set backup-path = (os:temp-dir)
+    os:remove-all $backup-path
+
+    copy $abs-path $backup-path
+  } else {
+    set backup-path = $nil
+  }
+
+  try {
+    $block
+  } finally {
+    ensure-not-in-directory $abs-path
+
+    echo '🏠🏠PWD IS NOW: '$pwd >&2
+
+    echo '🗑PATH TO DELETE: '$abs-path >&2
+    os:remove-all $abs-path
+
+    if $backup-path {
+      echo '🤔DOES ABS-PATH EXIST?' (os:is-regular $abs-path) >&2
+      echo BACKUP CONTENT: >&2
+      echo 🤪🤪🤪🤪🤪🤪 >&2
+      ls -R $backup-path >&2
+      echo 🤪🤪🤪🤪🤪🤪 >&2
+
+      move $backup-path $abs-path
+      echo 💡BACKUP RESTORED! >&2
+    }
+  }
 }
 
 #TODO! Test this!

@@ -23,6 +23,24 @@ fn -create-temp-tree { |temp-root|
 }
 
 >> 'In fs module' {
+  >> 'ensuring pwd is not in given directory' {
+    var temp-dir = (os:temp-dir)
+    defer { os:remove-all $temp-dir }
+
+    var nested-path = (path:join $temp-dir A B C D E)
+    os:mkdir-all $nested-path
+
+    cd $nested-path
+
+    put $pwd |
+      should-be $nested-path
+
+    fs:ensure-not-in-directory $temp-dir
+
+    put $pwd |
+      should-be (path:dir $temp-dir)
+  }
+
   >> 'requesting a temp file path' {
     >> 'when not passing a pattern' {
       >> 'should use the default pattern' {
@@ -39,7 +57,7 @@ fn -create-temp-tree { |temp-root|
       var custom-prefix = 'alpha-'
       var custom-suffix = '-omega'
 
-      var temp-path = (fs:temp-file-path &prefix=$custom-prefix'*'$custom-suffix)
+      var temp-path = (fs:temp-file-path &pattern=$custom-prefix'*'$custom-suffix)
       defer { os:remove-all $temp-path }
 
       >> 'should have the requested prefix' {
@@ -75,11 +93,13 @@ fn -create-temp-tree { |temp-root|
       var custom-prefix = 'alpha-'
       var custom-suffix = '-omega'
 
-      fs:with-temp-file &prefix=$custom-prefix'*'$custom-suffix { |temp-path|
-        str:has-prefix $temp-path $custom-prefix |
+      fs:with-temp-file &pattern=$custom-prefix'*'$custom-suffix { |temp-path|
+        var temp-base = (path:base $temp-path)
+
+        str:has-prefix $temp-base $custom-prefix |
           should-be $true
 
-        str:has-suffix $temp-path $custom-suffix |
+        str:has-suffix $temp-base $custom-suffix |
           should-be $true
       }
     }
@@ -104,11 +124,13 @@ fn -create-temp-tree { |temp-root|
       var custom-prefix = 'alpha-'
       var custom-suffix = '-omega'
 
-      fs:with-temp-dir &prefix=$custom-prefix'*'$custom-suffix { |temp-path|
-        str:has-prefix $temp-path $custom-prefix |
+      fs:with-temp-dir &pattern=$custom-prefix'*'$custom-suffix { |temp-path|
+        var temp-base = (path:base $temp-path)
+
+        str:has-prefix $temp-base $custom-prefix |
           should-be $true
 
-        str:has-suffix $temp-path $custom-suffix |
+        str:has-suffix $temp-base $custom-suffix |
           should-be $true
       }
     }
@@ -134,7 +156,7 @@ fn -create-temp-tree { |temp-root|
   >> 'the copy operation' {
     >> 'should copy a file' {
       fs:with-temp-file { |sigma-path|
-        fs fs:with-temp-file { |tau-path|
+        fs:with-temp-file { |tau-path|
           print Sigma > $sigma-path
 
           fs:copy $sigma-path $tau-path
@@ -323,6 +345,8 @@ fn -create-temp-tree { |temp-root|
 
             var b = (path:join $a B)
 
+            echo 🤯PWD BEFORE SANDBOX: $pwd >&2
+
             fs:with-dir-sandbox . {
               print LOL > $sigma
 
@@ -337,6 +361,17 @@ fn -create-temp-tree { |temp-root|
               os:is-regular $c |
                 should-be $true
             }
+
+            echo 🤯PWD AFTER SANDBOX: $pwd >&2
+
+            cd $temp-dir
+
+            echo 🤯PWD AFTER CD: $pwd >&2
+
+            echo LS >&2
+            echo 🤯🤯🤯🤯🤯 >&2
+            ls -R >&2
+            echo 🤯🤯🤯🤯🤯 >&2
 
             slurp < $sigma |
               should-be Sigma
