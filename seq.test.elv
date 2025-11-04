@@ -72,30 +72,37 @@ use ./seq
 
   >> 'enumerating' {
     >> 'when the sequence is empty' {
-      >> 'should not call the consumer' {
-        all [] | seq:enumerate { |index value|
-          fail 'This should not be run'
-        }
+      >> 'should emit nothing' {
+        all [] |
+          seq:enumerate |
+          put [(all)] |
+          should-be []
       }
     }
 
     >> 'when the sequence is non-empty' {
       >> 'should iterate' {
-        all [A B C] | seq:enumerate { |index value|
-          put [🦋 $index $value]
-        } |
+        all [A B C] |
+          seq:enumerate |
           put [(all)] |
-          should-be [[🦋 0 A] [🦋 1 B] [🦋 2 C]]
+          should-be [
+            [0 A]
+            [1 B]
+            [2 C]
+          ]
       }
     }
 
     >> 'when passing the first index' {
       >> 'should start from the given index' {
-        all [A B C] | seq:enumerate &start-index=35 { |index value|
-          put [🍺 $index $value]
-        } |
+        all [A B C] |
+          seq:enumerate &start-index=35 |
           put [(all)] |
-          should-be [[🍺 35 A] [🍺 36 B] [🍺 37 C]]
+          should-be [
+            [35 A]
+            [36 B]
+            [37 C]
+          ]
       }
     }
   }
@@ -443,6 +450,61 @@ use ./seq
         seq:value-as-list $nil |
           should-be []
       }
+    }
+  }
+
+  >> 'splitting into equivalence classes' {
+    >> 'with no items' {
+      all [] |
+        seq:equivalence-classes |
+        put [(all)] |
+        should-be []
+    }
+
+    >> 'with distinct items' {
+      all [90 92 95 98] |
+        seq:equivalence-classes |
+        order &key={ |equivalence-class| put $equivalence-class[0] } |
+        put [(all)] |
+        should-be [
+          [90]
+          [92]
+          [95]
+          [98]
+        ]
+    }
+
+    >> 'with equivalent items' {
+      all [90 92 90 92 95 98 95 90 95] |
+        seq:equivalence-classes |
+        order &key={ |equivalence-class| put $equivalence-class[0] } |
+        put [(all)] |
+        should-be [
+          [90 90 90]
+          [92 92]
+          [95 95 95]
+          [98]
+        ]
+    }
+
+    >> 'with custom equality' {
+      all [
+        Beta
+        Dodo
+        Alpha
+        Ciop
+        Sigma
+        Testing
+        Yogi
+      ] |
+        seq:equivalence-classes &equality={ |left right| eq (count $left) (count $right) } |
+        order &key={ |equivalence-class| put $equivalence-class[0] } |
+        put [(all)] |
+        should-be [
+          [Alpha Sigma]
+          [Beta Dodo Ciop Yogi]
+          [Testing]
+        ]
     }
   }
 }

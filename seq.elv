@@ -16,11 +16,11 @@ fn is-non-empty { |@arguments|
     != (all) 0
 }
 
-fn enumerate { |&start-index=0 consumer|
+fn enumerate { |&start-index=0|
   var index = (num $start-index)
 
   each { |item|
-    $consumer $index $item
+    put [$index $item]
     set index = (+ $index 1)
   }
 }
@@ -122,4 +122,32 @@ fn value-as-list { |@arguments|
 
   not-eq $value $nil |
     lang:ternary (all) [$value] []
+}
+
+fn equivalence-classes { |&equality=$eq~|
+  var classes-by-representative = (
+    reduce [&] { |cumulated-map value|
+      var added = $false
+
+      keys $cumulated-map | each { |class-representative|
+        if ($equality $value $class-representative) {
+          var equivalence-class = $cumulated-map[$class-representative]
+
+          var updated-class = [$@equivalence-class $value]
+
+          assoc $cumulated-map $class-representative $updated-class
+
+          set added = $true
+        }
+      }
+
+      if (not $added) {
+        assoc $cumulated-map $value [$value]
+      }
+    }
+  )
+
+  keys $classes-by-representative | each { |representative|
+    put $classes-by-representative[$representative]
+  }
 }
