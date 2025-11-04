@@ -1,4 +1,5 @@
 use re
+use str
 use ./lang
 
 fn indent-lines { |indent|
@@ -41,5 +42,6 @@ fn pretty { |@arguments|
   )
 
   $formatter $value |
-    slurp
+    slurp |
+    str:trim-space (all)
 }

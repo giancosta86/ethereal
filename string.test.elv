@@ -60,24 +60,24 @@ use ./string
       var source = 'Hello, world!'
 
       string:pretty $source |
-        should-be $source"\n"
+        should-be $source
     }
 
     >> 'applied to multi-line string' {
       var source = "Hello!\n   world!"
 
       string:pretty $source |
-        should-be $source"\n"
+        should-be $source
     }
 
     >> 'applied to number' {
       string:pretty (num 90) |
-        should-be "(num 90)\n"
+        should-be '(num 90)'
     }
 
     >> 'applied to list' {
       string:pretty [A B C] |
-        should-be "[\n A\n B\n C\n]\n"
+        should-be "[\n A\n B\n C\n]"
     }
 
     >> 'applied to exception' {
