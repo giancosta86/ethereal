@@ -137,8 +137,8 @@ fn -create-temp-tree { |temp-root|
   }
 
   >> 'the touch operation' {
-    fs:with-temp-dir { |temp-directory|
-      var file-path = (path:join $temp-directory DODO)
+    fs:with-temp-dir { |temp-dir|
+      var file-path = (path:join $temp-dir DODO)
       fs:touch $file-path
 
       >> 'should create a file' {
@@ -171,10 +171,10 @@ fn -create-temp-tree { |temp-root|
     }
 
     >> 'should copy a directory' {
-      fs:with-temp-dir { |temp-directory|
-        var temp-tree = (-create-temp-tree $temp-directory)
+      fs:with-temp-dir { |temp-dir|
+        var temp-tree = (-create-temp-tree $temp-dir)
 
-        var omega-path = (path:join $temp-directory omega)
+        var omega-path = (path:join $temp-dir omega)
 
         fs:copy $temp-tree[beta-dir] $omega-path
 
@@ -210,10 +210,10 @@ fn -create-temp-tree { |temp-root|
     }
 
     >> 'should move a directory' {
-      fs:with-temp-dir { |temp-directory|
-        var temp-tree = (-create-temp-tree $temp-directory)
+      fs:with-temp-dir { |temp-dir|
+        var temp-tree = (-create-temp-tree $temp-dir)
 
-        var omega-path = (path:join $temp-directory omega)
+        var omega-path = (path:join $temp-dir omega)
 
         fs:move $temp-tree[beta-dir] $omega-path
 
@@ -345,8 +345,6 @@ fn -create-temp-tree { |temp-root|
 
             var b = (path:join $a B)
 
-            echo 🤯PWD BEFORE SANDBOX: $pwd >&2
-
             fs:with-dir-sandbox . {
               print LOL > $sigma
 
@@ -362,16 +360,7 @@ fn -create-temp-tree { |temp-root|
                 should-be $true
             }
 
-            echo 🤯PWD AFTER SANDBOX: $pwd >&2
-
             cd $temp-dir
-
-            echo 🤯PWD AFTER CD: $pwd >&2
-
-            echo LS >&2
-            echo 🤯🤯🤯🤯🤯 >&2
-            ls -R >&2
-            echo 🤯🤯🤯🤯🤯 >&2
 
             slurp < $sigma |
               should-be Sigma
@@ -432,7 +421,78 @@ fn -create-temp-tree { |temp-root|
 
     >> 'when the path has multiple extensions' {
       fs:switch-extension 'alpha.test.txt' 'elv' |
-          should-be 'alpha.test.elv'
+        should-be 'alpha.test.elv'
+    }
+  }
+
+  >> 'checking file equality' {
+    >> 'when the files are equal' {
+      fs:with-temp-dir { |temp-dir|
+        echo DODO > alpha.txt
+        echo DODO > beta.txt
+
+        fs:equal-files alpha.txt beta.txt |
+          should-be $true
+      }
+    }
+
+    >> 'when the files are different' {
+      fs:with-temp-dir { |temp-dir|
+        echo DODO > alpha.txt
+        echo CHIPMUNK > beta.txt
+
+        fs:equal-files alpha.txt beta.txt |
+          should-be $false
+      }
+    }
+  }
+
+  >> 'finding duplicates' {
+    fs:with-temp-dir { |temp-dir|
+      cd $temp-dir
+
+      print A > A1
+      print A > A2
+      print A > A3
+
+      print B > B1
+      print B > B2
+
+      os:mkdir-all alpha
+      cd alpha
+      print A > A4
+      print C > C1
+      print A > A5
+      cd ..
+
+      var duplicates = (
+        put ** |
+          fs:find-duplicates |
+          order &key=$count~ |
+          put [(all)]
+      )
+
+      count $duplicates |
+        should-be 2
+
+      all $duplicates[0] |
+        order |
+        put [(all)] |
+        should-be [
+          B1
+          B2
+        ]
+
+      all $duplicates[1] |
+        order |
+        put [(all)] |
+        should-be [
+          A1
+          A2
+          A3
+          alpha/A4
+          alpha/A5
+        ]
     }
   }
 }

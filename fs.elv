@@ -5,7 +5,6 @@ use str
 use ./lang
 use ./map
 use ./seq
-use ./set
 
 fn ensure-not-in-directory { |directory-path|
   var abs-path = (path:abs $directory-path)
@@ -149,23 +148,30 @@ fn switch-extension { |source-path new-extension|
   put $path-without-extension''$dotted-new-extension
 }
 
-#TODO! Test this!
+fn equal-files { |left-path right-path|
+  put ?(cmp -s $left-path $right-path) |
+    eq (all) $ok
+}
+
 fn find-duplicates {
-  var files-by-size = [&]
+  each { |file-path|
+    if (not (os:is-regular $file-path)) {
+      continue
+    }
 
-  put **[type:regular] | each { |file|
-    var file-size = (os:stat $file)[size]
+    var file-size = (os:stat $file-path)[size]
 
-    var files-of-given-size = (map:get-value $files-by-size $file-size &default=[])
-
-    set files-by-size = (
-      assoc $files-by-size $file-size [$@files-of-given-size $file]
-    )
-  }
-
-  set files-by-size = (map:filter $files-by-size { |size files-of-this-size|
-    > (count $files-of-this-size) 1
-  })
-
-  put $files-by-size
+    put [$file-size $file-path]
+  } |
+    map:multi-value |
+    map:values |
+    keep-if { |files-having-same-size|
+      count $files-having-same-size |
+        > (all) 1
+    } |
+    each { |files-having-same-size|
+      all $files-having-same-size |
+        seq:equivalence-classes &equality=$equal-files~ |
+          keep-if { |equal-files| > (count $equal-files) 1 }
+    }
 }
