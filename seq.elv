@@ -138,6 +138,8 @@ fn equivalence-classes { |&equality=$eq~|
           assoc $cumulated-map $class-representative $updated-class
 
           set added = $true
+
+          break
         }
       }
 
