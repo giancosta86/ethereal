@@ -1,5 +1,6 @@
 use math
 use ./lang
+use ./string
 
 fn is-empty { |@arguments|
   lang:get-single-input $arguments |
@@ -30,12 +31,32 @@ fn each-spread { |consumer|
   }
 }
 
-fn reduce { |initial-value operator|
+fn reduce { |&debug=$false initial-value operator|
+  if $debug {
+    print '🏡INITIAL VALUE: '
+    echo (string:pretty $initial-value)
+    echo
+  } >&2
+
   var result = $initial-value
 
   each { |item|
+    if $debug {
+      print '💰CUMULATED: '
+      echo (string:pretty $result)
+      echo
+      print '⏩CURRENT ITEM: '
+      echo (string:pretty $item)
+      echo
+    } >&2
+
     set result = ($operator $result $item)
   }
+
+  if $debug {
+    print '💡RESULT: '
+    pprint $result
+  } >&2
 
   put $result
 }
