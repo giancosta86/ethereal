@@ -189,4 +189,29 @@ use ./map
         ]
     }
   }
+
+  >> 'making multi-value map' {
+    >> 'with no entries' {
+      all [] |
+        map:multi-value |
+        should-be [&]
+    }
+
+    >> 'with entries having the same key' {
+      all [
+        [alpha 95]
+        [alpha 90]
+        [beta 92]
+        [gamma 98]
+        [alpha 99]
+        [beta 72]
+      ] |
+        map:multi-value |
+          should-be [
+            &alpha=[95 90 99]
+            &beta=[92 72]
+            &gamma=[98]
+          ]
+    }
+  }
 }

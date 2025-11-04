@@ -72,3 +72,16 @@ fn filter-map { |source mapper|
     } |
     make-map
 }
+
+fn multi-value { |@arguments|
+  lang:get-inputs $arguments |
+    seq:reduce [&] { |cumulated-map entry|
+      var key value = (put $@entry)
+
+      var existing-values = (get-value $cumulated-map $key &default=[])
+
+      var updated-values = [$@existing-values $value]
+
+      assoc $cumulated-map $key $updated-values
+    }
+}
