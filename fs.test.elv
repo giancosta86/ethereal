@@ -411,4 +411,28 @@ fn -create-temp-tree { |temp-root|
       }
     }
   }
+
+  >> 'switching extension' {
+    >> 'when the file has no extension' {
+      fs:switch-extension 'dodo' '.png' |
+          should-be 'dodo.png'
+    }
+
+    >> 'when the path has a single extension' {
+      >> 'when the new extension has a leading dot' {
+        fs:switch-extension 'alpha.jpg' '.png' |
+          should-be 'alpha.png'
+      }
+
+      >> 'when the new extension has no dot' {
+        fs:switch-extension 'alpha.jpg' 'png' |
+          should-be 'alpha.png'
+      }
+    }
+
+    >> 'when the path has multiple extensions' {
+      fs:switch-extension 'alpha.test.txt' 'elv' |
+          should-be 'alpha.test.elv'
+    }
+  }
 }

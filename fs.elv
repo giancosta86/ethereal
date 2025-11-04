@@ -7,30 +7,11 @@ use ./map
 use ./seq
 use ./set
 
-#TODO! Test this!
 fn ensure-not-in-directory { |directory-path|
   var abs-path = (path:abs $directory-path)
 
-  echo ABS-PATH >&2
-  echo 🔎🔎🔎🔎🔎🔎 >&2
-  echo $abs-path >&2
-  echo 🔎🔎🔎🔎🔎🔎 >&2
-  echo >&2
-
-  echo PWD >&2
-  echo 🏡🏡🏡🏡🏡🏡 >&2
-  echo $pwd >&2
-  echo 🏡🏡🏡🏡🏡🏡 >&2
-  echo >&2
-
   while (str:has-prefix $pwd $abs-path) {
     cd ..
-
-    echo PWD >&2
-    echo 🏡🏡🏡🏡🏡🏡 >&2
-    echo $pwd >&2
-    echo 🏡🏡🏡🏡🏡🏡 >&2
-    echo >&2
   }
 }
 
@@ -138,33 +119,34 @@ fn with-dir-sandbox { |path block|
   } finally {
     ensure-not-in-directory $abs-path
 
-    echo '🏠🏠PWD IS NOW: '$pwd >&2
-
-    echo '🗑PATH TO DELETE: '$abs-path >&2
     os:remove-all $abs-path
 
     if $backup-path {
-      echo '🤔DOES ABS-PATH EXIST?' (os:is-regular $abs-path) >&2
-      echo BACKUP CONTENT: >&2
-      echo 🤪🤪🤪🤪🤪🤪 >&2
-      ls -R $backup-path >&2
-      echo 🤪🤪🤪🤪🤪🤪 >&2
-
       move $backup-path $abs-path
-      echo 💡BACKUP RESTORED! >&2
     }
   }
 }
 
-#TODO! Test this!
-fn potential-ext { |source-path new-ext|
-  var ext = (path:ext $source-path)
+fn switch-extension { |source-path new-extension|
+  var current-extension = (path:ext $source-path)
 
-  var path-without-ext = $source-path[..-(count $ext)]
+  var path-without-extension = (
+    if (not-eq $current-extension '') {
+      put $source-path[..-(count $current-extension)]
+    } else {
+      put $source-path
+    }
+  )
 
-  var extension-dot = (lang:ternary (str:has-prefix $new-ext '.') '' '.')
+  var dotted-new-extension = (
+    if (str:has-prefix $new-extension '.') {
+      put $new-extension
+    } else {
+      put '.'$new-extension
+    }
+  )
 
-  put $path-without-ext''$extension-dot''$new-ext
+  put $path-without-extension''$dotted-new-extension
 }
 
 #TODO! Test this!
