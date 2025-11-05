@@ -1,6 +1,5 @@
+use os
 use ./fs
-
-#TODO! Test this!
 
 fn diff { |&throw=$false left right|
   var left-path = (fs:temp-file-path)
@@ -23,6 +22,6 @@ fn diff { |&throw=$false left right|
   }
 
   if (and $exception $throw) {
-    fail $e
+    fail $exception
   }
 }
