@@ -1,38 +1,42 @@
 use os
-use ./console
-use ./fs
-use ./map
 
 fn exists-in-bash { |command|
-  eq $ok ?(bash -c 'type '$command > $os:dev-null 2>&1)
+  eq $ok ?(bash --rcfile ~/.bashrc -i -c 'type '$command > $os:dev-null 2>&1)
 }
 
-#TODO! Test this!
-fn bytes-as-string { |&keep-stream=both block|
-  var redirected-block = (map:get-value [
-    &both={ $block 2>&1 }
+var -byte-capturers = [
+  &both={ |block|
+    $block 2>&1
+  }
 
-    &out={ $block 2>$os:dev-null }
+  &out={ |block|
+    $block 2>$os:dev-null
+  }
 
-    &err={ $block 2>&1 >$os:dev-null }
+  &err={ |block|
+    $block 2>&1 >$os:dev-null
+  }
 
-    &none={ $block >$os:dev-null 2>&1 }
-  ] $keep-stream &default={ fail 'Invalid stream value: '$keep-stream  })
+  &none={ |block|
+    $block >$os:dev-null 2>&1
+  }
+]
 
-  $redirected-block | only-bytes | slurp
-}
-
-#TODO! Update its tests
 fn capture { |&keep-stream=both block|
-  var exception = $exception
+  if (not (has-key $-byte-capturers $keep-stream)) {
+    fail 'Invalid stream setting: '$keep-stream
+  }
+
+  var byte-capturer = $-byte-capturers[$keep-stream]
+
+  var exception = $nil
 
   var output = (
-    bytes-as-string &keep-stream=$keep-stream {
-      try {
-        $block
-      } catch e {
-        set exception = $e
-      }
+    try {
+      $byte-capturer { $block | only-bytes } |
+        slurp
+    } catch e {
+      set exception = $e
     }
   )
 
@@ -43,21 +47,23 @@ fn capture { |&keep-stream=both block|
 }
 
 fn silence { |block|
-  bytes-as-string &keep-stream=none $block
+  capture &keep-stream=none $block | only-bytes
 }
 
-fn silence-until-error { |&description=$nil block|
+fn silence-until-exception { |&description=$nil block|
   var capture-result = (capture $block)
 
-  if (eq $capture-result[status] $ok) {
+  if (eq $capture-result[exception] $nil) {
     return
   }
 
-  var actual-description = (coalesce $description 'Error while running command block!')
+  var actual-description = (coalesce $description 'Exception while running block!')
 
-  console:section &emoji=❌ $actual-description {
+  {
+    echo ❌ $actual-description
     echo $capture-result[output]
-  }
+    echo ❌❌❌
+  } >&2
 
-  fail $capture-result[status]
+  fail $capture-result[exception]
 }
