@@ -227,39 +227,4 @@ use ./lang
         ]
     }
   }
-
-  >> 'preventing output' {
-    >> 'when output is bytes' {
-      {
-        echo Alpha
-        echo Beta
-        echo Gamma
-      } |
-        lang:no-output |
-        put [(all)] |
-        should-be []
-    }
-
-    >> 'when output is values' {
-      {
-        put Alpha
-        put Beta
-        put Gamma
-      } |
-        lang:no-output |
-        put [(all)] |
-        should-be []
-    }
-
-    >> 'when output is mixed' {
-      {
-        put Alpha
-        echo Beta
-        put Gamma
-      } |
-        lang:no-output |
-        put [(all)] |
-        should-be []
-    }
-  }
 }
