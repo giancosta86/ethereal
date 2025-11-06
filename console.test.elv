@@ -93,7 +93,7 @@ fn assert-console-output { |block expected|
   >> 'inspecting input map' {
     >> 'should-work' {
       assert-console-output {
-        console:inspect-inputs [&a=90 &b=dodo]
+        console:inspect-input-map [&a=90 &b=dodo]
       } "📥 Input map: [\n &a=\t90\n &b=\tdodo\n]\n"
     }
   }

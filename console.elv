@@ -3,12 +3,12 @@ use str
 use ./lang
 use ./string
 
-fn echo { |@rest|
-  builtin:echo $@rest > &2
+fn echo { |@arguments|
+  builtin:echo $@arguments > &2
 }
 
-fn print { |@rest|
-  builtin:print $@rest > &2
+fn print { |@arguments|
+  builtin:print $@arguments > &2
 }
 
 fn printf { |&newline=$false template @values|
@@ -29,8 +29,8 @@ fn inspect { |&emoji=🔎 description value|
   pprint $value
 }
 
-fn inspect-inputs { |inputs|
-  inspect &emoji=📥 'Input map' $inputs
+fn inspect-input-map { |input-map|
+  inspect &emoji=📥 'Input map' $input-map
 }
 
 fn section { |&emoji=🔎 description string-or-block|
