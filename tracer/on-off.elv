@@ -1,7 +1,6 @@
 use ../map
 use ../tracer
 
-#TODO! Test the flag!
 fn create { |&enabled=$false|
   var tracer = (tracer:create { put $enabled })
 

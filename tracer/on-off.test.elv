@@ -1,44 +1,54 @@
+use ../command
 use ./on-off
 
-describe 'Manual on-off tracer' {
+>> 'Manual on-off tracer' {
   var tracer = (on-off:create)
 
   var tracer-test-block = {
     $tracer[section] &emoji=🐬 'Description' 'Test content'
   }
 
-  describe 'upon creation' {
-    it 'should be disabled' {
-      expect-log &stream=err '' $tracer-test-block
+  >> 'upon creation' {
+    >> 'should be disabled' {
+      command:capture $tracer-test-block |
+        put (all)[output] |
+        should-be ''
     }
   }
 
-  describe 'when enabled' {
-    it 'should write to console' {
+  >> 'when enabled' {
+    >> 'should write to console' {
       $tracer[enable]
 
-      expect-log &stream=err "🐬 Description:\nTest content\n🐬🐬🐬\n" $tracer-test-block
+      command:capture $tracer-test-block |
+        put (all)[output] |
+        should-be "🐬 Description:\nTest content\n🐬🐬🐬\n"
     }
   }
 
-  describe 'when disabled' {
-    it 'should remain silent' {
+  >> 'when disabled' {
+    >> 'should remain silent' {
+      $tracer[enable]
       $tracer[disable]
 
-      expect-log &stream=err '' $tracer-test-block
+      command:capture $tracer-test-block |
+        put (all)[output] |
+        should-be ''
     }
   }
 
-  describe 'when the enabled is passed via setter' {
-    it 'should work' {
-      var new-tracer = (on-off:create)
-      $new-tracer[set-enabled] $true
+  >> 'when the enabled is passed via setter' {
+    >> 'should work' {
+      var tracer = (on-off:create)
+      $tracer[set-enabled] $true
 
       var test-message = '🐞 Hello, world!'
 
-      expect-log &stream=err $test-message"\n" {
-        $new-tracer[echo] $test-message
-      }
+      command:capture {
+        $tracer[echo] $test-message
+      } |
+        put (all)[output] |
+        should-be $test-message"\n"
     }
   }
 }
