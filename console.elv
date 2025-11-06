@@ -1,7 +1,7 @@
 use builtin
 use str
 use ./lang
-use ./map
+use ./string
 
 fn echo { |@rest|
   builtin:echo $@rest > &2
@@ -23,26 +23,14 @@ fn pprint { |@values|
   builtin:pprint $@values > &2
 }
 
-var -inspect-formatters = [
-  &string={ |source| echo "'"$source"'" }
-  &list=$pprint~
-  &map=$pprint~
-]
-
 fn inspect { |&emoji=🔎 description value|
   printf '%s %s: ' $emoji $description
 
-  var value-kind = (kind-of $value)
-
-  var formatter = (
-    map:get-value &default=$echo~ $-inspect-formatters $value-kind
-  )
-
-  $formatter $value
+  pprint $value
 }
 
 fn inspect-inputs { |inputs|
-  inspect &emoji=📥 Inputs $inputs
+  inspect &emoji=📥 'Input map' $inputs
 }
 
 fn section { |&emoji=🔎 description string-or-block|
