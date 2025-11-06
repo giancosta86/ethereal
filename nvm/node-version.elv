@@ -1,10 +1,10 @@
 use os
 use path
 use re
+use str
 use ../console
 use ../lang
 use ../seq
-use ../string
 
 fn -detect-from-package-json {
   if (not (os:is-regular package.json)) {
@@ -14,14 +14,9 @@ fn -detect-from-package-json {
 
   var version-field = (
     jq -r '.engines.node // ""' package.json |
-      string:empty-to-default (all)
+      str:trim-space (all) |
+      seq:empty-to-default
   )
-
-  if $version {
-    console:inspect 'NodeJS version requested in package.json field' $version-field
-  } else {
-    console:echo 💭 No 'engines/node' field in package.json...
-  }
 
   re:find '.*?(\d+(?:\.\d+)*).*' $version-field | each { |match|
     put 'v'$match[groups][1][text]
@@ -29,19 +24,17 @@ fn -detect-from-package-json {
 }
 
 fn -detect-from-nvmrc {
-  if (os:is-regular .nvmrc) {
-    var version = (
-      slurp < .nvmrc |
-        string:empty-to-default (all)
-      )
-
-    console:inspect 'Requested version in the .nvmrc file' $version
-
-    lang:ternary (seq:is-non-empty $version) $version $nil
-  } else {
-    console:echo 💭 No .nvmrc file...
+  if (not (os:is-regular .nvmrc)) {
     put $nil
+    return
   }
+
+  var version = (
+    slurp < .nvmrc |
+      str:trim-space (all)
+  )
+
+  lang:ternary (seq:is-non-empty $version) $version $nil
 }
 
 fn detect-in-pwd {
@@ -54,25 +47,23 @@ fn detect-in-pwd {
 
 fn detect-recursively {
   var original-pwd = $pwd
+  defer { set pwd = $original-pwd }
 
-  try {
-    while $true {
-      var version = (detect-in-pwd)
+  while $true {
+    var version = (detect-in-pwd)
 
-      if $version {
-        put $version
-        return
-      }
-
-      var parent-dir = (path:dir $pwd)
-      if (==s $parent-dir $pwd) {
-        put $nil
-        return
-      }
-
-      set pwd = $parent-dir
+    if $version {
+      put $version
+      return
     }
-  } finally {
-    set pwd = $original-pwd
+
+    var parent-dir = (path:dir $pwd)
+
+    if (eq $parent-dir $pwd) {
+      put $nil
+      return
+    }
+
+    set pwd = $parent-dir
   }
 }
