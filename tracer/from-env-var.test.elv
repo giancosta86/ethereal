@@ -1,7 +1,8 @@
+use ../command
 use ./from-env-var
 
-describe 'Tracer based on an environment variable' {
-  var test-var = AURORA_TRACER_TEST
+>> 'Tracer based on an environment variable' {
+  var test-var = MY_TRACER_TEST
 
   var tracer = (from-env-var:create $test-var)
 
@@ -9,27 +10,33 @@ describe 'Tracer based on an environment variable' {
     $tracer[section] &emoji=🐿 'Description' 'Test content'
   }
 
-  describe 'when the variable is enabled' {
-    it 'should write to console' {
-      set-env $test-var $from-env-var:enabled
+  >> 'when the variable is enabled' {
+    >> 'should write to console' {
+      set-env $test-var 1
 
-      expect-log &stream=err "🐿 Description:\nTest content\n🐿🐿🐿\n" $tracer-test-block
+      command:capture $tracer-test-block |
+        put (all)[output] |
+        should-be "🐿 Description:\nTest content\n🐿🐿🐿\n"
     }
   }
 
-  describe 'when the variable is disabled' {
-    it 'should remain silent' {
+  >> 'when the variable is disabled' {
+    >> 'should remain silent' {
       set-env $test-var '<SOME UNRECOGNIZED VALUE>'
 
-      expect-log &stream=err '' $tracer-test-block
+      command:capture $tracer-test-block |
+        put (all)[output] |
+        should-be ''
     }
   }
 
-  describe 'when the variable is missing' {
-    it 'should remain silent' {
+  >> 'when the variable is missing' {
+    >> 'should remain silent' {
       unset-env $test-var
 
-      expect-log &stream=err '' $tracer-test-block
+      command:capture $tracer-test-block |
+        put (all)[output] |
+        should-be ''
     }
   }
 }
