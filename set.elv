@@ -59,16 +59,16 @@ fn count { |@arguments|
     builtin:count (all)[-set-items]
 }
 
-fn has-value { |base-set @arguments|
+fn has-value { |reference-set @arguments|
   var value = (lang:get-single-input $arguments)
 
-  has-key $base-set[-set-items] $value
+  has-key $reference-set[-set-items] $value
 }
 
-fn add { |base-set @arguments|
+fn add { |reference-set @arguments|
   var updated-set-items = (
     lang:get-inputs $arguments |
-      seq:reduce $base-set[-set-items] { |cumulated-items value|
+      seq:reduce $reference-set[-set-items] { |cumulated-items value|
         assoc $cumulated-items $value $true
       }
   )
@@ -78,10 +78,10 @@ fn add { |base-set @arguments|
   ]
 }
 
-fn remove { |base-set @arguments|
+fn remove { |reference-set @arguments|
   var updated-set-items = (
     lang:get-inputs $arguments |
-      seq:reduce $base-set[-set-items] { |cumulated-items value|
+      seq:reduce $reference-set[-set-items] { |cumulated-items value|
         dissoc $cumulated-items $value
       }
   )
