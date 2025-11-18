@@ -1,6 +1,7 @@
 use os
 use path
 use ./fake-git
+use ./fs
 
 var valid-fake-git~ = (
   fake-git:create-command [
@@ -20,16 +21,6 @@ var valid-fake-git~ = (
     ]
   ]
 )
-
-fn -with-temp-directory { |block|
-  var temp-dir = (os:temp-dir)
-  defer {
-    cd (path:dir $temp-dir)
-    os:remove-all $temp-dir
-  }
-
-  $block $temp-dir
-}
 
 >> 'In fake-git module' {
   >> 'passing an unknown command' {
@@ -71,7 +62,7 @@ fn -with-temp-directory { |block|
 
     >> 'when a source with main is requested' {
       >> 'should clone its files' {
-        -with-temp-directory { |dest|
+        fs:with-temp-dir { |dest|
           valid-fake-git clone '<some url>' $dest
 
           slurp < (path:join $dest alpha.txt) |
@@ -87,7 +78,7 @@ fn -with-temp-directory { |block|
   >> 'checkout' {
     >> 'when the branch was not declared' {
       >> 'should fail' {
-        -with-temp-directory { |dest|
+        fs:with-temp-dir { |dest|
           valid-fake-git clone '<some url>' $dest
 
           cd $dest
@@ -103,7 +94,7 @@ fn -with-temp-directory { |block|
 
     >> 'when the target directory is not a cloned repository' {
       >> 'should fail' {
-        -with-temp-directory { |dest|
+        fs:with-temp-dir { |dest|
           cd $dest
 
           throws {
@@ -117,7 +108,7 @@ fn -with-temp-directory { |block|
 
     >> 'when the branch was declared' {
       >> 'the target should contain only the branch files' {
-        -with-temp-directory { |dest|
+        fs:with-temp-dir { |dest|
           valid-fake-git clone '<some url>' $dest
 
           cd $dest
@@ -142,7 +133,7 @@ fn -with-temp-directory { |block|
 
     >> 'when the branch is empty' {
       >> 'the target should contain no more files' {
-        -with-temp-directory { |dest|
+        fs:with-temp-dir { |dest|
           valid-fake-git clone '<some url>' $dest
 
           cd $dest
@@ -158,7 +149,7 @@ fn -with-temp-directory { |block|
 
     >> 'when cloning branches in sibling directories' {
       >> 'both directories should coexist' {
-        -with-temp-directory { |temp-dir|
+        fs:with-temp-dir { |temp-dir|
           var main-dir = (path:join $temp-dir A)
           valid-fake-git clone '<some url>' $main-dir
 
