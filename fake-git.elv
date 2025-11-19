@@ -1,5 +1,6 @@
 use os
 use path
+use ./fs
 
 fn create-command { |source-map|
   var sources-by-dest = [&]
@@ -19,20 +20,12 @@ fn create-command { |source-map|
         fail (all)
     }
 
-    put *[nomatch-ok] | each { |pwd-entry|
-      os:remove-all $pwd-entry
-    }
+    fs:clean-dir $pwd
 
     var reference-files = $repository-map[$reference]
 
     keys $reference-files | each { |entry-path|
-      var entry-parent = (path:dir $entry-path)
-
-      os:mkdir-all $entry-parent
-
-      var file-content = $reference-files[$entry-path]
-
-      print $file-content > $entry-path
+      fs:save-anywhere $entry-path $reference-files[$entry-path]
     }
   }
 
