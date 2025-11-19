@@ -47,7 +47,8 @@ use ./lang
         throws {
           lang:get-single-input [Alpha Beta]
         } |
-          str:contains (all)[reason][content] 'arity mismatch'
+          get-fail-content |
+          str:contains (all) 'arity mismatch'
       }
     }
 
@@ -60,6 +61,15 @@ use ./lang
           to-string (all) |
           str:contains (all) 'arity mismatch' |
           should-be $true
+      }
+    }
+
+    >> 'when both argument list and pipe values are passed' {
+      >> 'pipe values are ignored' {
+        put Alpha |
+          lang:get-inputs [Ro] |
+          put [(all)] |
+          should-be [Ro]
       }
     }
   }
@@ -118,14 +128,20 @@ use ./lang
   >> 'ensuring that a put is performed' {
     >> 'when a put is performed' {
       >> 'should just do nothing' {
-        { put Hello } |
+        put Hello |
           lang:ensure-put &default=World |
           should-be Hello
       }
     }
 
-    >> 'when no put is performed by the block' {
-      >> 'should output the default value' {
+    >> 'when no value is received via pipe' {
+      >> 'when the default value is not declared' {
+        { } |
+          lang:ensure-put |
+          should-be $nil
+      }
+
+      >> 'when the default value is declared' {
         { } |
           lang:ensure-put &default=World |
           should-be World
