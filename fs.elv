@@ -23,6 +23,19 @@ fn temp-file-path { |&dir='' &pattern=$nil|
   put $temp-file[name]
 }
 
+fn save-anywhere { |path content|
+  var parent = (path:dir $path)
+  os:mkdir-all $parent
+
+  print $content > $path
+}
+
+fn clean-directory { |directory|
+  put $directory/*[nomatch-ok] | each { |entry|
+    os:remove-all $entry
+  }
+}
+
 fn with-temp-file { |&dir='' &pattern=$nil consumer|
   var temp-path = (temp-file-path &dir=$dir &pattern=$pattern)
 

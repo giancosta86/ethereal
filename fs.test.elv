@@ -74,6 +74,55 @@ fn -create-temp-tree { |temp-root|
     }
   }
 
+  >> 'saving a file anywhere' {
+    >> 'should create intermediate directories' {
+      var temp-dir = (os:temp-dir)
+      defer { os:remove-all $temp-dir }
+
+      var target-path = (path:join $temp-dir alpha beta gamma delta.txt)
+      var content = 'Hello, world!'
+
+      fs:save-anywhere $target-path $content
+
+      slurp < $target-path |
+        should-be $content
+    }
+  }
+
+  >> 'cleaning a directory' {
+    var temp-dir = (os:temp-dir)
+    defer { os:remove-all $temp-dir }
+
+    var alpha = (path:join $temp-dir alpha)
+    echo ALPHA > $alpha
+
+    var beta = (path:join $temp-dir beta)
+    echo BETA > $beta
+
+    var delta = (path:join $temp-dir gamma delta)
+    os:mkdir-all $delta
+
+    var epsilon = (path:join $delta epsilon)
+    echo EPSILON > $epsilon
+
+    >> 'should delete its files' {
+      put $temp-dir/*[type:regular][nomatch-ok] |
+        count |
+        should-be 2
+    }
+
+    >> 'should delete its directories' {
+      put $temp-dir/*[type:dir][nomatch-ok] |
+        count |
+        should-be 1
+    }
+
+    >> 'should keep the directory itself' {
+      os:is-dir $temp-dir |
+        should-be $true
+    }
+  }
+
   >> 'consuming a temp file path' {
     >> 'should delete the temp path available only within the consumer' {
       var actual-path
