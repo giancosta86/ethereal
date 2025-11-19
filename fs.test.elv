@@ -105,16 +105,18 @@ fn -create-temp-tree { |temp-root|
     var epsilon = (path:join $delta epsilon)
     echo EPSILON > $epsilon
 
+    fs:clean-dir $temp-dir
+
     >> 'should delete its files' {
       put $temp-dir/*[type:regular][nomatch-ok] |
         count |
-        should-be 2
+        should-be 0
     }
 
     >> 'should delete its directories' {
       put $temp-dir/*[type:dir][nomatch-ok] |
         count |
-        should-be 1
+        should-be 0
     }
 
     >> 'should keep the directory itself' {

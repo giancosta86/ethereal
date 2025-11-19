@@ -30,7 +30,7 @@ fn save-anywhere { |path content|
   print $content > $path
 }
 
-fn clean-directory { |directory|
+fn clean-dir { |directory|
   put $directory/*[nomatch-ok] | each { |entry|
     os:remove-all $entry
   }
