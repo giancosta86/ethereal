@@ -17,7 +17,8 @@ use ./diff
     >> 'when the strings are different' {
       var command-result = (
         command:capture {
-          diff:diff &throw Alpha Beta
+          put Alpha Beta |
+            diff:diff &throw
         }
       )
 

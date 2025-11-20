@@ -1,5 +1,6 @@
 use os
 use ./fs
+use ./lang
 
 var -diff~ = (external diff)
 
@@ -8,7 +9,9 @@ var -diff~ = (external diff)
 # in case of errors - for example if the command is not available - just does nothing, unless
 # the `throw` flag is set.
 #
-fn diff { |&throw=$false left right|
+fn diff { |&throw=$false @arguments|
+  var left right = (lang:get-inputs $arguments)
+
   var left-path = (fs:temp-file-path)
   defer { os:remove-all $left-path }
 
