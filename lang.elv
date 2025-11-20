@@ -117,3 +117,16 @@ set -minimal-transforms-by-kind = [
       make-map
   }
 ]
+
+#
+# If the argument is a function (including a block), emits the (single) value emitted by such function;
+# otherwise, emits the value itself.
+#
+fn resolve { |value|
+  if (is-function $value) {
+    $value |
+      one
+  } else {
+    put $value
+  }
+}

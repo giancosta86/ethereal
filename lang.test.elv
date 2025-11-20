@@ -243,4 +243,40 @@ use ./lang
         ]
     }
   }
+
+  >> 'resolving a value' {
+    >> 'if the value is a not a function' {
+      lang:resolve 90 |
+        should-be 90
+    }
+
+    >> 'if the value is a function emitting one value' {
+      fn f {
+        put 90
+      }
+
+      lang:resolve $f~ |
+        should-be 90
+    }
+
+    >> 'if the value is a block emitting one value' {
+      lang:resolve {
+        put 90
+      } |
+        should-be 90
+    }
+
+    >> 'if the value is a block emitting multiple values' {
+      throws {
+        lang:resolve {
+          put 90
+          put 97
+        } |
+          should-be 90
+      } |
+        to-string (all) |
+        str:contains (all) 'arity mismatch' |
+        should-be $true
+    }
+  }
 }
