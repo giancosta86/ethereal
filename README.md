@@ -53,6 +53,8 @@ put ?(fail DODO) |
 
 ### Modules
 
+- [diff](diff.elv): easy way to apply the **diff** system command to two arbitrary values.
+
 - [exception](exception.elv): exception type checking and metadata.
 
 - [lang](lang.elv): core, almost language-related utilities.

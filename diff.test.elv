@@ -6,7 +6,7 @@ use ./diff
   >> 'diff' {
     >> 'when the strings are equal' {
       command:capture {
-        diff:diff Alpha Alpha
+        diff:diff &throw Alpha Alpha
       } |
         should-be [
           &output=''
@@ -17,7 +17,7 @@ use ./diff
     >> 'when the strings are different' {
       var command-result = (
         command:capture {
-          diff:diff Alpha Beta
+          diff:diff &throw Alpha Beta
         }
       )
 
