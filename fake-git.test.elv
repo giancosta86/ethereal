@@ -42,7 +42,7 @@ var valid-fake-git~ = (
           fake-git clone '<some url>' (os:temp-dir)
         } |
           get-fail-content |
-          should-be 'Fake Git: missing source "<some url>" in source map'
+          should-be 'Fake Git: missing source URL "<some url>" in source map'
       }
     }
 
@@ -56,7 +56,7 @@ var valid-fake-git~ = (
           fake-git clone '<some url>' (os:temp-dir)
         } |
           get-fail-content |
-          should-be 'Fake Git: missing reference "main" in repository at source "<some url>"'
+          should-be 'Fake Git: missing reference "main" in repository at source URL "<some url>"'
       }
     }
 
@@ -87,7 +87,7 @@ var valid-fake-git~ = (
             valid-fake-git checkout UNDECLARED
           } |
             get-fail-content |
-            should-be 'Fake Git: missing reference "UNDECLARED" in repository at source "<some url>"'
+            should-be 'Fake Git: missing reference "UNDECLARED" in repository at source URL "<some url>"'
         }
       }
     }

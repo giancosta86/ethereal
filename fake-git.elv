@@ -62,7 +62,7 @@ fn create-command { |@arguments|
     }
 
     set source-urls-by-dest = (
-      assoc $sources-by-dest (path:abs $dest) $source-url
+      assoc $source-urls-by-dest (path:abs $dest) $source-url
     )
 
     os:mkdir-all $dest
