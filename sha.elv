@@ -1,10 +1,15 @@
 use str
 use ./lang
 
+var -sha256sum~ = (external sha256sum)
+
+#
+# Computes the SHA256 hash for the given input value - using the external sha256sum command.
+#
 fn compute256 { |@arguments|
   lang:get-single-input $arguments |
     print (all) |
-    sha256sum |
+    -sha256sum |
     str:split ' ' (all) |
     take 1
 }

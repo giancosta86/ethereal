@@ -59,6 +59,4 @@ put ?(fail DODO) |
 
 - [resources](resources.elv): convenient way to access the resources associated with a script file.
 
-```
-
-```
+- [sha](sha.elv): computation of SHA hash codes.
