@@ -23,6 +23,59 @@ fn -create-temp-tree { |temp-root|
 }
 
 >> 'In fs module' {
+  >> 'splitting the extension' {
+    >> 'when the extension is missing' {
+      fs:split-ext 'alpha' |
+        put [(all)] |
+        should-be [
+          alpha
+          ''
+        ]
+    }
+
+    >> 'when the extension is present' {
+      fs:split-ext 'beta.elv' |
+        put [(all)] |
+        should-be [
+          beta
+          .elv
+        ]
+    }
+
+    >> 'when there are multiple extensions' {
+      fs:split-ext 'gamma.test.elv' |
+        put [(all)] |
+        should-be [
+          gamma.test
+          .elv
+        ]
+    }
+  }
+
+  >> 'switching extension' {
+    >> 'when the file has no extension' {
+      fs:switch-ext 'dodo' '.png' |
+          should-be 'dodo.png'
+    }
+
+    >> 'when the path has a single extension' {
+      >> 'when the new extension has a leading dot' {
+        fs:switch-ext 'alpha.jpg' '.png' |
+          should-be 'alpha.png'
+      }
+
+      >> 'when the new extension has no dot' {
+        fs:switch-ext 'alpha.jpg' 'png' |
+          should-be 'alpha.png'
+      }
+    }
+
+    >> 'when the path has multiple extensions' {
+      fs:switch-ext 'alpha.test.txt' 'elv' |
+        should-be 'alpha.test.elv'
+    }
+  }
+
   >> 'ensuring pwd is not in given directory' {
     var temp-dir = (os:temp-dir)
     defer { os:remove-all $temp-dir }
@@ -449,30 +502,6 @@ fn -create-temp-tree { |temp-root|
           }
         }
       }
-    }
-  }
-
-  >> 'switching extension' {
-    >> 'when the file has no extension' {
-      fs:switch-extension 'dodo' '.png' |
-          should-be 'dodo.png'
-    }
-
-    >> 'when the path has a single extension' {
-      >> 'when the new extension has a leading dot' {
-        fs:switch-extension 'alpha.jpg' '.png' |
-          should-be 'alpha.png'
-      }
-
-      >> 'when the new extension has no dot' {
-        fs:switch-extension 'alpha.jpg' 'png' |
-          should-be 'alpha.png'
-      }
-    }
-
-    >> 'when the path has multiple extensions' {
-      fs:switch-extension 'alpha.test.txt' 'elv' |
-        should-be 'alpha.test.elv'
     }
   }
 
