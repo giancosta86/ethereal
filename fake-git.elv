@@ -1,22 +1,48 @@
+use flag
 use os
 use path
 use ./fs
+use ./lang
 
-fn create-command { |source-map|
-  var sources-by-dest = [&]
+#
+# Takes in input a SOURCE-URL => REPOSITORY-MAP map,
+# where REPOSITORY-MAP is a GIT-REFERENCE => FILE-MAP map containing at least a `main` key,
+# where, in turn, FILE-MAP is a RELATIVE-PATH => FILE-CONTENT map,
+# and returns a command - another function - supporting a tiny subset of Git's functionality.
+#
+# In other words, `source-map` is a map potentially describing multiple branches/tags/...
+# within multiple repositories at multiple URLs;
+# as a plus, it can be a function, that will be evaluated every time a related command is performed.
+#
+# In particular, the supported commands are:
+#
+# * `clone <SOURCE-URL> <DIRECTORY>`: creates `DIRECTORY` if missing, then performs a checkout of the `main` reference
+#   for the given `SOURCE-URL`
+#
+# * `checkout <REFERENCE>`: deletes the content of the $pwd - which must have been cloned via the same command instance -
+#    and creates the directory structure described by `REFERENCE` for the related `SOURCE-URL`
+#
+# The execution of both commands can be altered - just like Git - via the optional `-C <current directory>` flag.
+#
+# Please, note: SOURCE-URL and GIT-REFERENCE can actually be arbitrary strings, without the usual constraints.
+#
+fn create-command { |@arguments|
+  var source-map = (lang:get-single-input $arguments)
+
+  var source-urls-by-dest = [&]
 
   fn checkout { |reference|
-    if (not (has-key $sources-by-dest $pwd)) {
+    if (not (has-key $source-urls-by-dest $pwd)) {
       printf 'Fake Git: the directory "%s" was not cloned via this command instance!' $pwd |
         fail (all)
     }
 
-    var source = $sources-by-dest[$pwd]
+    var source-url = $source-urls-by-dest[$pwd]
 
-    var repository-map = $source-map[$source]
+    var repository-map = $source-map[$source-url]
 
     if (not (has-key $repository-map $reference)) {
-      printf 'Fake Git: missing reference "%s" in repository at source "%s"' $reference $source |
+      printf 'Fake Git: missing reference "%s" in repository at source URL "%s"' $reference $source-url |
         fail (all)
     }
 
@@ -29,14 +55,14 @@ fn create-command { |source-map|
     }
   }
 
-  fn clone { |source dest|
-    if (not (has-key $source-map $source)) {
-      printf 'Fake Git: missing source "%s" in source map' $source |
+  fn clone { |source-url dest|
+    if (not (has-key $source-map $source-url)) {
+      printf 'Fake Git: missing source URL "%s" in source map' $source-url |
         fail (all)
     }
 
-    set sources-by-dest = (
-      assoc $sources-by-dest (path:abs $dest) $source
+    set source-urls-by-dest = (
+      assoc $sources-by-dest (path:abs $dest) $source-url
     )
 
     os:mkdir-all $dest
@@ -51,13 +77,17 @@ fn create-command { |source-map|
     &checkout=$checkout~
   ]
 
-  fn fake-git { |command @arguments|
-    if (not (has-key $commands $command)) {
-      printf 'Fake Git: unsupported "%s" command' $command |
-        fail (all)
-    }
+  fn fake-git { |@git-arguments|
+    flag:call { |&C=$pwd command @command-arguments|
+      tmp pwd = $C
 
-    $commands[$command] $@arguments
+      if (not (has-key $commands $command)) {
+        printf 'Fake Git: unsupported "%s" command' $command |
+          fail (all)
+      }
+
+      $commands[$command] $@command-arguments
+    } $git-arguments
   }
 
   put $fake-git~
