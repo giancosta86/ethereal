@@ -53,6 +53,8 @@ put ?(fail DODO) |
 
 ### Modules
 
+- [curl](curl.elv): utilities for the `curl` command-line client.
+
 - [diff](diff.elv): easy way to apply the **diff** system command to two arbitrary values.
 
 - [exception](exception.elv): exception type checking and metadata.

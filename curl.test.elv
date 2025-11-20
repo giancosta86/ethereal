@@ -4,13 +4,23 @@ use ./command
 use ./curl
 use ./fs
 
->> 'In curl model' {
-  >> 'when not disabling the progress' {
-    fs:with-file-sandbox $curl:-configuration-path {
-      os:remove-all $curl:-configuration-path
+var test-website = https://jsonplaceholder.typicode.com/todos/1
 
+var curl = (external curl)
+
+fn with-factory-reset-curl { |block|
+  fs:with-file-sandbox $curl:-configuration-path {
+    os:remove-all $curl:-configuration-path
+
+    $block
+  }
+}
+
+>> 'In curl module' {
+  >> 'when not altering the output settings' {
+    with-factory-reset-curl {
       command:capture &keep-stream=err {
-        curl gianlucacosta.info
+        curl $test-website
       } |
         put (all)[output] |
         str:contains (all) '%' |
@@ -18,14 +28,12 @@ use ./fs
     }
   }
 
-  >> 'when disabling the progress' {
-    fs:with-file-sandbox $curl:-configuration-path {
-      os:remove-all $curl:-configuration-path
-
-      curl:disable-non-error-output
+  >> 'when displaying errors only' {
+    with-factory-reset-curl {
+      curl:display-errors-only
 
       command:capture &keep-stream=err {
-        curl gianlucacosta.info
+        curl $test-website
       } |
         put (all)[output] |
         str:contains (all) '%' |
