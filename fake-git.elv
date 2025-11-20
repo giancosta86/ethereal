@@ -27,7 +27,7 @@ use ./lang
 # Please, note: SOURCE-URL and GIT-REFERENCE can actually be arbitrary strings, without the usual constraints.
 #
 fn create-command { |@arguments|
-  var source-map = (lang:get-single-input $arguments)
+  var potential-source-map = (lang:get-single-input $arguments)
 
   var source-urls-by-dest = [&]
 
@@ -38,6 +38,8 @@ fn create-command { |@arguments|
     }
 
     var source-url = $source-urls-by-dest[$pwd]
+
+    var source-map = (lang:resolve $potential-source-map)
 
     var repository-map = $source-map[$source-url]
 
@@ -56,6 +58,8 @@ fn create-command { |@arguments|
   }
 
   fn clone { |source-url dest|
+    var source-map = (lang:resolve $potential-source-map)
+
     if (not (has-key $source-map $source-url)) {
       printf 'Fake Git: missing source url "%s" in source map' $source-url |
         fail (all)

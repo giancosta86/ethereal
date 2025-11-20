@@ -59,6 +59,8 @@ put ?(fail DODO) |
 
 - [exception](exception.elv): exception type checking and metadata.
 
+- [fake-git](fake-git.elv): tiny, customizable subset of the Git command.
+
 - [lang](lang.elv): core, almost language-related utilities.
 
 - [resources](resources.elv): convenient way to access the resources associated with a script file.
