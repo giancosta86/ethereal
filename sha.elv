@@ -1,4 +1,3 @@
-use str
 use ./lang
 
 var -sha256sum~ = (external sha256sum)
@@ -10,6 +9,5 @@ fn compute256 { |@arguments|
   lang:get-single-input $arguments |
     print (all) |
     -sha256sum |
-    str:split ' ' (all) |
-    take 1
+    put (all)[..64]
 }
