@@ -11,7 +11,7 @@ use ./lang
 # and returns a command - another function - supporting a tiny subset of Git's functionality.
 #
 # In other words, `source-map` is a map potentially describing multiple branches/tags/...
-# within multiple repositories at multiple URLs;
+# within multiple repositories at multiple urls;
 # as a plus, it can be a function, that will be evaluated every time a related command is performed.
 #
 # In particular, the supported commands are:
@@ -42,7 +42,7 @@ fn create-command { |@arguments|
     var repository-map = $source-map[$source-url]
 
     if (not (has-key $repository-map $reference)) {
-      printf 'Fake Git: missing reference "%s" in repository at source URL "%s"' $reference $source-url |
+      printf 'Fake Git: missing reference "%s" in repository at source url "%s"' $reference $source-url |
         fail (all)
     }
 
@@ -57,7 +57,7 @@ fn create-command { |@arguments|
 
   fn clone { |source-url dest|
     if (not (has-key $source-map $source-url)) {
-      printf 'Fake Git: missing source URL "%s" in source map' $source-url |
+      printf 'Fake Git: missing source url "%s" in source map' $source-url |
         fail (all)
     }
 

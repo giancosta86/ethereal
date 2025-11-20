@@ -13,7 +13,7 @@ var valid-fake-git~ = (
 
       &secondary=[
         &'alpha.txt'='This is another copy of alpha'
-        &'omega.txt'='This is Omega'
+        &'pi.txt'='This is Pi'
         &'sigma/tau.txt'='This is Tau'
       ]
 
@@ -34,7 +34,7 @@ var valid-fake-git~ = (
   }
 
   >> 'cloning' {
-    >> 'when the source map does not include the given source' {
+    >> 'when the source map does not include the given source url' {
       >> 'should fail' {
         var fake-git~ = (fake-git:create-command [&])
 
@@ -42,7 +42,7 @@ var valid-fake-git~ = (
           fake-git clone '<some url>' (os:temp-dir)
         } |
           get-fail-content |
-          should-be 'Fake Git: missing source URL "<some url>" in source map'
+          should-be 'Fake Git: missing source url "<some url>" in source map'
       }
     }
 
@@ -56,12 +56,12 @@ var valid-fake-git~ = (
           fake-git clone '<some url>' (os:temp-dir)
         } |
           get-fail-content |
-          should-be 'Fake Git: missing reference "main" in repository at source URL "<some url>"'
+          should-be 'Fake Git: missing reference "main" in repository at source url "<some url>"'
       }
     }
 
-    >> 'when a source with main is requested' {
-      >> 'should clone its files' {
+    >> 'when a source url with a main reference is requested' {
+      >> 'should clone its files to the destination directory' {
         fs:with-temp-dir { |dest|
           valid-fake-git clone '<some url>' $dest
 
@@ -73,10 +73,29 @@ var valid-fake-git~ = (
         }
       }
     }
+
+    >> 'when cloning with -C' {
+      >> 'should clone to a directory within the context of the temporary pwd' {
+        fs:with-temp-dir { |dest|
+          var previous-pwd = $pwd
+
+          valid-fake-git -C $dest clone '<some url>' omega
+
+          slurp < (path:join $dest omega alpha.txt) |
+            should-be 'This is a sample test'
+
+          slurp < (path:join $dest omega beta gamma delta.txt) |
+            should-be 'This is another test!'
+
+          put $pwd |
+            should-be $previous-pwd
+        }
+      }
+    }
   }
 
   >> 'checkout' {
-    >> 'when the branch was not declared' {
+    >> 'when the branch was not declared in the source map' {
       >> 'should fail' {
         fs:with-temp-dir { |dest|
           valid-fake-git clone '<some url>' $dest
@@ -87,7 +106,7 @@ var valid-fake-git~ = (
             valid-fake-git checkout UNDECLARED
           } |
             get-fail-content |
-            should-be 'Fake Git: missing reference "UNDECLARED" in repository at source URL "<some url>"'
+            should-be 'Fake Git: missing reference "UNDECLARED" in repository at source url "<some url>"'
         }
       }
     }
@@ -106,8 +125,8 @@ var valid-fake-git~ = (
       }
     }
 
-    >> 'when the branch was declared' {
-      >> 'the target should contain only the branch files' {
+    >> 'when the branch in the source map is declared' {
+      >> 'the target should contain only the files in that branch' {
         fs:with-temp-dir { |dest|
           valid-fake-git clone '<some url>' $dest
 
@@ -118,15 +137,43 @@ var valid-fake-git~ = (
           slurp < (path:join $dest alpha.txt) |
             should-be 'This is another copy of alpha'
 
-          slurp < (path:join $dest omega.txt) |
-            should-be 'This is Omega'
-
           path:join $dest beta gamma delta.txt |
             os:is-regular (all) |
             should-be $false
 
+          slurp < (path:join $dest pi.txt) |
+            should-be 'This is Pi'
+
           slurp < (path:join $dest sigma tau.txt) |
             should-be 'This is Tau'
+        }
+      }
+
+      >> 'when performing the checkout with -C' {
+        >> 'the checkout should occur within the directory passed to -C' {
+          fs:with-temp-dir { |dest|
+            var previous-pwd = $pwd
+
+            valid-fake-git clone '<some url>' $dest
+
+            valid-fake-git -C $dest checkout secondary
+
+            slurp < (path:join $dest alpha.txt) |
+              should-be 'This is another copy of alpha'
+
+            path:join $dest beta gamma delta.txt |
+              os:is-regular (all) |
+              should-be $false
+
+            slurp < (path:join $dest pi.txt) |
+              should-be 'This is Pi'
+
+            slurp < (path:join $dest sigma tau.txt) |
+              should-be 'This is Tau'
+
+            put $pwd |
+              should-be $previous-pwd
+          }
         }
       }
     }
@@ -155,8 +202,7 @@ var valid-fake-git~ = (
 
           var secondary-dir = (path:join $temp-dir B)
           valid-fake-git clone '<some url>' $secondary-dir
-          cd $secondary-dir
-          valid-fake-git checkout secondary
+          valid-fake-git -C $secondary-dir checkout secondary
 
           path:join $main-dir beta gamma delta.txt |
             os:is-regular (all) |
