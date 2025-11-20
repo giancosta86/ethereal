@@ -2,41 +2,98 @@ use str
 use ./string
 
 >> 'In string module' {
-  >> 'indenting lines' {
-    >> 'with empty string' {
-      put '' |
-        string:indent-lines '****' |
-        should-be ''
+  >> 'prefixing lines' {
+    >> 'by default' {
+      >> 'with empty string' {
+        put '' |
+          string:prefix-lines '****' |
+          should-be ''
+      }
+
+      >> 'with single text line' {
+        put 'Alpha' |
+          string:prefix-lines '****' |
+          should-be '****Alpha'
+      }
+
+      >> 'with 2 text lines' {
+          put "Alpha\nBeta" |
+            string:prefix-lines '****' |
+            put [(all)] |
+            should-be [
+              '****Alpha'
+              '****Beta'
+            ]
+      }
+
+      >> 'with 2 text lines and final empty line' {
+        put "Alpha\nBeta\n" |
+          string:prefix-lines '****' |
+          put [(all)] |
+          should-be [
+            '****Alpha'
+            '****Beta'
+            ''
+          ]
+      }
+
+      >> 'with 2 text lines and intermediate empty lines' {
+        put "Alpha\n\n\nBeta" |
+          string:prefix-lines '****' |
+          put [(all)] |
+          should-be [
+            '****Alpha'
+            ''
+            ''
+            '****Beta'
+          ]
+      }
+
+      >> 'with 3 text lines, intermediate empty lines and final empty lines' {
+        put "Alpha\n\n\nBeta\n\n\n\n\nGamma\n\n" |
+          string:prefix-lines '****' |
+          put [(all)] |
+          should-be [
+            '****Alpha'
+            ''
+            ''
+            '****Beta'
+            ''
+            ''
+            ''
+            ''
+            '****Gamma'
+            ''
+            ''
+          ]
+      }
     }
 
-    >> 'with single text line' {
-      put 'Alpha' |
-        string:indent-lines '****' |
-        should-be '****Alpha'
-    }
+    >> 'when indenting empty lines, too' {
+      >> 'with empty string' {
+        put '' |
+          string:prefix-lines &empty-too '# ' |
+          should-be '# '
+      }
 
-    >> 'with 2 text lines' {
-        put "Alpha\nBeta" |
-          string:indent-lines '****' |
-          should-be "****Alpha\n****Beta"
-    }
-
-    >> 'with 2 text lines and final empty line' {
-      put "Alpha\nBeta\n" |
-        string:indent-lines '****' |
-        should-be "****Alpha\n****Beta\n"
-    }
-
-    >> 'with 2 text lines and intermediate empty lines' {
-      put "Alpha\n\n\nBeta" |
-        string:indent-lines '****' |
-        should-be "****Alpha\n\n\n****Beta"
-    }
-
-    >> 'with 3 text lines, intermediate empty lines and final empty lines' {
-      put "Alpha\n\n\nBeta\n\n\n\n\nGamma\n\n" |
-        string:indent-lines '****' |
-        should-be "****Alpha\n\n\n****Beta\n\n\n\n\n****Gamma\n\n"
+      >> 'with 3 text lines, intermediate empty lines and final empty lines' {
+        put "Alpha\n\n\nBeta\n\n\n\n\nGamma\n\n" |
+          string:prefix-lines &empty-too '# ' |
+          put [(all)] |
+          should-be [
+            '# Alpha'
+            '# '
+            '# '
+            '# Beta'
+            '# '
+            '# '
+            '# '
+            '# '
+            '# Gamma'
+            '# '
+            '# '
+          ]
+      }
     }
   }
 
