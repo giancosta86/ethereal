@@ -53,9 +53,11 @@ put ?(fail DODO) |
 
 ### Modules
 
+- [exception](exception.elv): exception type checking and metadata.
+
 - [lang](lang.elv): core, almost language-related utilities.
 
-- [exception](exception.elv): exception type checking and metadata.
+- [resources](resources.elv): convenient way to access the resources associated with a script file.
 
 ```
 
