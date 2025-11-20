@@ -28,4 +28,6 @@ This section only contains very high-level descriptions; for details about using
 
 ### Modules
 
-- [lang](lang.elv): core, almost language-related utilities
+- [lang](lang.elv): core, almost language-related utilities.
+
+- [exception](exception.elv): exception type checking and metadata.

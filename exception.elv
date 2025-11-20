@@ -1,11 +1,17 @@
 use ./lang
 
+#
+# Emits $true if the input value is an exception, $false otherwise.
+#
 fn is-exception { |@arguments|
   lang:get-single-input $arguments |
     kind-of (all) |
     eq (all) exception
 }
 
+#
+# If the input value is an exception and has the `reason` key, emits the related value - or $nil otherwise.
+#
 fn get-reason { |@arguments|
   var potential-exception = (lang:get-single-input $arguments)
 
@@ -18,6 +24,21 @@ fn get-reason { |@arguments|
   }
 }
 
+#
+# Emits $true if the input value is an exception induced by `fail` - or $false otherwise.
+#
+fn is-fail { |@arguments|
+  var reason = (
+    lang:get-single-input $arguments |
+      get-reason (all)
+  )
+
+  and (not-eq $reason $nil) (has-key $reason type) (eq $reason[type] fail)
+}
+
+#
+# If the input value is a `fail`-induced exception, emits its content - or $nil otherwise.
+#
 fn get-fail-content { |@arguments|
   var reason = (get-reason $@arguments)
 
@@ -30,21 +51,12 @@ fn get-fail-content { |@arguments|
   }
 }
 
-fn is-fail { |@arguments|
-  get-fail-content $@arguments |
-    not-eq (all) $nil
-}
-
+#
+# Emits $true if the single input is an exception induced by `return` - or $false otherwise.
+#
 fn is-return { |@arguments|
   var reason = (get-reason $@arguments)
 
-  if (
-    and $reason (has-key $reason type) (has-key $reason name) |
-      not (all)
-  ) {
-    put $false
-    return
-  }
-
-  and (eq $reason[type] flow) (eq $reason[name] return)
+  and $reason (has-key $reason type) (eq $reason[type] flow) (has-key $reason name) (eq $reason[name] return) |
+    bool (all)
 }

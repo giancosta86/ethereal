@@ -45,6 +45,33 @@ use ./exception
     }
   }
 
+  >> 'detecting fail' {
+    >> 'applied to number' {
+      exception:is-fail 90 |
+        should-be $false
+    }
+
+    >> 'applied to divide-by-zero error' {
+      exception:is-fail ?(/ 8 0) |
+        should-be $false
+    }
+
+    >> 'applied to fail' {
+      exception:is-fail ?(fail DODO) |
+        should-be $true
+    }
+
+    >> 'applied to fail with $nil content' {
+      exception:is-fail ?(fail $nil) |
+        should-be $true
+    }
+
+    >> 'applied to return' {
+      exception:is-fail ?(return) |
+        should-be $false
+    }
+  }
+
   >> 'retrieving fail content' {
     >> 'applied to number' {
       exception:get-fail-content 90 |
@@ -64,28 +91,6 @@ use ./exception
     >> 'applied to return' {
       exception:get-fail-content ?(return) |
         should-be $nil
-    }
-  }
-
-  >> 'detecting fail' {
-    >> 'applied to number' {
-      exception:is-fail 90 |
-        should-be $false
-    }
-
-    >> 'applied to divide-by-zero error' {
-      exception:is-fail ?(/ 8 0) |
-        should-be $false
-    }
-
-    >> 'applied to fail' {
-      exception:is-fail ?(fail DODO) |
-        should-be $true
-    }
-
-    >> 'applied to return' {
-      exception:is-fail ?(return) |
-        should-be $false
     }
   }
 
