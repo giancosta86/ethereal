@@ -19,10 +19,11 @@ fn with-factory-reset-curl { |block|
 >> 'In curl module' {
   >> 'when not altering the output settings' {
     with-factory-reset-curl {
-      command:capture &keep-stream=err {
+      command:capture &stream=err {
         curl $test-website
       } |
-        put (all)[output] |
+        put (all)[data] |
+        str:join "\n" (all) |
         str:contains (all) '%' |
           should-be $true
     }
@@ -32,10 +33,11 @@ fn with-factory-reset-curl { |block|
     with-factory-reset-curl {
       curl:display-errors-only
 
-      command:capture &keep-stream=err {
+      command:capture &stream=err {
         curl $test-website
       } |
-        put (all)[output] |
+        put (all)[data] |
+        str:join "\n" (all) |
         str:contains (all) '%' |
           should-be $false
     }

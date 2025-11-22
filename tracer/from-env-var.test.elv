@@ -15,8 +15,12 @@ use ./from-env-var
       set-env $test-var 1
 
       command:capture $tracer-test-block |
-        put (all)[output] |
-        should-be "🐿 Description:\nTest content\n🐿🐿🐿\n"
+        put (all)[data] |
+        should-be [
+          '🐿 Description:'
+          'Test content'
+          🐿🐿🐿
+        ]
     }
   }
 
@@ -25,8 +29,8 @@ use ./from-env-var
       set-env $test-var '<SOME UNRECOGNIZED VALUE>'
 
       command:capture $tracer-test-block |
-        put (all)[output] |
-        should-be ''
+        put (all)[data] |
+        should-be []
     }
   }
 
@@ -35,8 +39,8 @@ use ./from-env-var
       unset-env $test-var
 
       command:capture $tracer-test-block |
-        put (all)[output] |
-        should-be ''
+        put (all)[data] |
+        should-be []
     }
   }
 }

@@ -1,69 +1,156 @@
 use os
+use ./lang
 
-fn exists-in-bash { |command|
-  eq $ok ?(bash --rcfile ~/.bashrc -i -c 'type '$command > $os:dev-null 2>&1)
-}
-
-var -byte-capturers = [
+var -redirectors-by-stream = [
   &both={ |block|
-    $block 2>&1
+    put { $block 2>&1 }
   }
 
   &out={ |block|
-    $block 2>$os:dev-null
+    put { $block 2>$os:dev-null }
   }
 
   &err={ |block|
-    $block 2>&1 >$os:dev-null
+    put {
+      { $block | only-bytes } 2>&1 >$os:dev-null
+    }
   }
 
   &none={ |block|
-    $block >$os:dev-null 2>&1
+    put {
+      { $block | only-bytes } >$os:dev-null 2>&1
+    }
   }
 ]
 
-fn capture { |&keep-stream=both block|
-  if (not (has-key $-byte-capturers $keep-stream)) {
-    fail 'Invalid stream setting: '$keep-stream
+var -data-filter-by-type = [
+  &both={ |block|
+    put $block
   }
 
-  var byte-capturer = $-byte-capturers[$keep-stream]
+  &bytes={ |block|
+    put { $block | only-bytes }
+  }
+
+  &values={ |block|
+    put { $block | only-values }
+  }
+
+  &none={ |block|
+    put { $block | only-bytes | only-values }
+  }
+]
+
+#
+# Runs the given block and:
+#
+# * captures its emitted data as a list containing bytes/values:
+#
+#   * from stream **out**, **err**, **both** or **none**, according to the `stream` flag
+#
+#   * of type **bytes**, **values**, **both** or **none**, according to the `type` flag
+#
+# * intercepts its thrown exception, if any - or $nil if the block runs flawlessly.
+#
+# In the end, emits a map containing the `data` and `exception` keys.
+#
+fn capture { |&stream=both &type=both @arguments|
+  if (not (has-key $-redirectors-by-stream $stream)) {
+    fail 'Invalid stream flag: '$stream
+  }
+
+  if (not (has-key $-data-filter-by-type $type)) {
+    fail 'Invalid type flag: '$type
+  }
+
+  var block = (lang:get-single-input $arguments)
+
+  var redirector~ = $-redirectors-by-stream[$stream]
+  var data-filter~ = $-data-filter-by-type[$type]
+
+  var decorated-block = (
+    put $block |
+      redirector (all) |
+      data-filter (all)
+  )
 
   var exception = $nil
 
-  var output = (
-    try {
-      $byte-capturer { $block | only-bytes } |
-        slurp
-    } catch e {
-      set exception = $e
-    }
+  var data = (
+    {
+      try {
+        $decorated-block
+      } catch e {
+        set exception = $e
+      }
+    } |
+      put [(all)]
   )
 
   put [
-    &output=$output
+    &data=$data
     &exception=$exception
   ]
 }
 
-fn silence { |block|
-  capture &keep-stream=none $block | only-bytes
-}
+var -silence-exception-strategies = [
+  &both={ |capture-result|
+    all $capture-result[data] | each { |item|
+      echo $item
+    }
 
-fn silence-until-exception { |&description=$nil block|
-  var capture-result = (capture $block)
-
-  if (eq $capture-result[exception] $nil) {
-    return
+    fail $capture-result[exception]
   }
 
-  var actual-description = (coalesce $description 'Exception while running block!')
+  &data={ |capture-result|
+    all $capture-result[data] | each { |item|
+      echo $item
+    }
+  }
 
-  {
-    echo ❌ $actual-description
-    echo $capture-result[output]
-    echo ❌❌❌
-  } >&2
+  &exception={ |capture-result|
+    fail $capture-result[exception]
+  }
 
-  fail $capture-result[exception]
+  &none={ |_| }
+]
+
+#
+# Silences the given block - preventing it from emitting anything from both stdout and stderr.
+#
+# In case of exception, the `on-exception` flag dictates the strategy:
+#
+# * **both**: outputs to stdout every line/value emitted by the command, then throws the exception.
+#
+# * **data**: outputs to stdout every line/value emitted by the command, but does not throw the exception.
+#
+# * **exception**: just throws the exception.
+#
+# * **none**: just does nothing.
+#
+fn silence { |&on-exception=both @arguments|
+  if (not (has-key $-silence-exception-strategies $on-exception)) {
+    fail 'Invalid value for the "&on-exception" flag: '$on-exception
+  }
+
+  var command = (lang:get-single-input $arguments)
+
+  var capture-result = (
+    capture &stream=both &type=both $command
+  )
+
+  if (not-eq $capture-result[exception] $nil) {
+    $-silence-exception-strategies[$on-exception] $capture-result
+  }
+}
+
+#
+# Emits $true if the given command is available in Bash - even as an alias - by invoking `type`;
+# otherwise, emits $false.
+#
+fn exists-in-bash { |@arguments|
+  var command = (lang:get-single-input $arguments)
+
+  put ?(bash --rcfile ~/.bashrc -i -c 'type '$command > $os:dev-null 2>&1) |
+    eq $ok (all)
 }

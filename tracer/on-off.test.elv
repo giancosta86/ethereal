@@ -11,8 +11,8 @@ use ./on-off
   >> 'upon creation' {
     >> 'should be disabled' {
       command:capture $tracer-test-block |
-        put (all)[output] |
-        should-be ''
+        put (all)[data] |
+        should-be []
     }
   }
 
@@ -21,8 +21,12 @@ use ./on-off
       $tracer[enable]
 
       command:capture $tracer-test-block |
-        put (all)[output] |
-        should-be "🐬 Description:\nTest content\n🐬🐬🐬\n"
+        put (all)[data] |
+        should-be [
+          '🐬 Description:'
+          'Test content'
+          🐬🐬🐬
+        ]
     }
   }
 
@@ -32,8 +36,8 @@ use ./on-off
       $tracer[disable]
 
       command:capture $tracer-test-block |
-        put (all)[output] |
-        should-be ''
+        put (all)[data] |
+        should-be []
     }
   }
 
@@ -47,8 +51,10 @@ use ./on-off
       command:capture {
         $tracer[echo] $test-message
       } |
-        put (all)[output] |
-        should-be $test-message"\n"
+        put (all)[data] |
+        should-be [
+          $test-message
+        ]
     }
   }
 }

@@ -9,7 +9,7 @@ use ./diff
         diff:diff &throw Alpha Alpha
       } |
         should-be [
-          &output=''
+          &data=[]
           &exception=$nil
         ]
     }
@@ -22,13 +22,15 @@ use ./diff
         }
       )
 
-      str:contains $command-result[output] '@@ -1 +1 @@' |
+      var output = (str:join "\n" $command-result[data])
+
+      str:contains $output '@@ -1 +1 @@' |
         should-be $true
 
-      str:contains $command-result[output] -Alpha |
+      str:contains $output -Alpha |
         should-be $true
 
-      str:contains $command-result[output] +Beta |
+      str:contains $output +Beta |
         should-be $true
 
       put $command-result[exception] |

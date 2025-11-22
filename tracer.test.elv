@@ -1,62 +1,89 @@
 use ./command
 use ./tracer
 
-#TODO! This function and the one in console tests could be replaced by a dedicated test function that also checks for no exception
-fn assert-tracer-output { |block expected|
-  command:capture &keep-stream=err $block |
-    put (all)[output] |
-    should-be $expected
+fn assert-tracer-data { |block expected-data|
+  command:capture &stream=err $block |
+    put (all)[data] |
+    should-be $expected-data
 }
 
 >> 'Tracer' {
   var test-tracer = (tracer:create { put $true })
 
   >> 'echo' {
-    assert-tracer-output {
+    assert-tracer-data {
       $test-tracer[echo] YOGI
-    } YOGI"\n"
+    } [
+      YOGI
+    ]
   }
 
   >> 'print' {
-    assert-tracer-output {
+    assert-tracer-data {
       $test-tracer[print] YOGI
-    } YOGI
+    } [
+      YOGI
+    ]
   }
 
   >> 'printf' {
     var base = 'Dodo'
     var value = 90
 
-    assert-tracer-output {
+    assert-tracer-data {
       $test-tracer[printf] &newline $base': %s' $value
-    } $base': '$value"\n"
+    } [
+      $base': '$value
+    ]
   }
 
   >> 'pprint' {
-    assert-tracer-output {
+    assert-tracer-data {
       $test-tracer[pprint] [ A B C ]
-    } "[\n A\n B\n C\n]\n"
+    } [
+        '['
+        ' A'
+        ' B'
+        ' C'
+        ']'
+      ]
   }
 
   >> 'inspect' {
-    assert-tracer-output {
+    assert-tracer-data {
       $test-tracer[inspect] Map [ &x=90 &y=92 ]
-    } "🔎 Map: [\n &x=\t90\n &y=\t92\n]\n"
+    } [
+      '🔎 Map: ['
+      " &x=\t90"
+      " &y=\t92"
+      ']'
+    ]
   }
 
   >> 'inspect-input-map' {
-    assert-tracer-output {
+    assert-tracer-data {
       $test-tracer[inspect-input-map] [&a=90 &b=dodo]
-    } "📥 Input map: [\n &a=\t90\n &b=\tdodo\n]\n"
+    } [
+      '📥 Input map: ['
+      " &a=\t90"
+      " &b=\tdodo"
+      ']'
+    ]
   }
 
   >> 'section' {
-    assert-tracer-output {
+    assert-tracer-data {
       $test-tracer[section] &emoji=📚 'Description' {
         echo Alpha
         echo Beta
         $test-tracer[inspect] Gamma (num 92)
       }
-    } "📚 Description:\nAlpha\nBeta\n🔎 Gamma: (num 92)\n📚📚📚\n"
+    } [
+      '📚 Description:'
+      'Alpha'
+      'Beta'
+      '🔎 Gamma: (num 92)'
+      📚📚📚
+    ]
   }
 }

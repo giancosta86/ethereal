@@ -1,9 +1,9 @@
 use ./command
 use ./console
 
-fn assert-console-output { |block expected|
-  command:capture &keep-stream=err $block |
-    put (all)[output] |
+fn assert-console-data { |block expected|
+  command:capture &stream=err $block |
+    put (all)[data] |
     should-be $expected
 }
 
@@ -11,17 +11,21 @@ fn assert-console-output { |block expected|
   >> 'echo' {
     var message = 'Dodo'
 
-    assert-console-output {
+    assert-console-data {
       console:echo $message
-    } $message"\n"
+    } [
+      $message
+    ]
   }
 
   >> 'print' {
     var message = 'Dodo'
 
-    assert-console-output {
+    assert-console-data {
       console:print $message
-    } $message
+    } [
+      $message
+    ]
   }
 
   >> 'printf' {
@@ -29,93 +33,135 @@ fn assert-console-output { |block expected|
       var base = 'Dodo'
       var value = 90
 
-      assert-console-output {
+      assert-console-data {
         console:printf &newline $base': %s' $value
-      } $base': '$value"\n"
+      } [
+        $base': '$value
+      ]
     }
 
     >> 'when not requesting newline' {
       var base = 'Dodo'
       var value = 90
 
-      assert-console-output {
+      assert-console-data {
         console:printf $base': %s' $value
-      } $base': '$value
+      } [
+        $base': '$value
+      ]
     }
   }
 
   >> 'pprint' {
-    assert-console-output {
+    assert-console-data {
       console:pprint [ A B C ]
-    } "[\n A\n B\n C\n]\n"
+    } [
+      '['
+      ' A'
+      ' B'
+      ' C'
+      ']'
+    ]
   }
 
   >> 'inspect' {
     >> 'with a string' {
       >> 'having one word' {
-        assert-console-output {
+        assert-console-data {
           console:inspect String A
-        }  "🔎 String: A\n"
+        } [
+          '🔎 String: A'
+        ]
       }
 
       >> 'having multiple words' {
-        assert-console-output {
+        assert-console-data {
           console:inspect String 'Alpha Beta'
-        }  "🔎 String: 'Alpha Beta'\n"
+        } [
+          '🔎 String: ''Alpha Beta'''
+        ]
       }
     }
 
     >> 'with a number' {
       >> 'should print the raw value' {
-        assert-console-output {
+        assert-console-data {
           console:inspect Number (num 98)
-        } "🔎 Number: (num 98)\n"
+        } [
+          '🔎 Number: (num 98)'
+        ]
       }
     }
 
     >> 'with a list' {
       >> 'should pretty-print' {
-        assert-console-output {
+        assert-console-data {
           console:inspect List [ X Y Z ]
-        } "🔎 List: [\n X\n Y\n Z\n]\n"
+        } [
+          '🔎 List: ['
+          ' X'
+          ' Y'
+          ' Z'
+          ']'
+        ]
       }
     }
 
     >> 'with a map' {
       >> 'should pretty-print' {
-        assert-console-output {
+        assert-console-data {
           console:inspect Map [ &x=90 &y=92 ]
-        } "🔎 Map: [\n &x=\t90\n &y=\t92\n]\n"
+        } [
+          '🔎 Map: ['
+          " &x=\t90"
+          " &y=\t92"
+          ']'
+        ]
       }
     }
   }
 
   >> 'inspecting input map' {
     >> 'should-work' {
-      assert-console-output {
+      assert-console-data {
         console:inspect-input-map [&a=90 &b=dodo]
-      } "📥 Input map: [\n &a=\t90\n &b=\tdodo\n]\n"
+      } [
+        '📥 Input map: ['
+        " &a=\t90"
+        " &b=\tdodo"
+        ']'
+      ]
     }
   }
 
   >> 'section' {
     >> 'when a string is passed' {
       >> 'should print the string' {
-        assert-console-output {
+        assert-console-data {
           console:section &emoji=📚 'Description' 'Test content'
-        } "📚 Description:\nTest content\n📚📚📚\n"
+        } [
+          '📚 Description:'
+          'Test content'
+          📚📚📚
+        ]
       }
     }
 
     >> 'when a block is passed' {
       >> 'should print the block output' {
-        assert-console-output {
+        assert-console-data {
           console:section &emoji=📚 'Description' {
             echo Alpha
             echo Beta
             console:inspect Gamma (num 92)
           }
-        } "📚 Description:\nAlpha\nBeta\n🔎 Gamma: (num 92)\n📚📚📚\n"
+        } [
+          '📚 Description:'
+          Alpha
+          Beta
+          '🔎 Gamma: (num 92)'
+          📚📚📚
+        ]
       }
     }
   }
