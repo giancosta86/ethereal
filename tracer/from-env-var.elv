@@ -1,15 +1,20 @@
-use ../set
 use ../tracer
 
-var -enabled-values = (set:of true '$true' t 1)
+var -enabled-values = [true '$true' t 1]
 
-fn create { |env-var-name|
-  tracer:create {
+#
+# Creates a tracer enabled only when the given environment variable assumes one
+# of the "enabled" values.
+#
+fn create { |env-var-name &writer=$tracer:out-writer|
+  fn enabled-by-var {
     if (has-env $env-var-name) {
       get-env $env-var-name |
-        set:has-value $-enabled-values (all)
+        has-value $-enabled-values (all)
     } else {
       put $false
     }
   }
+
+  tracer:create $enabled-by-var~ &writer=$writer
 }

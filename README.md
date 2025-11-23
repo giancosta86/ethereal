@@ -70,3 +70,9 @@ put ?(fail DODO) |
 - [sha](sha.elv): computation of SHA hash codes.
 
 - [string](string.elv): string manipulation.
+
+- [tracer](tracer.elv): conditional text output to different streams and files.
+
+- [tracer/from-env-var](tracer/from-env-var.elv): tracer whose state depends on the given env var.
+
+- [tracer/on-off](tracer/on-off.elv): tracer with additional methods for enabling/disabling its output.

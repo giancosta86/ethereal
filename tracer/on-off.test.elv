@@ -1,7 +1,6 @@
-use ../command
 use ./on-off
 
->> 'Manual on-off tracer' {
+>> 'Tracer with manual on/off controls' {
   var tracer = (on-off:create)
 
   var tracer-test-block = {
@@ -9,9 +8,9 @@ use ./on-off
   }
 
   >> 'upon creation' {
-    >> 'should be disabled' {
-      command:capture $tracer-test-block |
-        put (all)[data] |
+    >> 'should be disabled by default' {
+      $tracer-test-block |
+        put [(all)] |
         should-be []
     }
   }
@@ -20,8 +19,8 @@ use ./on-off
     >> 'should write to console' {
       $tracer[enable]
 
-      command:capture $tracer-test-block |
-        put (all)[data] |
+      $tracer-test-block |
+        put [(all)] |
         should-be [
           '🐬 Description:'
           'Test content'
@@ -35,26 +34,21 @@ use ./on-off
       $tracer[enable]
       $tracer[disable]
 
-      command:capture $tracer-test-block |
-        put (all)[data] |
+      $tracer-test-block |
+        put [(all)] |
         should-be []
     }
   }
 
-  >> 'when the enabled is passed via setter' {
-    >> 'should work' {
-      var tracer = (on-off:create)
-      $tracer[set-enabled] $true
+  >> 'when enabling via set-enabled' {
+    $tracer[set-enabled] $true
 
-      var test-message = '🐞 Hello, world!'
+    var test-message = '🐞 Hello, world!'
 
-      command:capture {
-        $tracer[echo] $test-message
-      } |
-        put (all)[data] |
-        should-be [
-          $test-message
-        ]
-    }
+    $tracer[echo] $test-message |
+      put [(all)] |
+      should-be [
+        $test-message
+      ]
   }
 }

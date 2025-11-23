@@ -1,4 +1,3 @@
-use ../command
 use ./from-env-var
 
 >> 'Tracer based on an environment variable' {
@@ -14,8 +13,8 @@ use ./from-env-var
     >> 'should write to console' {
       set-env $test-var 1
 
-      command:capture $tracer-test-block |
-        put (all)[data] |
+      $tracer-test-block |
+        put [(all)] |
         should-be [
           '🐿 Description:'
           'Test content'
@@ -28,8 +27,8 @@ use ./from-env-var
     >> 'should remain silent' {
       set-env $test-var '<SOME UNRECOGNIZED VALUE>'
 
-      command:capture $tracer-test-block |
-        put (all)[data] |
+      $tracer-test-block |
+        put [(all)] |
         should-be []
     }
   }
@@ -38,8 +37,8 @@ use ./from-env-var
     >> 'should remain silent' {
       unset-env $test-var
 
-      command:capture $tracer-test-block |
-        put (all)[data] |
+      $tracer-test-block |
+        put [(all)] |
         should-be []
     }
   }
