@@ -59,6 +59,8 @@ put ?(fail DODO) |
 
 - [diff](diff.elv): easy way to apply the **diff** system command to two arbitrary values.
 
+- [edit](edit.elv]): in-place file editing.
+
 - [exception](exception.elv): exception type checking and metadata.
 
 - [fake-git](fake-git.elv): tiny, customizable subset of the Git command.

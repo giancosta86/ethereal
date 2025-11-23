@@ -1,20 +1,27 @@
-fn file { |path transformer|
+#
+# Reads the entire content of the given `file` and passes it to `transformer`,
+# which must be a function taking such content and returning either the new content or $nil.
+#
+# If the returned value is not $nil, it replaces the original file content.
+#
+fn file { |file transformer|
   var updated-content = (
-    slurp < $path |
+    slurp < $file |
       $transformer (all) |
       one
   )
 
-  if $updated-content {
-    print $updated-content > $path
+  if (not-eq $updated-content $nil) {
+    print $updated-content > $file
   }
 }
 
-fn json { |path jq-operation|
-  var updated-json = (
-    jq $jq-operation $path |
-      slurp
-  )
-
-  echo $updated-json > $path
+#
+# In-place manipulation of the given `file` using the **jq** command, passing the given arguments:
+# the operation is performed without creating an auxiliary temp file.
+#
+fn json { |file @jq-arguments|
+    jq $@jq-arguments < $file |
+      slurp |
+      to-lines > $file
 }

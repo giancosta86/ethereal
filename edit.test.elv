@@ -7,16 +7,16 @@ use ./fs
     >> 'when the transformer emits a string' {
       >> 'should replace the content' {
         fs:with-temp-file { |temp-path|
-          print 'Test' > $temp-path
+          var initial-value = Test
+
+          print $initial-value > $temp-path
 
           edit:file $temp-path { |content|
             put 'X-'$content"\n\n--Y"
           }
 
-          var new-content = (slurp < $temp-path)
-
-          put $new-content |
-            should-be "X-Test\n\n--Y"
+          slurp < $temp-path |
+            should-be "X-"$initial-value"\n\n--Y"
         }
       }
     }
@@ -32,9 +32,7 @@ use ./fs
             put $nil
           }
 
-          var new-content = (slurp < $temp-path)
-
-          put $new-content |
+          slurp < $temp-path |
             should-be $initial-value
         }
       }
@@ -44,7 +42,12 @@ use ./fs
   >> 'editing a file via jq' {
     >> 'should apply the requested transform' {
       fs:with-temp-file { |temp-path|
-        echo '{ "alpha": 90, "beta": 92, "gamma": 95 }' > $temp-path
+        put [
+          &alpha=90
+          &beta=92
+          &gamma=5
+        ] |
+          to-json > $temp-path
 
         slurp < $temp-path |
           str:contains (all) 'beta' |
