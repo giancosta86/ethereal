@@ -4,14 +4,16 @@ use ./map
   >> 'getting the entries of a map' {
     >> 'when the map is empty' {
       >> 'should output nothing' {
-        put [(map:entries [&])] |
+        map:entries [&] |
+          put [(all)] |
           should-be []
       }
     }
 
     >> 'when the map has entries' {
       >> 'should output each of them' {
-        put [(map:entries [&a=90 &b=92 &c=95])] |
+        map:entries [&a=90 &b=92 &c=95] |
+          put [(all)] |
           should-be [[a 90] [b 92] [c 95]]
       }
     }
@@ -52,18 +54,16 @@ use ./map
     }
 
     >> 'when the maps have overlapping keys' {
-      >> 'should have keys from the rightmost map' {
+      >> 'should have keys from the latest map' {
         map:merge [&a=90 &b=92] [&c=95 &a=89] [&a=3 &c=32] |
           should-be [&a=3 &b=92 &c=32]
       }
     }
 
     >> 'when passing the maps via pipe' {
-      >> 'should merge them' {
-        put [&a=90 &b=92] [&c=95 &a=89] [&a=3 &c=32] |
-          map:merge |
-          should-be [&a=3 &b=92 &c=32]
-      }
+      put [&a=90 &b=92] [&c=95 &a=89] [&a=3 &c=32] |
+        map:merge |
+        should-be [&a=3 &b=92 &c=32]
     }
   }
 
@@ -76,14 +76,30 @@ use ./map
       ]
     ]
 
-    >> 'when the entire path exists' {
-      >> 'should return the value' {
+    >> 'when no keys are passed' {
+      >> 'should return the source map itself' {
+        map:drill-down $test-map |
+          should-be $test-map
+      }
+    }
+
+    >> 'when a partial path is passed' {
+      >> 'should return a submap' {
+        map:drill-down $test-map a b |
+          should-be [
+            &c=90
+          ]
+      }
+    }
+
+    >> 'when an existing full path is passed' {
+      >> 'should return the associated leaf value' {
         map:drill-down $test-map a b c |
           should-be 90
       }
     }
 
-    >> 'when an intermediate part does not exist' {
+    >> 'when the path does not exist' {
       >> 'if a default value is passed' {
         >> 'should return the default value' {
           var test-default = 'Some default value'
@@ -100,67 +116,79 @@ use ./map
         }
       }
     }
-
-    >> 'when no path is passed' {
-      >> 'should return the source itself' {
-        map:drill-down $test-map |
-          should-be $test-map
-      }
-    }
   }
 
-  >> 'filtering a map' {
-    >> 'should work' {
-      var source = [
-        &a=90
-        &b=92
-        &c=98
-        &d=300
-      ]
-
-      map:filter $source { |key value|
-        put (and (> $value 90) (!=s $key c))
-      } |
-        should-be [&b=92 &d=300]
-    }
-  }
-
-  >> 'filter-mapping a map' {
+  >> 'transforming a map' {
     >> 'with empty map' {
-      map:filter-map [&] { |key value|
+      map:transform [&] { |key value|
         fail 'This should not be called'
       } |
         should-be [&]
     }
 
     >> 'with non-empty map' {
-      map:filter-map [&90=Alpha &18=Beta] { |key value|
-        put [(+ $key 3) $value''$value]
+      map:transform [
+        &Alpha=90
+        &Beta=18
+      ] { |key value|
+        put [$key''$key (+ $value 3)]
       } |
         should-be [
-          &(num 93)=AlphaAlpha
-          &(num 21)=BetaBeta
+          &AlphaAlpha=(num 93)
+          &BetaBeta=(num 21)
         ]
     }
 
-    >> 'with filtering' {
-      map:filter-map [
-        &90=Alpha
-        &18=Beta
-        &72=Gamma
-        &32=Delta
+    >> 'with filter-mapping' {
+      map:transform [
+        &Alpha=90
+        &Beta=18
+        &Gamma=72
+        &Delta=32
       ] { |key value|
-        if (< $key 50) {
-          put [(+ $key 3) $value'-'$value]
-        } else {
-          put $nil
+        if (< $value 50) {
+          put [$key'-'$key (+ $value 3)]
         }
       } |
         should-be [
-          &21=Beta-Beta
-          &35=Delta-Delta
+          &Beta-Beta=21
+          &Delta-Delta=35
         ]
     }
+
+    >> 'with multiple outputs per entry' {
+      map:transform [
+        &A=1
+        &B=2
+      ] { |key value|
+        put [$key'X' $value]
+        put [$key'Y' $value]
+        put [$key'Z' $value]
+      } |
+        should-be [
+          &AX=1
+          &AY=1
+          &AZ=1
+
+          &BX=2
+          &BY=2
+          &BZ=2
+        ]
+    }
+  }
+
+  >> 'keeping items from a map' {
+    var source = [
+      &a=90
+      &b=92
+      &c=98
+      &d=300
+    ]
+
+    map:keep-if $source { |key value|
+      put (and (> $value 90) (not-eq $key c))
+    } |
+      should-be [&b=92 &d=300]
   }
 
   >> 'making multi-value map' {

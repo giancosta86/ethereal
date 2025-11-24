@@ -67,6 +67,8 @@ put ?(fail DODO) |
 
 - [lang](lang.elv): core, almost language-related utilities.
 
+- [map](map.elv): functional-style map manipulation.
+
 - [resources](resources.elv): convenient way to access the resources associated with a script file.
 
 - [semver](semver.elv): semantic versions - parsing, inspection and comparison.

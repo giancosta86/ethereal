@@ -116,7 +116,7 @@ fn intersection { |@arguments|
     all $operands |
       drop 1 |
       seq:reduce $operands[0][-set-items] { |cumulated-items operand|
-        map:filter $cumulated-items { |key _|
+        map:keep-if $cumulated-items { |key _|
           has-key $operand[-set-items] $key
         }
       }
@@ -139,7 +139,7 @@ fn difference { |@arguments|
     all $operands |
       drop 1 |
       seq:reduce $operands[0][-set-items] { |cumulated-items operand|
-        map:filter $cumulated-items { |key _|
+        map:keep-if $cumulated-items { |key _|
           not (has-key $operand[-set-items] $key)
         }
       }
