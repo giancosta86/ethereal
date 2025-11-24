@@ -1,109 +1,100 @@
 use ./semver
 
+var major = 9
+var minor = 15
+var patch = 7
+var pre-release = 'alpha-a.b-c-somethinglong'
+var build = 'build.1-aef.1-its-okay'
+
+var full-source = $major'.'$minor'.'$patch'-'$pre-release'+'$build
+
 >> 'In semver module' {
-  var major = 9
-  var minor = 15
-  var patch = 7
-  var pre-release = 'alpha-a.b-c-somethinglong'
-  var build = 'build.1-aef.1-its-okay'
-
-  var full-source = $major'.'$minor'.'$patch'-'$pre-release'+'$build
-
   >> 'parsing a semver' {
-    >> 'with all the components' {
-      >> 'without the optional leading v' {
-        >> 'should parse just the major' {
-          put $major |
-            semver:parse |
-            should-be [
-              &major=$major
-              &minor=0
-              &patch=0
-              &pre-release=$nil
-              &build=$nil
-            ]
-        }
-
-        >> 'should parse major and minor' {
-          put $major'.'$minor |
-            semver:parse |
-            should-be [
-              &major=$major
-              &minor=$minor
-              &patch=0
-              &pre-release=$nil
-              &build=$nil
-            ]
-        }
-
-        >> 'should parse major, minor and patch' {
-          put $major'.'$minor'.'$patch |
-            semver:parse |
-            should-be [
-              &major=$major
-              &minor=$minor
-              &patch=$patch
-              &pre-release=$nil
-              &build=$nil
-            ]
-        }
-
-        >> 'should parse major, minor, patch and pre-release' {
-          put $major'.'$minor'.'$patch'-'$pre-release |
-            semver:parse |
-            should-be [
-              &major=$major
-              &minor=$minor
-              &patch=$patch
-              &pre-release=$pre-release
-              &build=$nil
-            ]
-        }
-
-        >> 'should parse major, minor, patch and build' {
-          put $major'.'$minor'.'$patch'+'$build |
-            semver:parse |
-            should-be [
-              &major=$major
-              &minor=$minor
-              &patch=$patch
-              &pre-release=$nil
-              &build=$build
-            ]
-        }
-
-        >> 'should parse all the components' {
-          put $full-source |
-            semver:parse |
-            should-be [
-              &major=$major
-              &minor=$minor
-              &patch=$patch
-              &pre-release=$pre-release
-              &build=$build
-            ]
-        }
+    >> 'without the optional leading v' {
+      >> 'should parse the major' {
+        put $major |
+          semver:parse |
+          should-be [
+            &major=$major
+            &minor=0
+            &patch=0
+            &pre-release=$nil
+            &build=$nil
+          ]
       }
 
-      >> 'with the optional leading v' {
-        >> 'should parse all the components' {
-          var semver = (semver:parse 'v'$full-source)
+      >> 'should parse major and minor' {
+        put $major'.'$minor |
+          semver:parse |
+          should-be [
+            &major=$major
+            &minor=$minor
+            &patch=0
+            &pre-release=$nil
+            &build=$nil
+          ]
+      }
 
-          put $semver[major] |
-            should-be $major
+      >> 'should parse major, minor and patch' {
+        put $major'.'$minor'.'$patch |
+          semver:parse |
+          should-be [
+            &major=$major
+            &minor=$minor
+            &patch=$patch
+            &pre-release=$nil
+            &build=$nil
+          ]
+      }
 
-          put $semver[minor] |
-            should-be $minor
+      >> 'should parse major, minor, patch and pre-release' {
+        put $major'.'$minor'.'$patch'-'$pre-release |
+          semver:parse |
+          should-be [
+            &major=$major
+            &minor=$minor
+            &patch=$patch
+            &pre-release=$pre-release
+            &build=$nil
+          ]
+      }
 
-          put $semver[patch] |
-            should-be $patch
+      >> 'should parse major, minor, patch and build' {
+        put $major'.'$minor'.'$patch'+'$build |
+          semver:parse |
+          should-be [
+            &major=$major
+            &minor=$minor
+            &patch=$patch
+            &pre-release=$nil
+            &build=$build
+          ]
+      }
 
-          put $semver[pre-release] |
-            should-be $pre-release
+      >> 'should parse all the components' {
+        put $full-source |
+          semver:parse |
+          should-be [
+            &major=$major
+            &minor=$minor
+            &patch=$patch
+            &pre-release=$pre-release
+            &build=$build
+          ]
+      }
+    }
 
-          put $semver[build] |
-            should-be $build
-        }
+    >> 'with the optional leading v' {
+      >> 'should parse all the components' {
+        put 'v'$full-source |
+          semver:parse |
+          should-be [
+            &major=$major
+            &minor=$minor
+            &patch=$patch
+            &pre-release=$pre-release
+            &build=$build
+          ]
       }
     }
   }

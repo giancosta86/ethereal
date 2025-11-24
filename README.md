@@ -69,9 +69,11 @@ put ?(fail DODO) |
 
 - [resources](resources.elv): convenient way to access the resources associated with a script file.
 
-- [sha](sha.elv): computation of SHA hash codes.
+- [semver](semver.elv): semantic versions - parsing, inspection and comparison.
 
 - [seq](seq.elv): functional-style sequence manipulation - especially `reduce` and fairly sophisticated ones, such as `split-by-chunk-count` and `equivalence-classes`.
+
+- [sha](sha.elv): computation of SHA hash codes.
 
 - [string](string.elv): string editing.
 
