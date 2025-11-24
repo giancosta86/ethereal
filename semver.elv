@@ -87,24 +87,24 @@ fn parse { |@arguments|
 
     &minor=(
       put $groups[2][text] |
-        seq:empty-to-default &default=0 |
+        seq:coalesce-empty &default=0 |
         num (all)
     )
 
     &patch=(
       put $groups[3][text] |
-        seq:empty-to-default &default=0 |
+        seq:coalesce-empty &default=0 |
         num (all)
     )
 
     &pre-release=(
       str:trim-space $groups[4][text] |
-        seq:empty-to-default
+        seq:coalesce-empty
     )
 
     &build=(
       str:trim-space $groups[5][text] |
-        seq:empty-to-default
+        seq:coalesce-empty
     )
   ]
 }

@@ -130,3 +130,15 @@ fn resolve { |value|
     put $value
   }
 }
+
+#
+# If the given `source` sequence has the given `key`, emits it;
+# otherwise, emits the requested `default` (by default, $nil).
+#
+fn get-value { |&default=$nil source key|
+  if (has-key $source $key) {
+    put $source[$key]
+  } else {
+    put $default
+  }
+}

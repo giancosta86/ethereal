@@ -1,14 +1,6 @@
 use ./lang
 use ./seq
 
-fn get-value { |&default=$nil source key|
-  if (has-key $source $key) {
-    put $source[$key]
-  } else {
-    put $default
-  }
-}
-
 fn entries { |@arguments|
   var source = (lang:get-single-input $arguments)
 
@@ -51,7 +43,7 @@ fn drill-down { |&default=$nil source @properties|
 
 fn filter { |source key-value-predicate|
   entries $source |
-    seq:each-spread { |key value|
+    seq:spread { |key value|
       if ($key-value-predicate $key $value) {
         put [$key $value]
       }
@@ -78,7 +70,7 @@ fn multi-value { |@arguments|
     seq:reduce [&] { |cumulated-map entry|
       var key value = (put $@entry)
 
-      var existing-values = (get-value $cumulated-map $key &default=[])
+      var existing-values = (lang:get-value $cumulated-map $key &default=[])
 
       var updated-values = [$@existing-values $value]
 

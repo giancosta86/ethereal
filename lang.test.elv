@@ -279,4 +279,58 @@ use ./lang
         should-be $true
     }
   }
+
+  >> 'getting a value' {
+    >> 'applied to a list' {
+      >> 'when the index exists' {
+        >> 'should output the related value' {
+          lang:get-value [A B C] 2 |
+            should-be C
+        }
+      }
+
+      >> 'when the index does not exist' {
+        >> 'when a default value is passed' {
+          >> 'should output such default value' {
+            lang:get-value &default=Dodo [A B C] 90 |
+              should-be Dodo
+          }
+        }
+
+        >> 'when no default value is passed' {
+          >> 'should output $nil' {
+            lang:get-value [A B C] 90 |
+              should-be $nil
+          }
+        }
+      }
+    }
+
+    >> 'applied to a map' {
+      var map = [&a=98 &b=30]
+
+      >> 'when the key exists' {
+        >> 'should return the related value' {
+          lang:get-value $map b |
+            should-be 30
+        }
+      }
+
+      >> 'when the key does not exist' {
+        >> 'when the default value is not passed' {
+          >> 'should return $nil' {
+            lang:get-value $map INEXISTING |
+              should-be $nil
+          }
+        }
+
+        >> 'when the default value is passed' {
+          >> 'should return the default value' {
+            lang:get-value $map INEXISTING &default=4321 |
+              should-be 4321
+          }
+        }
+      }
+    }
+  }
 }

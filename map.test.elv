@@ -1,33 +1,6 @@
 use ./map
 
 >> 'In map module' {
-  >> 'getting a value from a map' {
-    var map = [&a=98 &b=30]
-
-    >> 'when the key exists' {
-      >> 'should return the related value' {
-        map:get-value $map b |
-          should-be 30
-      }
-    }
-
-    >> 'when the key does not exist' {
-      >> 'when the default value is not passed' {
-        >> 'should return $nil' {
-          map:get-value $map INEXISTING |
-            should-be $nil
-        }
-      }
-
-      >> 'when the default value is passed' {
-        >> 'should return the default value' {
-          map:get-value $map INEXISTING &default=4321 |
-            should-be 4321
-        }
-      }
-    }
-  }
-
   >> 'getting the entries of a map' {
     >> 'when the map is empty' {
       >> 'should output nothing' {

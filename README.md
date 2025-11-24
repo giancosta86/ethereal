@@ -71,7 +71,9 @@ put ?(fail DODO) |
 
 - [sha](sha.elv): computation of SHA hash codes.
 
-- [string](string.elv): string manipulation.
+- [seq](seq.elv): functional-style sequence manipulation - especially `reduce` and fairly sophisticated ones, such as `split-by-chunk-count` and `equivalence-classes`.
+
+- [string](string.elv): string editing.
 
 - [tracer](tracer.elv): conditional text output to different streams and files.
 

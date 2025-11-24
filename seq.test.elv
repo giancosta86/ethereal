@@ -34,6 +34,22 @@ use ./seq
         }
       }
     }
+
+    >> 'when the source is a map' {
+      >> 'when the map is empty' {
+        >> 'should output $true' {
+          seq:is-empty [&] |
+            should-be $true
+        }
+      }
+
+      >> 'when the map is non-empty' {
+        >> 'should output $false' {
+          seq:is-empty [&A=90] |
+            should-be $false
+        }
+      }
+    }
   }
 
   >> 'testing for non-emptiness' {
@@ -68,20 +84,48 @@ use ./seq
         }
       }
     }
+
+    >> 'when the source is a map' {
+      >> 'when the map is empty' {
+        >> 'should output $false' {
+          seq:is-non-empty [&] |
+            should-be $false
+        }
+      }
+
+      >> 'when the map is non-empty' {
+        >> 'should output $true' {
+          seq:is-non-empty [&A=90] |
+            should-be $true
+        }
+      }
+    }
   }
 
   >> 'enumerating' {
     >> 'when the sequence is empty' {
-      >> 'should emit nothing' {
-        all [] |
-          seq:enumerate |
-          put [(all)] |
-          should-be []
+      >> 'when passing the sequence via pipe' {
+        >> 'should emit nothing' {
+          all [] |
+            seq:enumerate |
+            put [(all)] |
+            should-be []
+        }
       }
     }
 
     >> 'when the sequence is non-empty' {
-      >> 'should iterate' {
+      >> 'when passing the sequence as arguments' {
+        seq:enumerate A B C |
+          put [(all)] |
+          should-be [
+            [0 A]
+            [1 B]
+            [2 C]
+          ]
+      }
+
+      >> 'when passing the sequence via pipe' {
         all [A B C] |
           seq:enumerate |
           put [(all)] |
@@ -107,18 +151,18 @@ use ./seq
     }
   }
 
-  >> 'iterating and spreading each item as consumer arguments' {
+  >> 'spreading each item as consumer arguments' {
     >> 'when the sequence is empty' {
       >> 'should not call the consumer' {
         all [] |
-          seq:each-spread { |a b| fail 'THIS SHOULD NOT RUN' }
+          seq:spread { |a b| fail 'THIS SHOULD NOT RUN' }
       }
     }
 
     >> 'when there are items' {
-      >> 'should call the consumer' {
+      >> 'should call the consumer for each item' {
         all [[a b 90] [x y 92]] |
-          seq:each-spread { |left right result|
+          seq:spread { |left right result|
             put $left'+'$right'='$result
           } |
           put [(all)] |
@@ -140,76 +184,57 @@ use ./seq
     }
 
     >> 'when the sequence has one item' {
-      >> 'should apply the operator' {
-        all [92] |
-          seq:reduce 0 $'-~' |
-          should-be -92
-      }
+      all [92] |
+        seq:reduce 0 $'-~' |
+        should-be -92
     }
 
     >> 'when the sequence has two items' {
-      >> 'should apply the operator' {
-        all [82 13] |
-          seq:reduce 0 $'+~' |
-          should-be 95
-      }
+      all [82 13] |
+        seq:reduce 0 $'+~' |
+        should-be 95
     }
 
     >> 'when the sequence has three items' {
-      >> 'should apply the operator' {
-        all [65 25 8] |
-          seq:reduce 0 $'+~' |
-          should-be 98
-      }
+      all [65 25 8] |
+        seq:reduce 0 $'+~' |
+        should-be 98
+    }
+
+    >> 'when the sequence has three items and a different initial value' {
+      all [65 25 8] |
+        seq:reduce 4000 $'+~' |
+        should-be 4098
     }
 
     >> 'should support break' {
       all [65 25 8] |
         seq:reduce 0 { |left right|
-        if (==s $right 8) {
-          break
-        }
+          if (==s $right 8) {
+            break
+          }
 
-        + $left $right
-      } |
+          + $left $right
+        } |
         should-be 90
     }
 
     >> 'should support continue' {
       all [65 25 8 5] |
         seq:reduce 0 { |left right|
-        if (==s $right 8) {
-          continue
-        }
+          if (==s $right 8) {
+            continue
+          }
 
-        + $left $right
-      } |
+          + $left $right
+        } |
         should-be 95
     }
-  }
 
-  >> 'getting a value at a given index' {
-    >> 'when the index exists' {
-      >> 'should output the related value' {
-        seq:get-at [A B C] 2 |
-          should-be C
-      }
-    }
-
-    >> 'when the index does not exist' {
-      >> 'when a default value is passed' {
-        >> 'should output such default value' {
-          seq:get-at &default=Dodo [A B C] 90 |
-            should-be Dodo
-        }
-      }
-
-      >> 'when no default value is passed' {
-        >> 'should output $nil' {
-          seq:get-at [A B C] 90 |
-            should-be $nil
-        }
-      }
+    >> 'when debug is requested' {
+      all [65 25 8] |
+        seq:reduce &debug 0 $'+~' |
+        should-be 98
     }
   }
 
@@ -252,95 +277,71 @@ use ./seq
     }
   }
 
-  >> 'turning an empty sequence to default' {
-    >> 'when not passing a default value' {
-      >> 'for strings' {
-        >> 'when empty' {
-          >> 'should output $nil' {
-            seq:empty-to-default '' |
-              should-be $nil
-          }
+  >> 'coalescing an empty sequence' {
+    >> 'for strings' {
+      >> 'when empty' {
+        >> 'when not passing a default value' {
+          put '' |
+            seq:coalesce-empty |
+            should-be $nil
         }
 
-        >> 'when non-empty' {
-          >> 'should output the collection itself' {
-            seq:empty-to-default 'Dodo' |
-              should-be 'Dodo'
-          }
+        >> 'when passing a default value' {
+          put '' |
+            seq:coalesce-empty &default=Dodo |
+            should-be Dodo
         }
       }
 
-      >> 'for lists' {
-        >> 'when empty' {
-          >> 'should output $nil' {
-            seq:empty-to-default [] |
-              should-be $nil
-          }
-        }
-
-        >> 'when non-empty' {
-          >> 'should output the collection itself' {
-            seq:empty-to-default [A B C] |
-              should-be [A B C]
-          }
-        }
-      }
-
-      >> 'for maps' {
-        >> 'when empty' {
-          >> 'should output $nil' {
-            seq:empty-to-default [&] |
-              should-be $nil
-          }
-        }
-
-        >> 'when non-empty' {
-          >> 'should output the collection itself' {
-            seq:empty-to-default [&A=90 &B=92] |
-              should-be [&A=90 &B=92]
-          }
-        }
+      >> 'when not empty' {
+        put Yogi |
+          seq:coalesce-empty |
+          should-be Yogi
       }
     }
 
-    >> 'when passing a default value' {
-      >> 'when the source is empty' {
-        >> 'should return the default value' {
-          var test-default = my-default
+    >> 'for lists' {
+      >> 'when empty' {
+        >> 'when not passing a default value' {
+          put [] |
+            seq:coalesce-empty |
+            should-be $nil
+        }
 
-          seq:empty-to-default &default=$test-default '' |
-            should-be $test-default
-
-          seq:empty-to-default &default=$test-default [] |
-            should-be $test-default
-
-          seq:empty-to-default &default=$test-default [&] |
-            should-be $test-default
+        >> 'when passing a default value' {
+          put [] |
+            seq:coalesce-empty &default=[Cip Ciop] |
+            should-be [Cip Ciop]
         }
       }
 
-      >> 'when the source is non-empty' {
-        >> 'should return the source' {
-          var test-default = my-default
-
-          seq:empty-to-default &default=$test-default DODO |
-            should-be DODO
-
-          seq:empty-to-default &default=$test-default [A B C] |
-            should-be [A B C]
-
-          seq:empty-to-default &default=$test-default [&A=90] |
-            should-be [&A=90]
-        }
+      >> 'when not empty' {
+        put [90 92 95] |
+          seq:coalesce-empty |
+          should-be [90 92 95]
       }
     }
 
-    >> 'when passing a string via pipe' {
-      var source = "This is a\nmultiline test!"
+    >> 'for maps' {
+      >> 'when empty' {
+        >> 'when not passing a default value' {
+          put [&] |
+            seq:coalesce-empty |
+            should-be $nil
+        }
 
-      put $source |
-        seq:empty-to-default |
-        should-be $source
+        >> 'when passing a default value' {
+          put [&] |
+            seq:coalesce-empty &default=[&alpha=90] |
+            should-be [&alpha=90]
+        }
+      }
+
+      >> 'when not empty' {
+        put [&omega=98] |
+          seq:coalesce-empty |
+          should-be [&omega=98]
+      }
     }
   }
 
@@ -349,7 +350,7 @@ use ./seq
       >> 'should fail' {
         throws {
           all [Alpha Beta] |
-          seq:split-by-chunk-count -1
+            seq:split-by-chunk-count -1
         } |
           get-fail-content |
           str:contains (all) 'The chunk count must be > 0' |
@@ -421,23 +422,23 @@ use ./seq
     }
   }
 
-  >> 'converting single value to list' {
+  >> 'converting a single value to list' {
     >> 'when the value is a string' {
-      >> 'should return a list containing just the value' {
+      >> 'should emit a list containing just the value' {
         seq:value-as-list Dodo |
           should-be [Dodo]
       }
     }
 
     >> 'when the value is a number' {
-      >> 'should return a list containing just the value' {
+      >> 'should emit a list containing just the value' {
         seq:value-as-list (num 90) |
           should-be [(num 90)]
       }
     }
 
     >> 'when the value is an exception' {
-      >> 'should return a list containing just the value' {
+      >> 'should emit a list containing just the value' {
         var value = ?(fail DODO)
 
         seq:value-as-list $value |
@@ -446,7 +447,7 @@ use ./seq
     }
 
     >> 'when the value is $nil' {
-      >> 'should return an empty list' {
+      >> 'should emit an empty list' {
         seq:value-as-list $nil |
           should-be []
       }
