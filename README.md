@@ -2,6 +2,10 @@
 
 _Elegant utilities for the Elvish shell_
 
+![Logo](logo.png)
+
+**ethereal** is a collection of _utility modules_ for the [Elvish](https://elv.sh/) shell - providing a gallery of _common patterns_ in a variety of domains.
+
 ## Installation
 
 The library can be installed via **epm** - in particular:
