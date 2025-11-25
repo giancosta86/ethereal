@@ -3,7 +3,7 @@ use ./lang
 
 #
 # Emits every single line it receives via pipe, prepending the given `prefix` string;
-# by default, empty lines are emitted unaltered - unless the `empty-too` flag is set.
+# by default, empty lines are emitted unaltered - unless the `empty-too` option is set.
 #
 fn prefix-lines { |&empty-too=$false prefix|
   to-lines |

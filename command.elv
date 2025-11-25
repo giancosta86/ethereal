@@ -46,9 +46,9 @@ var -data-filter-by-type = [
 #
 # * captures its emitted data as a list containing bytes/values:
 #
-#   * from stream **out**, **err**, **both** or **none**, according to the `stream` flag
+#   * from stream **out**, **err**, **both** or **none**, according to the `stream` option
 #
-#   * of type **bytes**, **values**, **both** or **none**, according to the `type` flag
+#   * of type **bytes**, **values**, **both** or **none**, according to the `type` option
 #
 # * intercepts its thrown exception, if any - or $nil if the block runs flawlessly.
 #
@@ -56,11 +56,11 @@ var -data-filter-by-type = [
 #
 fn capture { |&stream=both &type=both @arguments|
   if (not (has-key $-redirectors-by-stream $stream)) {
-    fail 'Invalid stream flag: '$stream
+    fail 'Invalid stream option: '$stream
   }
 
   if (not (has-key $-data-filter-by-type $type)) {
-    fail 'Invalid type flag: '$type
+    fail 'Invalid type option: '$type
   }
 
   var block = (lang:get-single-input $arguments)
@@ -118,7 +118,7 @@ var -silence-exception-strategies = [
 #
 # Silences the given block - preventing it from emitting anything from both stdout and stderr.
 #
-# In case of exception, the `on-exception` flag dictates the strategy:
+# In case of exception, the `on-exception` option dictates the strategy:
 #
 # * **both**: outputs to stdout every line/value emitted by the command, then throws the exception.
 #
@@ -130,7 +130,7 @@ var -silence-exception-strategies = [
 #
 fn silence { |&on-exception=both @arguments|
   if (not (has-key $-silence-exception-strategies $on-exception)) {
-    fail 'Invalid value for the "&on-exception" flag: '$on-exception
+    fail 'Invalid value for the "&on-exception" option: '$on-exception
   }
 
   var command = (lang:get-single-input $arguments)

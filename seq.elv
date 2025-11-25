@@ -25,7 +25,7 @@ fn is-non-empty { |@arguments|
 #
 # Takes in input a sequence and emits `[index item]` pairs.
 #
-# The `start-index` flag can be used to start the sequence from the given value.
+# The `start-index` option can be used to start the sequence from the given value.
 #
 fn enumerate { |&start-index=0 @arguments|
   var index = (num $start-index)
@@ -58,7 +58,7 @@ fn spread { |consumer|
 #
 # and must emit the new partial result.
 #
-# In the end, returns the most recent partial result; as a plus, the `debug` flag
+# In the end, returns the most recent partial result; as a plus, the `debug` option
 # enables useful debug messages.
 #
 # Please, note: the `operator` function can call `break` or `continue` to influence the loop.
