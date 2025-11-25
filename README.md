@@ -79,6 +79,8 @@ put ?(fail DODO) |
 
 - [seq](seq.elv): functional-style sequence manipulation - especially `reduce` and fairly sophisticated ones, such as `split-by-chunk-count` and `equivalence-classes`.
 
+- [set](set.elv): full-fledged set operations.
+
 - [sha](sha.elv): computation of SHA hash codes.
 
 - [string](string.elv): string editing.

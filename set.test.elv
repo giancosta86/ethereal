@@ -2,6 +2,16 @@ use ./set
 
 >> 'In set module' {
   >> 'creating from item enumeration' {
+    >> 'when passing no items' {
+      >> 'via pipe' {
+        all [] |
+          set:of |
+          should-be [
+            &-set-items=[&]
+          ]
+      }
+    }
+
     >> 'when passing 1 item' {
       >> 'as argument' {
         set:of DODO |
@@ -20,7 +30,7 @@ use ./set
     }
 
     >> 'when passing multiple items' {
-      >> 'as argument' {
+      >> 'as arguments' {
         set:of 90 92 95 98 |
           should-be [
             &-set-items=[
@@ -83,21 +93,28 @@ use ./set
 
   >> 'converting from another sequence' {
     >> 'if the source is a list' {
-      put [92 90 98 95] |
-        set:from |
-        set:to-list |
-        order (all) |
-        put [(all)] |
-        should-be [90 92 95 98]
+      set:from [92 90 98 95] |
+        should-be [
+          &-set-items=[
+            &90=$true
+            &92=$true
+            &95=$true
+            &98=$true
+          ]
+        ]
     }
 
     >> 'if the source is a set' {
       set:of 90 92 95 98 |
         set:from |
-        set:to-list |
-        order (all) |
-        put [(all)] |
-        should-be [90 92 95 98]
+        should-be [
+          &-set-items=[
+            &90=$true
+            &92=$true
+            &95=$true
+            &98=$true
+          ]
+        ]
     }
   }
 
@@ -177,7 +194,8 @@ use ./set
     >> 'when adding multiple values' {
       var source = (set:of 90)
 
-      set:add $source 92 95 98 |
+      put 92 95 98 |
+        set:add $source |
         should-be (set:of 90 92 95 98)
     }
   }
@@ -205,8 +223,7 @@ use ./set
     >> 'when removing multiple value' {
       var source = (set:of 90 92 95 98 99)
 
-      put 90 95 99 |
-        set:remove $source |
+      set:remove $source 90 95 99 |
         should-be (set:of 92 98)
     }
   }
@@ -218,7 +235,8 @@ use ./set
 
     >> 'union' {
       >> 'with no operands' {
-        set:union |
+        all [] |
+          set:union |
           should-be $set:empty
       }
 
@@ -235,7 +253,8 @@ use ./set
 
     >> 'intersection' {
       >> 'with no operands' {
-        set:intersection |
+        all [] |
+          set:intersection |
           should-be $set:empty
       }
 
@@ -303,15 +322,15 @@ use ./set
           should-be $set:empty
       }
 
-      >> 'with empty and non-empty set' {
-        set:symmetric-difference $set:empty $left |
-          should-be $left
-      }
-
       >> 'with non-empty and empty set' {
         put $left $set:empty |
           set:symmetric-difference |
           should-be $left
+      }
+
+      >> 'with empty and non-empty set' {
+        set:symmetric-difference $set:empty $right |
+          should-be $right
       }
 
       >> 'with two non-empty sets' {
