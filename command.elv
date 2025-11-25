@@ -154,3 +154,33 @@ fn exists-in-bash { |@arguments|
   put ?(bash --rcfile ~/.bashrc -i -c 'type '$command > $os:dev-null 2>&1) |
     eq $ok (all)
 }
+
+#
+# Creates a map - especially useful in tests - with the following keys:
+#
+# * `command`: a command that can be invoked - with any number of arguments; it takes track of its arguments, then executes the optional block argument, passing its arguments.
+#
+# * `get-runs`: emits the list of runs of the above `command` up to that moment - where each run is stored in a sublist containing its arguments.
+#
+fn spy { |@arguments|
+  var block = (lang:get-value $arguments 0)
+
+  var runs = []
+
+  put [
+    &get-runs={
+      put $runs
+    }
+
+    &command={ |@arguments|
+      set runs = [
+        $@runs
+        $arguments
+      ]
+
+      if $block {
+        $block $@arguments
+      }
+    }
+  ]
+}

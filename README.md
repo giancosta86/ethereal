@@ -69,6 +69,8 @@ put ?(fail DODO) |
 
 - [fake-git](fake-git.elv): tiny, customizable subset of the Git command.
 
+- [image](image.elv): image transforms, mainly based on the `gm` command.
+
 - [lang](lang.elv): core, almost language-related utilities.
 
 - [map](map.elv): functional-style map manipulation.

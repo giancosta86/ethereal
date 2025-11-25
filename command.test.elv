@@ -259,4 +259,74 @@ var test-block-crashing = {
         should-be $false
     }
   }
+
+  >> 'creating a spy' {
+    >> 'when not passing a block' {
+      >> 'upon creation' {
+        var spy = (command:spy)
+
+        $spy[get-runs] |
+          should-be []
+      }
+
+      >> 'after one invocation' {
+        var spy = (command:spy)
+
+        $spy[command] A B C
+
+        $spy[get-runs] |
+          should-be [
+            [A B C]
+          ]
+      }
+
+      >> 'after two invocations' {
+        var spy = (command:spy)
+
+        $spy[command] A B C
+        $spy[command]
+
+        $spy[get-runs] |
+          should-be [
+            [A B C]
+            []
+          ]
+      }
+
+      >> 'after three invocations' {
+        var spy = (command:spy)
+
+        $spy[command] A B C
+        $spy[command]
+        $spy[command] X Y
+
+        $spy[get-runs] |
+          should-be [
+            [A B C]
+            []
+            [X Y]
+          ]
+      }
+    }
+
+    >> 'when passing a block' {
+      var spy = (
+        command:spy { |@arguments| count $arguments }
+      )
+
+      var output = ($spy[command] X Y Z)
+
+      >> 'the arguments should still be tracked' {
+        $spy[get-runs] |
+          should-be [
+            [X Y Z]
+          ]
+      }
+
+      >> 'the block should be executed' {
+        put $output |
+          should-be 3
+      }
+    }
+  }
 }
