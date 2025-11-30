@@ -21,9 +21,9 @@ jobs:
         run: |
           use epm
 
-          epm:install github.com/giancosta86/epm-plus@v1
+          epm:install github.com/giancosta86/epm-plus
 
-          use github.com/giancosta86/epm-plus/v1/epm-plus
+          use github.com/giancosta86/epm-plus/epm-plus
 
           epm-plus:patch-epm
 
