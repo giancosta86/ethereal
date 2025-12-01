@@ -11,13 +11,13 @@ fn for-script { |@arguments|
   var caller-src-result = (lang:get-single-input $arguments)
 
   var caller-path = $caller-src-result[name]
-  var caller-directory = (path:dir $caller-path)
+  var caller-dir = (path:dir $caller-path)
 
   put [
     &get-path={ |@arguments|
       var relative-path = (lang:get-single-input $arguments)
 
-      path:join $caller-directory $relative-path
+      path:join $caller-dir $relative-path
     }
   ]
 }

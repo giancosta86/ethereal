@@ -39,18 +39,18 @@ fn create-temp-tree { |temp-root|
     ]
 
     >> 'if the directory prefix ends with path separator' {
-      var directory-path = (path:join alpha beta)''$path:separator
+      var dir-path = (path:join alpha beta)''$path:separator
 
-      fs:relative-to $directory-path $@source-paths |
+      fs:relative-to $dir-path $@source-paths |
         put [(all)] |
         should-be $expected-paths
     }
 
     >> 'if the directory prefix does not end with path separator' {
-      var directory-path = (path:join alpha beta)
+      var dir-path = (path:join alpha beta)
 
       all $source-paths |
-        fs:relative-to $directory-path |
+        fs:relative-to $dir-path |
         put [(all)] |
         should-be $expected-paths
     }
@@ -122,7 +122,7 @@ fn create-temp-tree { |temp-root|
     put $pwd |
       should-be $nested-path
 
-    fs:ensure-not-in-directory $temp-dir
+    fs:ensure-not-in-dir $temp-dir
 
     put $pwd |
       should-be (path:dir $temp-dir)
@@ -181,7 +181,8 @@ fn create-temp-tree { |temp-root|
       var target-path = (path:join $temp-dir alpha beta gamma delta.txt)
       var content = 'Hello, world!'
 
-      fs:save-anywhere $target-path $content
+      put $content |
+        fs:save-anywhere $target-path
 
       slurp < $target-path |
         should-be $content
@@ -315,34 +316,6 @@ fn create-temp-tree { |temp-root|
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   >> 'the copy operation' {
     >> 'should copy a file' {
       fs:with-temp-file { |sigma-path|
@@ -424,11 +397,9 @@ fn create-temp-tree { |temp-root|
   >> 'the mkcd command' {
     >> 'when the target directory does not exist' {
       fs:with-temp-dir { |test-root|
-        tmp pwd = $test-root
-
         var components = [alpha beta gamma delta]
 
-        fs:mkcd $@components
+        fs:mkcd $test-root $@components
 
         >> 'should create that directory and its parents' {
           path:join $test-root $@components |
@@ -462,6 +433,20 @@ fn create-temp-tree { |temp-root|
   }
 
   >> 'opening a file sandbox' {
+    >> 'in the beginning' {
+      >> 'if the path exists' {
+        >> 'if it is not a regular file' {
+          fs:with-temp-dir { |temp-dir|
+            throws {
+              fs:with-file-sandbox $temp-dir {}
+            } |
+              get-fail-content |
+              should-be 'Path "'$temp-dir'" exists and is not a regular file!'
+          }
+        }
+      }
+    }
+
     >> 'in the end' {
       >> 'if the path existed' {
         >> 'after modification' {
@@ -502,7 +487,7 @@ fn create-temp-tree { |temp-root|
 
       >> 'if the path did not exist' {
         >> 'should remove the file' {
-          var test-file = SOME_INEXISTING_FILE
+          var test-file = SOME-MISSING-FILE
 
           fs:with-file-sandbox $test-file {
             echo Some text > $test-file
@@ -518,7 +503,29 @@ fn create-temp-tree { |temp-root|
     }
   }
 
-  >> 'Opening a directory sandbox' {
+  >> 'opening a directory sandbox' {
+    >> 'in the beginning' {
+      >> 'if the path exists' {
+        >> 'if it is not a directory' {
+          fs:with-temp-file { |temp-file|
+            throws {
+              fs:with-dir-sandbox $temp-file {}
+            } |
+              get-fail-content |
+              should-be 'Path "'$temp-file'" exists and is not a directory!'
+          }
+        }
+      }
+
+      >> 'if the path is the file system root' {
+        throws {
+          fs:with-dir-sandbox / {}
+        } |
+          get-fail-content |
+          should-be 'Cannot apply a sandbox to the file system root!'
+      }
+    }
+
     >> 'in the end' {
       >> 'if the path existed' {
         >> 'should restore the tree as it was' {
@@ -597,7 +604,8 @@ fn create-temp-tree { |temp-root|
         echo DODO > alpha.txt
         echo DODO > beta.txt
 
-        fs:equal-files alpha.txt beta.txt |
+        put alpha.txt beta.txt |
+          fs:equal-files |
           should-be $true
       }
     }
@@ -631,17 +639,17 @@ fn create-temp-tree { |temp-root|
       print A > A5
       cd ..
 
-      var duplicates = (
+      var duplicate-lists = (
         put ** |
           fs:find-duplicates |
           order &key=$count~ |
           put [(all)]
       )
 
-      count $duplicates |
+      count $duplicate-lists |
         should-be 2
 
-      all $duplicates[0] |
+      all $duplicate-lists[0] |
         order |
         put [(all)] |
         should-be [
@@ -649,7 +657,7 @@ fn create-temp-tree { |temp-root|
           B2
         ]
 
-      all $duplicates[1] |
+      all $duplicate-lists[1] |
         order |
         put [(all)] |
         should-be [
