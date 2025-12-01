@@ -1,5 +1,7 @@
 use ../tracer
 
+pragma unknown-command = disallow
+
 var -enabled-values = [true '$true' t 1]
 
 #

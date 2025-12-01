@@ -4,6 +4,8 @@ use path
 use ./fs
 use ./lang
 
+pragma unknown-command = disallow
+
 #
 # Takes in input a SOURCE-URL => REPOSITORY-MAP map,
 # where REPOSITORY-MAP is a GIT-REFERENCE => FILE-MAP map containing at least a `main` key,

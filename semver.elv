@@ -3,6 +3,8 @@ use str
 use ./lang
 use ./seq
 
+pragma unknown-command = disallow
+
 var -numeric-component-fragment = [
   '0'
   '|'

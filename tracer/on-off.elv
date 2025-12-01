@@ -1,6 +1,8 @@
 use ../map
 use ../tracer
 
+pragma unknown-command = disallow
+
 #
 # Creates a tracer - initially disabled by default - with additional methods:
 #

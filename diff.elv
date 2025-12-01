@@ -2,6 +2,8 @@ use os
 use ./fs
 use ./lang
 
+pragma unknown-command = disallow
+
 var -diff~ = (external diff)
 
 #

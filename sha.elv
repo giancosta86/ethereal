@@ -1,5 +1,7 @@
 use ./lang
 
+pragma unknown-command = disallow
+
 var -sha256sum~ = (external sha256sum)
 
 #

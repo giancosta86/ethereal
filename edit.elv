@@ -1,3 +1,7 @@
+pragma unknown-command = disallow
+
+var -jq~ = (external jq)
+
 #
 # Reads the entire content of the given `file` and passes it to `transformer`,
 # which must be a function taking such content and returning either the new content or $nil.
@@ -21,7 +25,7 @@ fn file { |file transformer|
 # the operation is performed without creating an auxiliary temp file.
 #
 fn json { |file @jq-arguments|
-    jq $@jq-arguments < $file |
-      slurp |
-      to-lines > $file
+  -jq $@jq-arguments < $file |
+    slurp |
+    to-lines > $file
 }

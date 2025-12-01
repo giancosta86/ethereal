@@ -1,6 +1,8 @@
 use path
 use ./lang
 
+pragma unknown-command = disallow
+
 #
 # Takes as a single input the output of the `src` command for the calling module.
 #

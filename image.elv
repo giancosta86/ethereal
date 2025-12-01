@@ -1,6 +1,8 @@
 use ./fs
 use ./lang
 
+pragma unknown-command = disallow
+
 var -gm~ = (external gm)
 
 #

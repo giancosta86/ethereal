@@ -1,6 +1,8 @@
 use ./lang
 use ./seq
 
+pragma unknown-command = disallow
+
 #
 # Emits the entries of the given map as a stream of [key value] pairs.
 #

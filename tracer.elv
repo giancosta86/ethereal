@@ -1,6 +1,8 @@
 use str
 use ./lang
 
+pragma unknown-command = disallow
+
 fn -trace { |enabled writer block|
   if (lang:resolve $enabled) {
     $writer $block

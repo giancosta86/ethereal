@@ -6,6 +6,8 @@ use ./lang
 use ./map
 use ./seq
 
+pragma unknown-command = disallow
+
 var -cp~ = (external cp)
 var -mv~ = (external mv)
 var -cmp~ = (external cmp)

@@ -2,6 +2,8 @@ use math
 use ./lang
 use ./string
 
+pragma unknown-command = disallow
+
 #
 # Emits $true if the passed input sequence has no items, $false otherwise.
 #

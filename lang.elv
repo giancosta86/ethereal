@@ -1,3 +1,5 @@
+pragma unknown-command = disallow
+
 #
 # If $condition is trueish, $when-true is emitted - $when-false otherwise.
 #

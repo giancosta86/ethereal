@@ -3,6 +3,8 @@ use ./lang
 use ./map
 use ./seq
 
+pragma unknown-command = disallow
+
 #
 # Set with no items
 #

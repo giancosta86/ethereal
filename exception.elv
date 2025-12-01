@@ -1,5 +1,7 @@
 use ./lang
 
+pragma unknown-command = disallow
+
 #
 # Emits $true if the input value is an exception, $false otherwise.
 #

@@ -1,6 +1,8 @@
 use re
 use ./lang
 
+pragma unknown-command = disallow
+
 #
 # Emits every single line it receives via pipe, prepending the given `prefix` string;
 # by default, empty lines are emitted unaltered - unless the `empty-too` option is set.

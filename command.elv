@@ -1,6 +1,10 @@
 use os
 use ./lang
 
+pragma unknown-command = disallow
+
+var -bash~ = (external bash)
+
 var -redirectors-by-stream = [
   &both={ |block|
     put { $block 2>&1 }
@@ -151,7 +155,7 @@ fn silence { |&on-exception=both @arguments|
 fn exists-in-bash { |@arguments|
   var command = (lang:get-single-input $arguments)
 
-  put ?(bash --rcfile ~/.bashrc -i -c 'type '$command > $os:dev-null 2>&1) |
+  put ?(-bash --rcfile ~/.bashrc -i -c 'type '$command > $os:dev-null 2>&1) |
     eq $ok (all)
 }
 
