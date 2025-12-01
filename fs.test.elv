@@ -3,7 +3,7 @@ use path
 use str
 use ./fs
 
-fn -create-temp-tree { |temp-root|
+fn create-temp-tree { |temp-root|
   var alpha-file = (path:join $temp-root alpha)
   print Alpha > $alpha-file
 
@@ -23,6 +23,39 @@ fn -create-temp-tree { |temp-root|
 }
 
 >> 'In fs module' {
+  >> 'getting the relative path to a directory' {
+    var source-paths = [
+      (path:join alpha beta gamma.txt)
+      (path:join alpha beta delta epsilon.txt)
+      (path:join alpha beta x.txt)
+      (path:join ro sigma.txt)
+    ]
+
+    var expected-paths = [
+      gamma.txt
+      (path:join delta epsilon.txt)
+      x.txt
+      (path:join ro sigma.txt)
+    ]
+
+    >> 'if the directory prefix ends with path separator' {
+      var directory-path = (path:join alpha beta)''$path:separator
+
+      fs:relative-to $directory-path $@source-paths |
+        put [(all)] |
+        should-be $expected-paths
+    }
+
+    >> 'if the directory prefix does not end with path separator' {
+      var directory-path = (path:join alpha beta)
+
+      all $source-paths |
+        fs:relative-to $directory-path |
+        put [(all)] |
+        should-be $expected-paths
+    }
+  }
+
   >> 'splitting the extension' {
     >> 'when the extension is missing' {
       fs:split-ext 'alpha' |
@@ -34,7 +67,8 @@ fn -create-temp-tree { |temp-root|
     }
 
     >> 'when the extension is present' {
-      fs:split-ext 'beta.elv' |
+      put 'beta.elv' |
+        fs:split-ext |
         put [(all)] |
         should-be [
           beta
@@ -53,12 +87,12 @@ fn -create-temp-tree { |temp-root|
   }
 
   >> 'switching extension' {
-    >> 'when the file has no extension' {
+    >> 'when the source path has no extension' {
       fs:switch-ext 'dodo' '.png' |
           should-be 'dodo.png'
     }
 
-    >> 'when the path has a single extension' {
+    >> 'when the source path has a single extension' {
       >> 'when the new extension has a leading dot' {
         fs:switch-ext 'alpha.jpg' '.png' |
           should-be 'alpha.png'
@@ -95,6 +129,18 @@ fn -create-temp-tree { |temp-root|
   }
 
   >> 'requesting a temp file path' {
+    >> 'should actually create an empty file' {
+      var temp-path = (fs:temp-file-path)
+      defer { os:remove-all $temp-path }
+
+      os:exists $temp-path |
+        should-be $true
+
+      os:stat $temp-path |
+        put (all)[size] |
+        should-be 0
+    }
+
     >> 'when not passing a pattern' {
       >> 'should use the default pattern' {
         var temp-path = (fs:temp-file-path)
@@ -142,21 +188,50 @@ fn -create-temp-tree { |temp-root|
     }
   }
 
+  >> 'ensuring a file exists' {
+    var temp-path = (fs:temp-file-path)
+    defer { os:remove-all $temp-path }
+
+    >> 'when the path already exists' {
+      >> 'when the path is a actually a file' {
+        fs:ensure-file $temp-path
+      }
+
+      >> 'when the path is not a file' {
+        os:remove-all $temp-path
+        os:mkdir $temp-path
+
+        throws {
+          fs:ensure-file $temp-path
+        } |
+          get-fail-content |
+          should-be 'Path "'$temp-path'" exists, but it is not a file!'
+      }
+    }
+
+    >> 'when the path does not exist' {
+      os:remove-all $temp-path
+
+      fs:ensure-file $temp-path
+
+      os:is-regular $temp-path |
+        should-be $true
+    }
+  }
+
   >> 'cleaning a directory' {
     var temp-dir = (os:temp-dir)
     defer { os:remove-all $temp-dir }
 
-    var alpha = (path:join $temp-dir alpha)
-    echo ALPHA > $alpha
+    create-temp-tree $temp-dir
 
-    var beta = (path:join $temp-dir beta)
-    echo BETA > $beta
+    put $temp-dir/*[type:regular] |
+      count |
+      should-be 1
 
-    var delta = (path:join $temp-dir gamma delta)
-    os:mkdir-all $delta
-
-    var epsilon = (path:join $delta epsilon)
-    echo EPSILON > $epsilon
+    put $temp-dir/*[type:dir] |
+      count |
+      should-be 1
 
     fs:clean-dir $temp-dir
 
@@ -179,7 +254,7 @@ fn -create-temp-tree { |temp-root|
   }
 
   >> 'consuming a temp file path' {
-    >> 'should delete the temp path available only within the consumer' {
+    >> 'should delete the temp path after the consumer runs' {
       var actual-path
 
       fs:with-temp-file { |temp-path|
@@ -210,7 +285,7 @@ fn -create-temp-tree { |temp-root|
   }
 
   >> 'consuming a temp directory path' {
-    >> 'should make the temp path available only within the consumer' {
+    >> 'should delete the temp path after the consumer runs' {
       var actual-path
 
       fs:with-temp-dir { |temp-dir|
@@ -240,22 +315,33 @@ fn -create-temp-tree { |temp-root|
     }
   }
 
-  >> 'the touch operation' {
-    fs:with-temp-dir { |temp-dir|
-      var file-path = (path:join $temp-dir DODO)
-      fs:touch $file-path
 
-      >> 'should create a file' {
-        os:is-regular $file-path |
-          should-be $true
-      }
 
-      >> 'should create an empty file' {
-        put (os:stat $file-path)[size] |
-          should-be 0
-      }
-    }
-  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   >> 'the copy operation' {
     >> 'should copy a file' {
@@ -276,7 +362,7 @@ fn -create-temp-tree { |temp-root|
 
     >> 'should copy a directory' {
       fs:with-temp-dir { |temp-dir|
-        var temp-tree = (-create-temp-tree $temp-dir)
+        var temp-tree = (create-temp-tree $temp-dir)
 
         var omega-path = (path:join $temp-dir omega)
 
@@ -315,7 +401,7 @@ fn -create-temp-tree { |temp-root|
 
     >> 'should move a directory' {
       fs:with-temp-dir { |temp-dir|
-        var temp-tree = (-create-temp-tree $temp-dir)
+        var temp-tree = (create-temp-tree $temp-dir)
 
         var omega-path = (path:join $temp-dir omega)
 

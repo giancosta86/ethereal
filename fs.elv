@@ -9,38 +9,52 @@ use ./seq
 var -cp~ = (external cp)
 var -mv~ = (external mv)
 
+#
+# Receives one or more paths in input - as arguments or via pipe - and removes the given leading dir path from each.
+#
+# The directory prefix can optionally end with `$path:separator` - in any case, it won't appear in the emitted paths.
+#
+fn relative-to { |directory-path @arguments|
+  var simplified-directory-path = (
+    str:trim-suffix $directory-path $path:separator
+  )
+
+  lang:get-inputs $arguments | each { |path|
+    str:trim-prefix $path $simplified-directory-path''$path:separator
+  }
+}
+
+#
+# Takes a path - as argument or via pipe - and emits the core and the ext
+# as subsequent values, where `ext` can be either a dotted extension or the empty string.
+#
+# In case of multiple extensions, only the last one is returned -
+# in accordance with `path:ext`.
+#
 fn split-ext { |@arguments|
   var source-path = (lang:get-single-input $arguments)
 
   var ext = (path:ext $source-path)
 
-  var core = (
-    if (not-eq $ext '') {
-      put $source-path[..-(count $ext)]
-    } else {
-      put $source-path
-    }
-  )
-
-  put $core $ext
+  put (str:trim-suffix $source-path $ext) $ext
 }
 
+#
+# Given a `source-path` and an `extension` (with or without leading dot) - passed as arguments or via pipe -
+# emits a new path where the given `extension` replaces the extension in `source-path`.
+#
 fn switch-ext { |@arguments|
   var source-path new-ext = (lang:get-inputs $arguments)
 
   var core ext = (split-ext $source-path)
 
-  var dotted-new-ext = (
-    if (str:has-prefix $new-ext '.') {
-      put $new-ext
-    } else {
-      put '.'$new-ext
-    }
-  )
-
-  put $core''$dotted-new-ext
+  put $core'.'(str:trim-prefix $new-ext .)
 }
 
+#
+# Given a directory path as argument or via pipe, moves up via `cd..`
+# until the current directory is not below such path.
+#
 fn ensure-not-in-directory { |@arguments|
   var directory-path = (lang:get-single-input $arguments)
 
@@ -51,6 +65,9 @@ fn ensure-not-in-directory { |@arguments|
   }
 }
 
+#
+# Returns the path of a created temp file - but without an associated open file structure.
+#
 fn temp-file-path { |&dir='' &pattern=$nil|
   var temp-file = (
     os:temp-file &dir=$dir (all (seq:value-as-list $pattern))
@@ -60,6 +77,10 @@ fn temp-file-path { |&dir='' &pattern=$nil|
   put $temp-file[name]
 }
 
+#
+# Given a `path` and its `content` - passed as arguments or via pipe -
+# creates all the intermediate directories so as to be able to save `content` into `path`.
+#
 fn save-anywhere { |@arguments|
   var path content = (lang:get-inputs $arguments)
 
@@ -69,6 +90,24 @@ fn save-anywhere { |@arguments|
   print $content > $path
 }
 
+#
+# If the given path exists, it must be a file; otherwise, it will be created.
+#
+fn ensure-file { |path|
+  if (os:exists $path) {
+    if (not (os:is-regular $path)) {
+      fail 'Path "'$path'" exists, but it is not a file!'
+    }
+  } else {
+    save-anywhere $path ''
+  }
+}
+
+#
+# Given a `directory` passed as argument or via pipe,
+# removes all the files and subdirectories within it,
+# leaving just the empty directory itself.
+#
 fn clean-dir { |@arguments|
   var directory = (lang:get-single-input $arguments)
 
@@ -77,37 +116,60 @@ fn clean-dir { |@arguments|
   }
 }
 
+#
+# Given a consumer block taking a file path as argument,
+# creates a temp file, passes its path to the block and, in the end,
+# ensures it gets deleted.
+#
+# The block can be passed either as argument or via pipe.
+#
 fn with-temp-file { |&dir='' &pattern=$nil @arguments|
   var consumer = (lang:get-single-input $arguments)
 
   var temp-path = (temp-file-path &dir=$dir &pattern=$pattern)
+  defer { os:remove-all $temp-path }
 
-  try {
-    $consumer $temp-path
-  } finally {
-    os:remove-all $temp-path
-  }
+  $consumer $temp-path
 }
 
+#
+# Given a consumer block taking a directory path as argument,
+# creates a temp directory, passes its path to the block and, in the end,
+# deletes its entire tree - after ensuring the pwd is out of it.
+#
+# The block can be passed either as argument or via pipe.
+#
 fn with-temp-dir { |&dir='' &pattern=$nil @arguments|
   var consumer = (lang:get-single-input $arguments)
 
   var temp-path = (os:temp-dir &dir=$dir (all (seq:value-as-list $pattern)))
-
-  try {
-    $consumer $temp-path
-  } finally {
+  defer {
     ensure-not-in-directory $temp-path
 
     os:remove-all $temp-path
   }
+
+  $consumer $temp-path
 }
 
-fn touch { |@arguments|
-  var path = (lang:get-single-input $arguments)
 
-  print > $path
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 fn copy { |@arguments|
   var from to = (lang:get-inputs $arguments)

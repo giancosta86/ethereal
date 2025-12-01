@@ -55,6 +55,10 @@ put ?(fail DODO) |
   should-be $true
 ```
 
+This peculiar feature is enabled and standardized by `get-single-input` and `get-inputs`, in the [lang](lang.elv) module.
+
+As an interesting consequence, on the command line, when calling one of such functions but passing no arguments, it is recommended to pipe from `all []`, so as to prevent the terminal from interactively asking such input via **stdin**.
+
 ### Modules
 
 - [command](command.elv): data and exception capturing for commands and blocks, plus inspection functions.
@@ -68,6 +72,8 @@ put ?(fail DODO) |
 - [exception](exception.elv): exception type checking and metadata.
 
 - [fake-git](fake-git.elv): tiny, customizable subset of the Git command.
+
+- [fs](fs.elv): advanced file system management.
 
 - [image](image.elv): image transforms, mainly based on the `gm` command.
 
