@@ -19,13 +19,13 @@ use ./lang
 
     >> 'when passing code blocks' {
       >> 'should return a code block without executing it' {
-        var block = (lang:ternary $true { put 'Left' } { put 'Right' })
+        var block = (lang:ternary $true { put Left } { put Right })
 
         lang:is-function $block |
           should-be $true
 
         $block |
-          should-be 'Left'
+          should-be Left
       }
     }
   }
@@ -108,7 +108,7 @@ use ./lang
 
     >> 'when passing a function' {
       >> 'should output $true' {
-        fn my-function { echo 'Hello' }
+        fn my-function { echo Hello }
 
         lang:is-function $my-function~ |
           should-be $true
@@ -117,7 +117,7 @@ use ./lang
 
     >> 'when passing a code block' {
       >> 'should output $true' {
-        var code = { echo 'Hello' }
+        var code = { echo Hello }
 
         lang:is-function $code |
           should-be $true
@@ -159,7 +159,7 @@ use ./lang
 
     >> 'for number' {
       lang:minimize (num 90) |
-        should-be &strict '90'
+        should-be &strict 90
     }
 
     >> 'for boolean' {
@@ -188,7 +188,7 @@ use ./lang
       ] |
         should-be &strict [
           Alpha
-          '92'
+          92
           $nil
           $false
         ]

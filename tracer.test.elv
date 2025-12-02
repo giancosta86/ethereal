@@ -26,7 +26,7 @@ fn run-tests-for-tracer { |tracer stream|
   }
 
   >> 'printf' {
-    var base = 'Dodo'
+    var base = Dodo
     var value = 90
 
     assert-tracer-data {
@@ -76,8 +76,8 @@ fn run-tests-for-tracer { |tracer stream|
         $tracer[section] &emoji=📚 'Description' "Some\ntext"
       } [
         '📚 Description:'
-        'Some'
-        'text'
+        Some
+        text
         📚📚📚
       ]
     }
@@ -91,8 +91,8 @@ fn run-tests-for-tracer { |tracer stream|
         }
       } [
         '📚 Description:'
-        'Alpha'
-        'Beta'
+        Alpha
+        Beta
         '🔎 Gamma: (num 92)'
         📚📚📚
       ]

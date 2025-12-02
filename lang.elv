@@ -59,7 +59,7 @@ fn get-inputs { |argument-list|
 fn is-function { |@arguments|
   get-single-input $arguments |
     kind-of (all) |
-    eq (all) "fn"
+    eq (all) fn
 }
 
 #

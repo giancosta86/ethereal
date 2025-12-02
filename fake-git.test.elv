@@ -7,14 +7,14 @@ var valid-fake-git~ = (
   fake-git:create-command [
     &'<some url>'=[
       &main=[
-        &'alpha.txt'='This is a sample test'
-        &'beta/gamma/delta.txt'='This is another test!'
+        &alpha.txt='This is a sample test'
+        &beta/gamma/delta.txt='This is another test!'
       ]
 
       &secondary=[
-        &'alpha.txt'='This is another copy of alpha'
-        &'pi.txt'='This is Pi'
-        &'sigma/tau.txt'='This is Tau'
+        &alpha.txt='This is another copy of alpha'
+        &pi.txt='This is Pi'
+        &sigma/tau.txt='This is Tau'
       ]
 
       &empty=[&]

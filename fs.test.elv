@@ -58,7 +58,7 @@ fn create-temp-tree { |temp-root|
 
   >> 'splitting the extension' {
     >> 'when the extension is missing' {
-      fs:split-ext 'alpha' |
+      fs:split-ext alpha |
         put [(all)] |
         should-be [
           alpha
@@ -67,7 +67,7 @@ fn create-temp-tree { |temp-root|
     }
 
     >> 'when the extension is present' {
-      put 'beta.elv' |
+      put beta.elv |
         fs:split-ext |
         put [(all)] |
         should-be [
@@ -77,7 +77,7 @@ fn create-temp-tree { |temp-root|
     }
 
     >> 'when there are multiple extensions' {
-      fs:split-ext 'gamma.test.elv' |
+      fs:split-ext gamma.test.elv |
         put [(all)] |
         should-be [
           gamma.test
@@ -88,25 +88,25 @@ fn create-temp-tree { |temp-root|
 
   >> 'switching extension' {
     >> 'when the source path has no extension' {
-      fs:switch-ext 'dodo' '.png' |
-          should-be 'dodo.png'
+      fs:switch-ext dodo .png |
+          should-be dodo.png
     }
 
     >> 'when the source path has a single extension' {
       >> 'when the new extension has a leading dot' {
-        fs:switch-ext 'alpha.jpg' '.png' |
-          should-be 'alpha.png'
+        fs:switch-ext alpha.jpg .png |
+          should-be alpha.png
       }
 
       >> 'when the new extension has no dot' {
-        fs:switch-ext 'alpha.jpg' 'png' |
-          should-be 'alpha.png'
+        fs:switch-ext alpha.jpg png |
+          should-be alpha.png
       }
     }
 
     >> 'when the path has multiple extensions' {
-      fs:switch-ext 'alpha.test.txt' 'elv' |
-        should-be 'alpha.test.elv'
+      fs:switch-ext alpha.test.txt elv |
+        should-be alpha.test.elv
     }
   }
 
@@ -147,14 +147,14 @@ fn create-temp-tree { |temp-root|
         defer { os:remove-all $temp-path }
 
         path:base $temp-path |
-          str:has-prefix (all) 'elvish-' |
+          str:has-prefix (all) elvish- |
           should-be $true
       }
     }
 
     >> 'when passing a custom pattern' {
-      var custom-prefix = 'alpha-'
-      var custom-suffix = '-omega'
+      var custom-prefix = alpha-
+      var custom-suffix = -omega
 
       var temp-path = (fs:temp-file-path &pattern=$custom-prefix'*'$custom-suffix)
       defer { os:remove-all $temp-path }
@@ -270,8 +270,8 @@ fn create-temp-tree { |temp-root|
     }
 
     >> 'should support a custom pattern' {
-      var custom-prefix = 'alpha-'
-      var custom-suffix = '-omega'
+      var custom-prefix = alpha-
+      var custom-suffix = -omega
 
       fs:with-temp-file &pattern=$custom-prefix'*'$custom-suffix { |temp-path|
         var temp-base = (path:base $temp-path)
@@ -301,8 +301,8 @@ fn create-temp-tree { |temp-root|
     }
 
     >> 'should support a custom pattern' {
-      var custom-prefix = 'alpha-'
-      var custom-suffix = '-omega'
+      var custom-prefix = alpha-
+      var custom-suffix = -omega
 
       fs:with-temp-dir &pattern=$custom-prefix'*'$custom-suffix { |temp-path|
         var temp-base = (path:base $temp-path)

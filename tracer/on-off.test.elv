@@ -4,7 +4,7 @@ use ./on-off
   var tracer = (on-off:create)
 
   var tracer-test-block = {
-    $tracer[section] &emoji=🐬 'Description' 'Test content'
+    $tracer[section] &emoji=🐬 Description 'Test content'
   }
 
   >> 'upon creation' {

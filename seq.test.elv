@@ -29,7 +29,7 @@ use ./seq
 
       >> 'when the string is non-empty' {
         >> 'should output $false' {
-          seq:is-empty 'Hello' |
+          seq:is-empty Hello |
             should-be $false
         }
       }
@@ -79,7 +79,7 @@ use ./seq
 
       >> 'when the string is non-empty' {
         >> 'should output $true' {
-          seq:is-non-empty 'World' |
+          seq:is-non-empty World |
             should-be $true
         }
       }

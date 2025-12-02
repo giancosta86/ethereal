@@ -6,7 +6,7 @@ use ./from-env-var
   var tracer = (from-env-var:create $test-var)
 
   var tracer-test-block = {
-    $tracer[section] &emoji=🐿 'Description' 'Test content'
+    $tracer[section] &emoji=🐿 Description 'Test content'
   }
 
   >> 'when the variable is enabled' {

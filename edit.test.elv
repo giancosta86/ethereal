@@ -16,7 +16,7 @@ use ./fs
           }
 
           slurp < $temp-path |
-            should-be "X-"$initial-value"\n\n--Y"
+            should-be 'X-'$initial-value"\n\n--Y"
         }
       }
     }
@@ -24,7 +24,7 @@ use ./fs
     >> 'when the transformer emits $nil' {
       >> 'should leave the content untouched' {
         fs:with-temp-file { |temp-path|
-          var initial-value = 'Test'
+          var initial-value = Test
 
           print $initial-value > $temp-path
 
@@ -50,13 +50,13 @@ use ./fs
           to-json > $temp-path
 
         slurp < $temp-path |
-          str:contains (all) 'beta' |
+          str:contains (all) beta |
           should-be $true
 
         edit:json $temp-path 'del(.beta)'
 
         slurp < $temp-path |
-          str:contains (all) 'beta' |
+          str:contains (all) beta |
           should-be $false
       }
     }

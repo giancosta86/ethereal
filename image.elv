@@ -10,7 +10,7 @@ var -gm~ = (external gm)
 #
 fn copy-to-jpeg { |&quality=85 @arguments|
   lang:get-inputs $arguments | each { |source-path|
-    fs:switch-ext $source-path '.jpg' |
+    fs:switch-ext $source-path .jpg |
       -gm convert -quality $quality $source-path (all)
   }
 }

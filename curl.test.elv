@@ -24,7 +24,7 @@ fn with-factory-reset-curl { |block|
       } |
         put (all)[data] |
         str:join "\n" (all) |
-        str:contains (all) '%' |
+        str:contains (all) % |
           should-be $true
     }
   }
@@ -38,7 +38,7 @@ fn with-factory-reset-curl { |block|
       } |
         put (all)[data] |
         str:join "\n" (all) |
-        str:contains (all) '%' |
+        str:contains (all) % |
           should-be $false
     }
   }
