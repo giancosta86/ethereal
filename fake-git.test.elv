@@ -126,13 +126,13 @@ var valid-fake-git~ = (
     }
 
     >> 'when the branch in the source map is declared' {
-      >> 'the target should contain only the files in that branch' {
+      fn test-scenario { |@git-arguments|
         fs:with-temp-dir { |dest|
           valid-fake-git clone '<some url>' $dest
 
           cd $dest
 
-          valid-fake-git checkout secondary
+          valid-fake-git $@git-arguments
 
           slurp < (path:join $dest alpha.txt) |
             should-be 'This is another copy of alpha'
@@ -147,6 +147,14 @@ var valid-fake-git~ = (
           slurp < (path:join $dest sigma tau.txt) |
             should-be 'This is Tau'
         }
+      }
+
+      >> 'the target should contain only the files in that branch' {
+        test-scenario checkout secondary
+      }
+
+      >> 'should support --detach' {
+        test-scenario checkout --detach secondary
       }
 
       >> 'when performing the checkout with -C' {

@@ -33,7 +33,9 @@ fn create-command { |@arguments|
 
   var source-urls-by-dest = [&]
 
-  fn checkout { |reference|
+  fn checkout { |@arguments|
+    var reference = $arguments[-1]
+
     if (not (has-key $source-urls-by-dest $pwd)) {
       printf 'Fake Git: the directory "%s" was not cloned via this command instance!' $pwd |
         fail (all)
@@ -59,7 +61,9 @@ fn create-command { |@arguments|
     }
   }
 
-  fn clone { |source-url dest|
+  fn clone { |@arguments|
+    var source-url dest = (all $arguments[-2..])
+
     var source-map = (lang:resolve $potential-source-map)
 
     if (not (has-key $source-map $source-url)) {
