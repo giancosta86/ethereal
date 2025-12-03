@@ -13,7 +13,7 @@ var -mv~ = (external mv)
 var -cmp~ = (external cmp)
 
 #
-# Receives one or more paths in input - as arguments or via pipe - and removes the given leading dir path from each.
+# Receives one or more paths as input - and removes the given leading dir path from each.
 #
 # The directory prefix can optionally end with `$path:separator` - in any case, it won't appear in the emitted paths.
 #
@@ -28,7 +28,7 @@ fn relative-to { |dir-path @arguments|
 }
 
 #
-# Takes a path - as argument or via pipe - and emits the core and the ext
+# Takes a path as input and emits the core and the ext
 # as subsequent values, where `ext` can be either a dotted extension or the empty string.
 #
 # In case of multiple extensions, only the last one is returned -
@@ -43,7 +43,7 @@ fn split-ext { |@arguments|
 }
 
 #
-# Given a `source-path` and an `extension` (with or without leading dot) - passed as arguments or via pipe -
+# Given a `source-path` and an `extension` (with or without leading dot) passed as input,
 # emits a new path where the given `extension` replaces the extension in `source-path`.
 #
 fn switch-ext { |@arguments|
@@ -55,7 +55,7 @@ fn switch-ext { |@arguments|
 }
 
 #
-# Given a directory path as argument or via pipe, moves up via `cd..`
+# Given a directory path as input, moves up via `cd..`
 # until the current directory is not below such path.
 #
 fn ensure-not-in-dir { |@arguments|
@@ -81,10 +81,10 @@ fn temp-file-path { |&dir='' &pattern=$nil|
 }
 
 #
-# Given a `path`, passed as argument, and its `content` - passed as arguments or via pipe -
+# Given a `path`, passed as argument, and its `content` - passed as argument or via pipe -
 # creates all the intermediate directories so as to be able to save `content` into `path`.
 #
-fn save-anywhere { |path @arguments|
+fn save-all { |path @arguments|
   var content = (lang:get-single-input $arguments)
 
   var parent = (path:dir $path)
@@ -96,18 +96,20 @@ fn save-anywhere { |path @arguments|
 #
 # If the given path exists, it must be a file; otherwise, it will be created.
 #
-fn ensure-file { |path|
+fn ensure-file { |@arguments|
+  var path = (lang:get-single-input $arguments)
+
   if (os:exists $path) {
     if (not (os:is-regular $path)) {
       fail 'Path "'$path'" exists, but it is not a file!'
     }
   } else {
-    save-anywhere $path ''
+    save-all $path ''
   }
 }
 
 #
-# Given a `directory` passed as argument or via pipe,
+# Given a `directory` passed as input,
 # removes all the files and subdirectories within it,
 # leaving just the empty directory itself.
 #
@@ -120,11 +122,9 @@ fn clean-dir { |@arguments|
 }
 
 #
-# Given a consumer block taking a file path as argument,
+# Given as input a consumer block taking a file path as argument,
 # creates a temp file, passes its path to the block and, in the end,
 # ensures it gets deleted.
-#
-# The block can be passed either as argument or via pipe.
 #
 fn with-temp-file { |&dir='' &pattern=$nil @arguments|
   var consumer = (lang:get-single-input $arguments)
@@ -136,11 +136,9 @@ fn with-temp-file { |&dir='' &pattern=$nil @arguments|
 }
 
 #
-# Given a consumer block taking a directory path as argument,
+# Given as input a consumer block taking a directory path as argument,
 # creates a temp directory, passes its path to the block and, in the end,
 # deletes its entire tree - after ensuring the pwd is out of it.
-#
-# The block can be passed either as argument or via pipe.
 #
 fn with-temp-dir { |&dir='' &pattern=$nil @arguments|
   var consumer = (lang:get-single-input $arguments)
@@ -158,7 +156,7 @@ fn with-temp-dir { |&dir='' &pattern=$nil @arguments|
 #
 # Copies `from` to `to` - where both are received either as arguments or via pipe.
 #
-# The source can be either a file or a directory.
+# Both files and directories are supported.
 #
 fn copy { |@arguments|
   var from to = (lang:get-inputs $arguments)
@@ -169,7 +167,7 @@ fn copy { |@arguments|
 #
 # Moves `from` to `to` - where both are received either as arguments or via pipe.
 #
-# The source can be either a file or a directory.
+# Both files and directories are supported.
 #
 fn move { |@arguments|
   var from to = (lang:get-inputs $arguments)
@@ -193,59 +191,21 @@ fn mkcd { |&perm=0o755 @arguments|
 }
 
 #
-# Given a (potentially non-existent) file path and a block - both passed either as arguments or via pipe -
-# ensures that, after the execution of the block, the file is restored to its original state.
+# Given as input a (potentially non-existent) file/directory path and a block,
+# ensures that, after the execution of the block, the entire path is restored to its original state.
 #
-# In particular, if the file did not exist at the beginning of the block,
-# it will be deleted thereafter.
+# In particular, if the path did not exist at the beginning of the block,
+# it will be deleted thereafter - including an entire directory tree.
 #
-fn with-file-sandbox { |@arguments|
+# Please, note: the command also accepts a relative path, such as '.': in the case of a directory,
+# the `$pwd` current directory will not be affected by the sandbox restore operations.
+#
+fn with-path-sandbox { |@arguments|
   var path block = (lang:get-inputs $arguments)
 
   var backup-path = (
     if (os:exists $path) {
-      if (os:is-regular $path) {
-        temp-file-path
-      } else {
-        fail 'Path "'$path'" exists and is not a regular file!'
-      }
-    } else {
-      put $nil
-    }
-  )
-
-  if $backup-path {
-    copy $path $backup-path
-  }
-
-  try {
-    $block
-  } finally {
-    os:remove-all $path
-
-    if $backup-path {
-      move $backup-path $path
-    }
-  }
-}
-
-#
-# Given a (potentially non-existent) directory path and a block - both passed either as arguments or via pipe -
-# ensures that, after the execution of the block, the entire directory tree is restored to its original state.
-#
-# In particular, if the directory did not exist at the beginning of the block,
-# its tree will be deleted thereafter.
-#
-fn with-dir-sandbox { |@arguments|
-  var path block = (lang:get-inputs $arguments)
-
-  var backup-path = (
-    if (os:exists $path) {
-      if (os:is-dir $path) {
-        os:temp-dir
-      } else {
-        fail 'Path "'$path'" exists and is not a directory!'
-      }
+      temp-file-path
     } else {
       put $nil
     }
@@ -259,19 +219,26 @@ fn with-dir-sandbox { |@arguments|
 
   if $backup-path {
     os:remove-all $backup-path
-
     copy $path $backup-path
   }
 
   try {
     $block
   } finally {
-    ensure-not-in-dir $path
+    var previous-dir = $pwd
 
-    os:remove-all $abs-path
+    try {
+      ensure-not-in-dir $path
 
-    if $backup-path {
-      move $backup-path $abs-path
+      os:remove-all $abs-path
+
+      if $backup-path {
+        move $backup-path $abs-path
+      }
+    } finally {
+      if (os:is-dir $previous-dir) {
+        cd $previous-dir
+      }
     }
   }
 }
@@ -288,9 +255,8 @@ fn equal-files { |@arguments|
 }
 
 #
-# Given paths - passed as arguments or via pipe - ignores directories
-# and emits lists, where each list contains at least two file paths
-# having the very same content.
+# Given an arbitrary number of input paths, ignores directories and emits lists,
+# where each list contains at least two file paths having the same binary content.
 #
 fn find-duplicates { |@arguments|
   lang:get-inputs $arguments |

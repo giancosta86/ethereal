@@ -67,57 +67,6 @@ use ./map
     }
   }
 
-  >> 'drilling down a map' {
-    var test-map = [
-      &a=[
-        &b=[
-          &c=90
-        ]
-      ]
-    ]
-
-    >> 'when no keys are passed' {
-      >> 'should return the source map itself' {
-        map:drill-down $test-map |
-          should-be $test-map
-      }
-    }
-
-    >> 'when a partial path is passed' {
-      >> 'should return a submap' {
-        map:drill-down $test-map a b |
-          should-be [
-            &c=90
-          ]
-      }
-    }
-
-    >> 'when an existing full path is passed' {
-      >> 'should return the associated leaf value' {
-        map:drill-down $test-map a b c |
-          should-be 90
-      }
-    }
-
-    >> 'when the path does not exist' {
-      >> 'if a default value is passed' {
-        >> 'should return the default value' {
-          var test-default = 'Some default value'
-
-          map:drill-down &default=$test-default $test-map a INEXISTENT c |
-            should-be $test-default
-        }
-      }
-
-      >> 'if no default value is passed' {
-        >> 'should return $nil' {
-          map:drill-down $test-map a INEXISTENT c |
-            should-be $nil
-        }
-      }
-    }
-  }
-
   >> 'transforming a map' {
     >> 'with empty map' {
       map:transform [&] { |key value|

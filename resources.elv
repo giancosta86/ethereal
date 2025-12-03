@@ -4,9 +4,9 @@ use ./lang
 pragma unknown-command = disallow
 
 #
-# Takes as a single input the output of the `src` command for the calling module.
+# Takes, as a single input, the output of the `src` command for the calling module.
 #
-# Returns an object with a `get-path` method, taking in input a resource path relative
+# Returns an object with a `get-path` method, taking as input a resource path relative
 # to the calling module, and returning the absolute path of such resource.
 #
 fn for-script { |@arguments|

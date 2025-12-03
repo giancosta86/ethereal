@@ -3,9 +3,7 @@ use ./fs
 
 var test-block-ok = {
   echo STDOUT
-  sleep 1ms
   put [90 92 95 98]
-  sleep 1ms
   echo STDERR >&2
 }
 
@@ -13,6 +11,21 @@ var test-block-crashing = {
   $test-block-ok
 
   fail DODO
+}
+
+fn should-emit-in-any-order { |expected-items|
+  var sorted-actual-items = [(
+    all |
+    order &key=$to-string~
+  )]
+
+  var sorted-expected-items = [(
+    all $expected-items |
+    order &key=$to-string~
+  )]
+
+  put $sorted-actual-items |
+    should-be $sorted-expected-items
 }
 
 
@@ -134,8 +147,8 @@ var test-block-crashing = {
             command:capture &stream=$stream &type=$type $test-block-ok
           )
 
-          put $capture-result[data] |
-            should-be $scenario[expected-data]
+          all $capture-result[data] |
+            should-emit-in-any-order $scenario[expected-data]
 
           put $capture-result[exception] |
             should-be $nil
@@ -146,8 +159,8 @@ var test-block-crashing = {
             command:capture &stream=$stream &type=$type $test-block-crashing
           )
 
-          put $capture-result[data] |
-            should-be $scenario[expected-data]
+          all $capture-result[data] |
+            should-emit-in-any-order $scenario[expected-data]
 
           put $capture-result[exception] |
             get-fail-content |
@@ -176,8 +189,8 @@ var test-block-crashing = {
           }
         )
 
-        put $capture-result[data] |
-          should-be [
+        all $capture-result[data] |
+          should-emit-in-any-order [
             STDOUT
             '[90 92 95 98]'
             STDERR
@@ -195,8 +208,8 @@ var test-block-crashing = {
           }
         )
 
-        put $capture-result[data] |
-          should-be [
+        all $capture-result[data] |
+          should-emit-in-any-order [
             STDOUT
             '[90 92 95 98]'
             STDERR
@@ -246,7 +259,7 @@ var test-block-crashing = {
     >> 'if the command is an alias' {
       var test-alias = myTestAlias
 
-      fs:with-file-sandbox ~/.bashrc {
+      fs:with-path-sandbox ~/.bashrc {
         echo 'alias '$test-alias'=''ls -l''' >> ~/.bashrc
 
         command:exists-in-bash $test-alias |

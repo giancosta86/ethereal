@@ -173,7 +173,7 @@ fn create-temp-tree { |temp-root|
     }
   }
 
-  >> 'saving a file anywhere' {
+  >> 'saving a file to any location' {
     >> 'should create intermediate directories' {
       var temp-dir = (os:temp-dir)
       defer { os:remove-all $temp-dir }
@@ -182,7 +182,7 @@ fn create-temp-tree { |temp-root|
       var content = 'Hello, world!'
 
       put $content |
-        fs:save-anywhere $target-path
+        fs:save-all $target-path
 
       slurp < $target-path |
         should-be $content
@@ -432,22 +432,8 @@ fn create-temp-tree { |temp-root|
     }
   }
 
-  >> 'opening a file sandbox' {
-    >> 'in the beginning' {
-      >> 'if the path exists' {
-        >> 'if it is not a regular file' {
-          fs:with-temp-dir { |temp-dir|
-            throws {
-              fs:with-file-sandbox $temp-dir {}
-            } |
-              get-fail-content |
-              should-be 'Path "'$temp-dir'" exists and is not a regular file!'
-          }
-        }
-      }
-    }
-
-    >> 'in the end' {
+  >> 'working in a path sandbox' {
+    >> 'when operating on a file' {
       >> 'if the path existed' {
         >> 'after modification' {
           >> 'should restore the original file' {
@@ -455,7 +441,7 @@ fn create-temp-tree { |temp-root|
               var original-content = 'My sample text'
               print $original-content > $test-file
 
-              fs:with-file-sandbox $test-file {
+              fs:with-path-sandbox $test-file {
                 print ASD > $test-file
 
                 slurp < $test-file |
@@ -471,7 +457,7 @@ fn create-temp-tree { |temp-root|
         >> 'after deletion' {
           >> 'should restore the original file' {
             fs:with-temp-file { |test-file|
-              fs:with-file-sandbox $test-file {
+              fs:with-path-sandbox $test-file {
                 os:remove-all $test-file
 
                 os:is-regular $test-file |
@@ -487,48 +473,28 @@ fn create-temp-tree { |temp-root|
 
       >> 'if the path did not exist' {
         >> 'should remove the file' {
-          var test-file = SOME-MISSING-FILE
+          fs:with-temp-dir { |temp-dir|
+            cd $temp-dir
 
-          fs:with-file-sandbox $test-file {
-            echo Some text > $test-file
+            var test-file = SOME-MISSING-FILE
+
+            fs:with-path-sandbox $test-file {
+              echo Some text > $test-file
+
+              os:is-regular $test-file |
+                should-be $true
+            }
 
             os:is-regular $test-file |
-              should-be $true
-          }
-
-          os:is-regular $test-file |
-            should-be $false
-        }
-      }
-    }
-  }
-
-  >> 'opening a directory sandbox' {
-    >> 'in the beginning' {
-      >> 'if the path exists' {
-        >> 'if it is not a directory' {
-          fs:with-temp-file { |temp-file|
-            throws {
-              fs:with-dir-sandbox $temp-file {}
-            } |
-              get-fail-content |
-              should-be 'Path "'$temp-file'" exists and is not a directory!'
+              should-be $false
           }
         }
       }
-
-      >> 'if the path is the file system root' {
-        throws {
-          fs:with-dir-sandbox / {}
-        } |
-          get-fail-content |
-          should-be 'Cannot apply a sandbox to the file system root!'
-      }
     }
 
-    >> 'in the end' {
+    >> 'when operating on a directory' {
       >> 'if the path existed' {
-        >> 'should restore the tree as it was' {
+        >> 'should restore the tree as it was, without altering the pwd' {
           fs:with-temp-dir { |temp-dir|
             cd $temp-dir
 
@@ -542,7 +508,7 @@ fn create-temp-tree { |temp-root|
 
             var b = (path:join $a B)
 
-            fs:with-dir-sandbox . {
+            fs:with-path-sandbox . {
               print LOL > $sigma
 
               os:mkdir-all $b
@@ -557,8 +523,7 @@ fn create-temp-tree { |temp-root|
                 should-be $true
             }
 
-            cd $temp-dir
-
+            # Even despite the sandbox restore operations, the pwd is unaffected
             slurp < $sigma |
               should-be Sigma
 
@@ -580,13 +545,10 @@ fn create-temp-tree { |temp-root|
             os:is-dir $a |
               should-be $false
 
-            fs:with-dir-sandbox $a {
+            fs:with-path-sandbox $a {
               os:mkdir-all $b
 
               os:is-dir $a |
-                should-be $true
-
-              os:is-dir $b |
                 should-be $true
             }
 
@@ -596,6 +558,14 @@ fn create-temp-tree { |temp-root|
         }
       }
     }
+
+    >> 'if the path is the file system root' {
+        throws {
+          fs:with-path-sandbox / {}
+        } |
+          get-fail-content |
+          should-be 'Cannot apply a sandbox to the file system root!'
+      }
   }
 
   >> 'checking file equality' {

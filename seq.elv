@@ -25,7 +25,7 @@ fn is-non-empty { |@arguments|
 }
 
 #
-# Takes in input a sequence and emits `[index item]` pairs.
+# Takes as input a sequence and emits `[index item]` pairs.
 #
 # The `start-index` option can be used to start the sequence from the given value.
 #
@@ -98,7 +98,9 @@ fn reduce { |&debug=$false initial-value operator|
 #
 # Given two sequences, emits the longest initial subsequence shared by both.
 #
-fn get-prefix { |left right|
+fn get-prefix { |@arguments|
+  var left right = (lang:get-inputs $arguments)
+
   range 0 (math:min (count $left) (count $right)) |
     reduce [] { |partial index|
       if (eq $left[$index] $right[$index]) {
@@ -118,6 +120,26 @@ fn coalesce-empty { |&default=$nil @arguments|
 
   > (count $source) 0 |
     lang:ternary (all) $source $default
+}
+
+#
+# Takes the given `source` multi-level sequence and expects as input the keys/indexes required
+# to access one of its levels, not necessarily a leaf value; if any of such keys is not found in the related sequence,
+# the `default` value is emitted.
+#
+fn drill-down { |&default=$nil source @properties|
+  var current-source = $source
+
+  all $properties | each { |property|
+    if (has-key $current-source $property) {
+      set current-source = $current-source[$property]
+    } else {
+      put $default
+      return
+    }
+  }
+
+  put $current-source
 }
 
 #

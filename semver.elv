@@ -129,15 +129,15 @@ fn parse { |@arguments|
 }
 
 #
-# Receives in input a semantic version and converts it to string, as follows:
+# Receives as input a semantic version and converts it to string, as follows:
 #
 # * the leading "v" is *not* added
 #
-# * `<major>.<minor>.<patch>` is always added
+# * `<major>.<minor>.<patch>` is the base form
 #
-# * `<pre-release>` is added only if not $nil - with a leading `-`
+# * `<pre-release>` is added only if not $nil, with a leading `-`
 #
-# * `<build>` is added only if not $nil - with a leading `+`
+# * `<build>` is added only if not $nil, with a leading `+`
 #
 fn to-string { |@arguments|
   var version = (lang:get-single-input $arguments)
@@ -156,7 +156,7 @@ fn to-string { |@arguments|
 }
 
 #
-# Emits $true if the version passed in input has non-$nil `pre-release`, or `build`.
+# Emits $true if the version passed as input has both its `pre-release` and `build` components set to $nil.
 #
 fn is-stable { |@arguments|
   var version = (lang:get-single-input $arguments)
@@ -175,9 +175,9 @@ fn is-new-major { |@arguments|
 
 #
 # Returns $true if the lefthand version is less recent than the righthand one;
-# this function can be passed to the `order` builtin function.
+# it is designed to be passed as the `less-than` option of the `order` builtin function.
 #
-# In particular, the algorithm is as follows:
+# In particular, the algorithm operates as follows:
 #
 # 1)If `major` is not equal, the smaller one comes first.
 #
@@ -189,9 +189,11 @@ fn is-new-major { |@arguments|
 #
 # 5)Finally, a lexicographic comparison between the `pre-release` components is performed.
 #
-# Please, note: the `build` component is *not* taken into account.
+# Please, note: in accordance with the standard, the `build` component is *not* taken into account.
 #
-fn less-than { |left right|
+fn less-than { |@arguments|
+  var left right = (lang:get-inputs $arguments)
+
   for component [major minor patch] {
     if (< $left[$component] $right[$component]) {
       put $true

@@ -1,5 +1,6 @@
 use ../map
 use ../tracer
+use ../writer
 
 pragma unknown-command = disallow
 
@@ -12,7 +13,7 @@ pragma unknown-command = disallow
 #
 # * set-enabled
 #
-fn create { |&enabled=$false &writer=$tracer:out-writer|
+fn create { |&enabled=$false &writer=$writer:out|
   var tracer = (tracer:create { put $enabled } &writer=$writer)
 
   var controls = [

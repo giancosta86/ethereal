@@ -345,6 +345,113 @@ use ./seq
     }
   }
 
+  >> 'drilling down a sequence' {
+    >> 'when the source is a multi-level map' {
+      var test-map = [
+        &a=[
+          &b=[
+            &c=90
+          ]
+        ]
+      ]
+
+      >> 'when no keys are passed' {
+        >> 'should return the source map itself' {
+          seq:drill-down $test-map |
+            should-be $test-map
+        }
+      }
+
+      >> 'when a partial path is passed' {
+        >> 'should return a submap' {
+          seq:drill-down $test-map a b |
+            should-be [
+              &c=90
+            ]
+        }
+      }
+
+      >> 'when an existing full path is passed' {
+        >> 'should return the associated leaf value' {
+          seq:drill-down $test-map a b c |
+            should-be 90
+        }
+      }
+
+      >> 'when the path does not exist' {
+        >> 'if a default value is passed' {
+          >> 'should return the default value' {
+            var test-default = 'Some default value'
+
+            seq:drill-down &default=$test-default $test-map a INEXISTENT c |
+              should-be $test-default
+          }
+        }
+
+        >> 'if no default value is passed' {
+          >> 'should return $nil' {
+            seq:drill-down $test-map a INEXISTENT c |
+              should-be $nil
+          }
+        }
+      }
+    }
+
+    >> 'when the source is a multi-level list' {
+      var test-list = [
+        90
+        92
+        [
+          95
+          [
+            98
+          ]
+        ]
+      ]
+
+      >> 'when no keys are passed' {
+        >> 'should return the source list itself' {
+          seq:drill-down $test-list |
+            should-be $test-list
+        }
+      }
+
+      >> 'when a partial path is passed' {
+        >> 'should return a sublist' {
+          seq:drill-down $test-list 2 1 |
+            should-be [
+              98
+            ]
+        }
+      }
+
+      >> 'when an existing full path is passed' {
+        >> 'should return the associated leaf value' {
+          seq:drill-down $test-list 2 1 0 |
+            should-be 98
+        }
+      }
+
+      >> 'when the path does not exist' {
+        >> 'if a default value is passed' {
+          >> 'should return the default value' {
+            var test-default = 'Some default value'
+
+            seq:drill-down &default=$test-default $test-list 0 9999 0 |
+              should-be $test-default
+          }
+        }
+
+        >> 'if no default value is passed' {
+          >> 'should return $nil' {
+            seq:drill-down $test-list 0 9999 0 |
+              should-be $nil
+          }
+        }
+      }
+    }
+  }
+
   >> 'splitting by chunk count' {
     >> 'when chunk count < 0' {
       >> 'should fail' {

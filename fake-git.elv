@@ -7,10 +7,10 @@ use ./lang
 pragma unknown-command = disallow
 
 #
-# Takes in input a SOURCE-URL => REPOSITORY-MAP map,
+# Takes as input a SOURCE-URL => REPOSITORY-MAP map,
 # where REPOSITORY-MAP is a GIT-REFERENCE => FILE-MAP map containing at least a `main` key,
-# where, in turn, FILE-MAP is a RELATIVE-PATH => FILE-CONTENT map,
-# and returns a command - another function - supporting a tiny subset of Git's functionality.
+# where, in turn, FILE-MAP is a RELATIVE-PATH => FILE-CONTENT map;
+# the result is a command - another function - supporting a tiny subset of Git's functionality.
 #
 # In other words, `source-map` is a map potentially describing multiple branches/tags/...
 # within multiple repositories at multiple urls;
@@ -55,7 +55,7 @@ fn create-command { |@arguments|
     var reference-files = $repository-map[$reference]
 
     keys $reference-files | each { |entry-path|
-      fs:save-anywhere $entry-path $reference-files[$entry-path]
+      fs:save-all $entry-path $reference-files[$entry-path]
     }
   }
 

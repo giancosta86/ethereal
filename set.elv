@@ -48,7 +48,9 @@ fn is-set { |@arguments|
 }
 
 #
-# Takes a collection - including a set - as single input, and emits a set containing its items.
+# Takes a collection as single input, and emits a set containing its items.
+#
+# As a performance optimization, if the collection is a set, it is emitted unaltered.
 #
 fn from { |@arguments|
   var source = (lang:get-single-input $arguments)
@@ -85,7 +87,7 @@ fn count { |@arguments|
 }
 
 #
-# Emits $true if the given `reference-set` has the given input value - passed as argument or via pipe.
+# Emits $true if the given `reference-set` has the given input value.
 #
 fn has-value { |reference-set @arguments|
   var value = (lang:get-single-input $arguments)
@@ -94,7 +96,7 @@ fn has-value { |reference-set @arguments|
 }
 
 #
-# Takes a `base-set` as well as - via argument or pipe - one or more values,
+# Takes a `base-set` as well as - via arguments or pipe - one or more values,
 # emitting a set equal to the base set plus the input values.
 #
 fn add { |base-set @arguments|
@@ -111,7 +113,7 @@ fn add { |base-set @arguments|
 }
 
 #
-# Takes a `base-set` as well as - via argument or pipe - one or more values,
+# Takes a `base-set` as well as - via arguments or pipe - one or more values,
 # emitting a set equal to the base set minus the input values.
 #
 fn remove { |base-set @arguments|
@@ -128,7 +130,7 @@ fn remove { |base-set @arguments|
 }
 
 #
-# Takes in input source sets - via pipe or arguments - and emits their union.
+# Takes source sets as input and emits their union.
 #
 fn union { |@arguments|
   var result-items = (
@@ -143,7 +145,7 @@ fn union { |@arguments|
 }
 
 #
-# Takes in input source sets - via pipe or arguments - and emits their intersection.
+# Takes source sets as input and emits their intersection.
 #
 fn intersection { |@arguments|
   var first @others = (
@@ -171,7 +173,7 @@ fn intersection { |@arguments|
 }
 
 #
-# Takes in input source sets - via pipe or arguments - and emits their difference.
+# Takes source sets as input and emits their difference.
 #
 fn difference { |@arguments|
   var first @others = (
@@ -199,8 +201,7 @@ fn difference { |@arguments|
 }
 
 #
-# Takes 2 sets - either as arguments or from pipe - and emits
-# their symmetric difference.
+# Takes 2 sets as input and emits their symmetric difference.
 #
 fn symmetric-difference { |@arguments|
   var left right = (lang:get-inputs $arguments)

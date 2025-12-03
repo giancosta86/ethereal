@@ -149,38 +149,38 @@ use ./lang
     }
   }
 
-  >> 'minimized value' {
+  >> 'flattening numbers' {
     >> 'for string' {
       var value = 'This is a string!'
 
-      lang:minimize $value |
+      lang:flat-num $value |
         should-be &strict $value
     }
 
     >> 'for number' {
-      lang:minimize (num 90) |
+      lang:flat-num (num 90) |
         should-be &strict 90
     }
 
     >> 'for boolean' {
-      lang:minimize $true |
+      lang:flat-num $true |
         should-be &strict $true
     }
 
     >> 'for $nil' {
-      lang:minimize $nil |
+      lang:flat-num $nil |
         should-be &strict $nil
     }
 
     >> 'for exception' {
       var ex = ?(fail DODO)
 
-      lang:minimize $ex |
+      lang:flat-num $ex |
         should-be &strict $ex
     }
 
     >> 'for list' {
-      lang:minimize [
+      lang:flat-num [
         Alpha
         (num 92)
         $nil
@@ -195,7 +195,7 @@ use ./lang
     }
 
     >> 'for multi-level list' {
-      lang:minimize [
+      lang:flat-num [
         Alpha
         [
           Beta
@@ -216,7 +216,7 @@ use ./lang
     }
 
     >> 'for map' {
-      lang:minimize [
+      lang:flat-num [
         &alpha=(num 90)
         &(num 92)=beta
       ] |
@@ -227,7 +227,7 @@ use ./lang
     }
 
     >> 'for multi-level map' {
-      lang:minimize [
+      lang:flat-num [
         &[alpha $true (num 95)]=[
           gamma
           [(num 98) epsilon]
@@ -255,7 +255,8 @@ use ./lang
         put 90
       }
 
-      lang:resolve $f~ |
+      put $f~ |
+        lang:resolve |
         should-be 90
     }
 
@@ -311,7 +312,8 @@ use ./lang
 
       >> 'when the key exists' {
         >> 'should return the related value' {
-          lang:get-value $map b |
+          put $map b |
+            lang:get-value |
             should-be 30
         }
       }

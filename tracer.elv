@@ -1,5 +1,6 @@
 use str
 use ./lang
+use ./writer
 
 pragma unknown-command = disallow
 
@@ -7,23 +8,6 @@ fn -trace { |enabled writer block|
   if (lang:resolve $enabled) {
     $writer $block
   }
-}
-
-#
-# Takes a block and redirects its out to stdout.
-#
-var out-writer = { |block| $block }
-
-#
-# Takes a block and redirects its out to stderr.
-#
-var err-writer = { |block| $block > &2 }
-
-#
-# Creates a writer that takes a block and appends its out to the given file (object or path).
-#
-fn create-file-writer { |file|
-  put { |block| $block >> $file }
 }
 
 #
@@ -56,14 +40,18 @@ fn create-file-writer { |file|
 #
 # * a writer - a function taking a block and redirecting it somewhere; in particular:
 #
-#   * `$tracer:out-writer` - redirects to stdout (the default).
+#   * `$writer:out` - redirects to stdout (the default).
 #
-#   * `$tracer:err-writer` - redirects to stderr.
+#   * `$writer:err` - redirects to stderr.
 #
-#   * `create-file-writer` - takes a file (object or path) and returns a writer appending to it.
+#   * `writer:to-file` - takes a file (object or path) and returns a writer appending to it.
 #
-fn create { |enabled &writer=$out-writer|
-  fn inspect { |&emoji=🔎 description value|
+fn create { |&writer=$writer:out @arguments|
+  var enabled = (lang:get-single-input $arguments)
+
+  fn inspect { |&emoji=🔎 description @arguments|
+    var value = (lang:get-single-input $arguments)
+
     -trace $enabled $writer {
       printf '%s %s: ' $emoji $description
 
@@ -102,11 +90,15 @@ fn create { |enabled &writer=$out-writer|
 
     &inspect=$inspect~
 
-    &inspect-input-map={ |input-map|
+    &inspect-input-map={ |@arguments|
+      var input-map = (lang:get-single-input $arguments)
+
       inspect &emoji=📥 'Input map' $input-map
     }
 
-    &section={ |&emoji=🔎 description string-or-block|
+    &section={ |&emoji=🔎 description @arguments|
+      var string-or-block = (lang:get-single-input $arguments)
+
       -trace $enabled $writer {
         echo $emoji' '$description":"
 

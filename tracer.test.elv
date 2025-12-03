@@ -1,6 +1,7 @@
 use ./command
 use ./fs
 use ./tracer
+use ./writer
 
 fn run-tests-for-tracer { |tracer stream|
   fn assert-tracer-data { |block expected-data|
@@ -104,11 +105,11 @@ fn run-tests-for-tracer { |tracer stream|
   var scenarios = [
     [
       &stream=out
-      &writer=$tracer:out-writer
+      &writer=$writer:out
     ]
     [
       &stream=err
-      &writer=$tracer:err-writer
+      &writer=$writer:err
     ]
   ]
   all $scenarios | each { |scenario|
@@ -132,7 +133,7 @@ fn run-tests-for-tracer { |tracer stream|
 
   >> 'when writing to a file' {
     fs:with-temp-file { |temp-path|
-      var writer = (tracer:create-file-writer $temp-path)
+      var writer = (writer:to-file $temp-path)
 
       var tracer = (tracer:create $true &writer=$writer)
 

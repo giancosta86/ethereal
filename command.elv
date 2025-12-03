@@ -46,7 +46,7 @@ var -data-filter-by-type = [
 ]
 
 #
-# Runs the given block and:
+# Runs the given block provided as input and:
 #
 # * captures its emitted data as a list containing bytes/values:
 #
@@ -122,7 +122,7 @@ var -silence-exception-strategies = [
 #
 # Silences the given block - preventing it from emitting anything from both stdout and stderr.
 #
-# In case of exception, the `on-exception` option dictates the strategy:
+# In case of exception, the `on-exception` option selects the strategy:
 #
 # * **both**: outputs to stdout every line/value emitted by the command, then throws the exception.
 #
@@ -160,11 +160,11 @@ fn exists-in-bash { |@arguments|
 }
 
 #
-# Creates a map - especially useful in tests - with the following keys:
+# Takes as optional argument a block and creates a map - especially useful in tests - with the following keys:
 #
-# * `command`: a command that can be invoked - with any number of arguments; it takes track of its arguments, then executes the optional block argument, passing its arguments.
+# * `command`: a command that can be invoked - with any number of arguments; upon invocation, it adds the current arguments to its log, then executes the optional block, passing the arguments.
 #
-# * `get-runs`: emits the list of runs of the above `command` up to that moment - where each run is stored in a sublist containing its arguments.
+# * `get-runs`: emits the list of runs of the above `command` up to that moment - where each run is represented by a sublist containing its arguments.
 #
 fn spy { |@arguments|
   var block = (lang:get-value $arguments 0)

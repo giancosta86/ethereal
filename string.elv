@@ -33,7 +33,7 @@ var -pretty-formatters-by-kind = [
 ]
 
 #
-# Converts any value to a pretty string; more precisely:
+# Converts the input value - of any kind - to a pretty string; more precisely:
 #
 # * if the value is a string, outputs it.
 #
