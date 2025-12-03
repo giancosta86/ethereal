@@ -8,19 +8,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  check-license:
+  verify:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
-      - uses: giancosta86/aurora-github/actions/check-project-license@v10
+      - uses: elves/setup-elvish@v1
+        with:
+          elvish-version: 0.21.0
 
-  verify:
-    runs-on: ubuntu-24.04
-    needs:
-      - check-license
+      - shell: elvish {0}
+        run: |
+          use epm
 
-    steps:
-      - name: Show completion message
-        shell: bash
-        run: echo "✅Verification complete!"
+          epm:install github.com/giancosta86/epm-plus
+
+          use github.com/giancosta86/epm-plus/epm-plus
+
+          epm-plus:patch-epm
+
+          epm:install
+
+          use github.com/giancosta86/velvet/v1/main velvet
+
+          velvet:velvet &must-pass
