@@ -1,3 +1,4 @@
+use ./lang
 use ./set
 
 >> 'In set module' {
@@ -342,6 +343,43 @@ use ./set
         set:symmetric-difference $right $left |
           should-be (set:of A B L Q R S)
       }
+    }
+  }
+
+  >> 'flattening numbers' {
+    >> 'for basic set' {
+      all [
+        (num 90)
+        (num 92)
+        (num 98)
+      ] |
+        set:of |
+        lang:flat-num |
+        should-be &strict (set:of 90 92 98)
+    }
+
+    >> 'for multi-level set' {
+      var source-set = (
+        all [
+          set:of alpha (num 99) beta
+          (num 92)
+          [&(num 5)=(num 7)]
+        ] |
+          set:of
+      )
+
+      var expected-set = (
+        all [
+          set:of alpha 99 beta
+          92
+          [&5=7]
+        ] |
+          set:of
+      )
+
+      put $source-set |
+        lang:flat-num |
+        should-be &strict $expected-set
     }
   }
 }
