@@ -4,25 +4,50 @@ use ./seq
 pragma unknown-command = disallow
 
 #
+# Iterates over the given map - which can be passed via pipe or
+# as the first argument - and, for each of its entries, calls the
+# consumer - a binary function passed as the last argument and
+# taking the key and the value, respectively, as arguments.
+#
+fn iterate { |@arguments|
+  var argument-count = (count $arguments)
+
+  var map
+  var consumer
+
+  if (== $argument-count 1) {
+    set map = (one)
+    set consumer = $arguments[0]
+  } elif (== $argument-count 2) {
+    set map = $arguments[0]
+    set consumer = $arguments[1]
+  } else {
+    fail 'arity mismatch: <consumer> or <map><consumer> expected'
+  }
+
+  keys $map | each { |key|
+    $consumer $key $map[$key]
+  }
+}
+
+#
 # Emits the entries of the given map as a stream of [key value] pairs.
 #
 fn entries { |@arguments|
   var source = (lang:get-single-input $arguments)
 
-  keys $source | each { |key|
-    put [$key $source[$key]]
+  iterate $source { |key value|
+    put [$key $value]
   }
 }
+
 
 #
 # Emits the values of the given map, according to the internal map order.
 #
 fn values { |@arguments|
-  var source = (lang:get-single-input $arguments)
-
-  keys $source | each { |key|
-    put $source[$key]
-  }
+  lang:get-single-input $arguments |
+    iterate { |_ value| put $value }
 }
 
 #
@@ -42,10 +67,9 @@ fn merge { |@arguments|
 # stream of related entries for the result map.
 #
 fn transform { |source mapper|
-  keys $source |
-    each { |key|
-      $mapper $key $source[$key]
-    } |
+  iterate $source { |key value|
+    $mapper $key $value
+  } |
     make-map
 }
 

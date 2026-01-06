@@ -19,6 +19,29 @@ use ./map
     }
   }
 
+  >> 'iterating over the entries with a binary consumer' {
+    >> 'when passing the map as argument' {
+      map:iterate [&a=90 &b=92] { |key value|
+        put [$key $value]
+      } |
+        should-emit [
+          [a 90]
+          [b 92]
+        ]
+    }
+
+    >> 'when passing the map via pipe' {
+      put [&a=90 &b=92] |
+        map:iterate { |key value|
+          put [$key $value]
+        } |
+        should-emit [
+          [a 90]
+          [b 92]
+        ]
+    }
+  }
+
   >> 'getting the values of a map' {
     >> 'when the map is empty' {
       >> 'should return an empty list' {
