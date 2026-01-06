@@ -1,4 +1,5 @@
 use str
+use ./set
 use ./string
 
 >> 'In string module' {
@@ -144,6 +145,15 @@ use ./string
         string:unstyled (all) |
         str:has-prefix (all) "Exception: DODO\n" |
         should-be $true
+    }
+
+    >> 'applied to set' {
+      var source-list = [90 92 95 98]
+
+      put $source-list |
+        set:from |
+        string:pretty |
+        should-be (string:pretty $source-list)
     }
   }
 }

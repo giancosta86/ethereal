@@ -1,5 +1,6 @@
 use re
 use ./lang
+use ./set
 
 pragma unknown-command = disallow
 
@@ -29,6 +30,14 @@ fn unstyled { |@arguments|
 
 var -pretty-formatters-by-kind = [
   &string=$echo~
+  &map={ |map|
+    if (set:is-set $map) {
+      set:to-list $map |
+        pprint (all)
+    } else {
+      pprint $map
+    }
+  }
   &exception=$show~
 ]
 
@@ -36,6 +45,8 @@ var -pretty-formatters-by-kind = [
 # Converts the input value - of any kind - to a pretty string; more precisely:
 #
 # * if the value is a string, outputs it.
+#
+# * if the value is a set from the `set` module, display it as a list.
 #
 # * if the value is an exception, outputs the call to `show`.
 #
