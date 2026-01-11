@@ -25,10 +25,9 @@ var valid-fake-git~ = (
 >> 'In fake-git module' {
   >> 'passing an unknown command' {
     >> 'should fail' {
-      throws {
+      fails {
         valid-fake-git DODO
       } |
-        get-fail-content |
         should-be 'Fake Git: unsupported "DODO" command'
     }
   }
@@ -38,10 +37,9 @@ var valid-fake-git~ = (
       >> 'should fail' {
         var fake-git~ = (fake-git:create-command [&])
 
-        throws {
+        fails {
           fake-git clone '<some url>' (os:temp-dir)
         } |
-          get-fail-content |
           should-be 'Fake Git: missing source url "<some url>" in source map'
       }
     }
@@ -52,10 +50,9 @@ var valid-fake-git~ = (
           &'<some url>'=[&]
         ])
 
-        throws {
+        fails {
           fake-git clone '<some url>' (os:temp-dir)
         } |
-          get-fail-content |
           should-be 'Fake Git: missing reference "main" in repository at source url "<some url>"'
       }
     }
@@ -102,10 +99,9 @@ var valid-fake-git~ = (
 
           cd $dest
 
-          throws {
+          fails {
             valid-fake-git checkout UNDECLARED
           } |
-            get-fail-content |
             should-be 'Fake Git: missing reference "UNDECLARED" in repository at source url "<some url>"'
         }
       }
@@ -116,10 +112,9 @@ var valid-fake-git~ = (
         fs:with-temp-dir { |dest|
           cd $dest
 
-          throws {
+          fails {
             valid-fake-git checkout secondary
           } |
-            get-fail-content |
             should-be (printf 'Fake Git: the directory "%s" was not cloned via this command instance!' $dest)
         }
       }

@@ -202,10 +202,9 @@ fn create-temp-tree { |temp-root|
         os:remove-all $temp-path
         os:mkdir $temp-path
 
-        throws {
+        fails {
           fs:ensure-file $temp-path
         } |
-          get-fail-content |
           should-be 'Path "'$temp-path'" exists, but it is not a file!'
       }
     }
@@ -560,10 +559,9 @@ fn create-temp-tree { |temp-root|
     }
 
     >> 'if the path is the file system root' {
-        throws {
+        fails {
           fs:with-path-sandbox / {}
         } |
-          get-fail-content |
           should-be 'Cannot apply a sandbox to the file system root!'
       }
   }

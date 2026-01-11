@@ -455,11 +455,10 @@ use ./seq
   >> 'splitting by chunk count' {
     >> 'when chunk count < 0' {
       >> 'should fail' {
-        throws {
+        fails {
           all [Alpha Beta] |
             seq:split-by-chunk-count -1
         } |
-          get-fail-content |
           str:contains (all) 'The chunk count must be > 0' |
           should-be $true
       }
@@ -467,11 +466,10 @@ use ./seq
 
     >> 'when chunk count is 0' {
       >> 'should fail' {
-        throws {
+        fails {
           all [Alpha Beta] |
             seq:split-by-chunk-count 0
         } |
-          get-fail-content |
           str:contains (all) 'The chunk count must be > 0!' |
           should-be $true
       }

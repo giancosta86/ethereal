@@ -163,7 +163,7 @@ fn should-emit-in-any-order { |expected-items|
             should-emit-in-any-order $scenario[expected-data]
 
           put $capture-result[exception] |
-            get-fail-content |
+            exception:get-fail-content |
             should-be DODO
         }
       }
@@ -197,7 +197,7 @@ fn should-emit-in-any-order { |expected-items|
           ]
 
         put $capture-result[exception] |
-          get-fail-content |
+          exception:get-fail-content |
           should-be DODO
       }
 
@@ -230,7 +230,7 @@ fn should-emit-in-any-order { |expected-items|
           should-be []
 
         put $capture-result[exception] |
-          get-fail-content |
+          exception:get-fail-content |
           should-be DODO
       }
 

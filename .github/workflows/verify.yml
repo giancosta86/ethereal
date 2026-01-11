@@ -29,6 +29,6 @@ jobs:
 
           epm:install
 
-          use github.com/giancosta86/velvet/v2/velvet
+          use github.com/giancosta86/velvet/v3/velvet
 
           velvet:velvet &must-pass
