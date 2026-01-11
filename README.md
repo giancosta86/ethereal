@@ -83,6 +83,8 @@ As an interesting consequence, during an interactive session, when calling with 
 
 - [map](map.elv): functional-style map manipulation.
 
+- [parallel](parallel.elv): parallelism constructs - such as `fork-join`.
+
 - [resources](resources.elv): convenient way to access the resources associated with a script file.
 
 - [semver](semver.elv): semantic versions - parsing, inspection and comparison.
