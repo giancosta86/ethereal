@@ -44,10 +44,9 @@ use ./lang
 
     >> 'when multiple args are passed' {
       >> 'should fail' {
-        throws {
+        fails {
           lang:get-single-input [Alpha Beta]
         } |
-          get-fail-content |
           str:contains (all) 'arity mismatch'
       }
     }
