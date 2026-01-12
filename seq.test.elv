@@ -475,56 +475,73 @@ use ./seq
       }
     }
 
-    >> 'should support 1 chunk and 4 items' {
-      all [Alpha Beta Gamma Delta] |
-        seq:split-by-chunk-count 1 |
-        put [(all)] |
-        should-be [[Alpha Beta Gamma Delta]]
-    }
-
-    >> 'with 3 chunks' {
-      >> 'should support 0 items' {
-        all [] |
-          seq:split-by-chunk-count 3 |
-          put [(all)] |
-          should-be []
-      }
-
-      >> 'should support 1 item' {
-        all [Alpha] |
-          seq:split-by-chunk-count 3 |
-          put [(all)] |
-          should-be [[Alpha]]
-      }
-
-      >> 'should support 2 items' {
-        all [Alpha Beta] |
-          seq:split-by-chunk-count 3 |
-          put [(all)] |
-          should-be [[Alpha] [Beta]]
-      }
-
-      >> 'should support 3 items' {
-        all [Alpha Beta Gamma] |
-          seq:split-by-chunk-count 3 |
-          put [(all)] |
-          should-be [[Alpha] [Beta] [Gamma]]
-      }
-
-      >> 'should support 4 items' {
+    >> 'when performing round-robin allocation' {
+      >> 'should support 1 chunk and 4 items' {
         all [Alpha Beta Gamma Delta] |
-          seq:split-by-chunk-count 3 |
+          seq:split-by-chunk-count 1 |
           put [(all)] |
-          should-be [[Alpha Delta] [Beta] [Gamma]]
+          should-be [[Alpha Beta Gamma Delta]]
       }
 
-      >> 'should support 7 items' {
-        all [Alpha Beta Gamma Delta Epsilon Zeta Eta] |
-          seq:split-by-chunk-count 3 |
-          put [(all)] |
-          should-be [[Alpha Delta Eta] [Beta Epsilon] [Gamma Zeta]]
+      >> 'with 3 chunks' {
+        >> 'should support 0 items' {
+          all [] |
+            seq:split-by-chunk-count 3 |
+            put [(all)] |
+            should-be []
+        }
+
+        >> 'should support 1 item' {
+          all [Alpha] |
+            seq:split-by-chunk-count 3 |
+            put [(all)] |
+            should-be [[Alpha]]
+        }
+
+        >> 'should support 2 items' {
+          all [Alpha Beta] |
+            seq:split-by-chunk-count 3 |
+            put [(all)] |
+            should-be [[Alpha] [Beta]]
+        }
+
+        >> 'should support 3 items' {
+          all [Alpha Beta Gamma] |
+            seq:split-by-chunk-count 3 |
+            put [(all)] |
+            should-be [[Alpha] [Beta] [Gamma]]
+        }
+
+        >> 'should support 4 items' {
+          all [Alpha Beta Gamma Delta] |
+            seq:split-by-chunk-count 3 |
+            put [(all)] |
+            should-be [[Alpha Delta] [Beta] [Gamma]]
+        }
+
+        >> 'should support 7 items' {
+          all [Alpha Beta Gamma Delta Epsilon Zeta Eta] |
+            seq:split-by-chunk-count 3 |
+            put [(all)] |
+            should-be [[Alpha Delta Eta] [Beta Epsilon] [Gamma Zeta]]
+        }
       }
     }
+  }
+
+  >> 'when performing fast allocation' {
+    range 65 (+ 65 26) |
+      each $str:from-codepoints~ |
+      seq:split-by-chunk-count &fast 7 |
+      should-emit [
+        [A B C D]
+        [E F G H]
+        [I J K L]
+        [M N O P]
+        [Q R S T]
+        [U V W X]
+        [Y Z]
+      ]
   }
 
   >> 'converting a single value to list' {
