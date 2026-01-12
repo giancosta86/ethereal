@@ -98,7 +98,7 @@ fn multi-value { |@arguments|
 
       var existing-values = (lang:get-value $cumulated-map $key &default=[])
 
-      var updated-values = [$@existing-values $value]
+      var updated-values = (conj $existing-values $value)
 
       assoc $cumulated-map $key $updated-values
     }
