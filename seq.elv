@@ -144,34 +144,55 @@ fn drill-down { |&default=$nil source @properties|
 
 #
 # Creates the given (positive) number of chunks, then subdivides the items received via pipe
-# into such chunks, with a round-robin algorithm.
+# into such chunks, by default with a round-robin algorithm - which can be disabled
+# for faster performances via the &fast flag.
 #
 # In the end, emits the non-empty chunks as separate values.
 #
-fn split-by-chunk-count { |chunk-count|
+fn split-by-chunk-count { |&fast=$false chunk-count|
   if (<= $chunk-count 0) {
     fail 'The chunk count must be > 0! Requested: '$chunk-count
   }
 
-  var chunks = [(repeat $chunk-count [])]
+  if $fast {
+    var items = [(all)]
+    var item-count = (count $items)
 
-  var chunk-index = 0
+    var chunk-length = (
+      / (count $items) $chunk-count |
+        math:ceil (all)
+    )
 
-  each { |item|
-    var current-chunk = $chunks[$chunk-index]
+    range 0 (count $items) &step=$chunk-length |
+      reduce [] { |chunks start-index|
+        var exclusive-end-index = (math:min (+ $start-index $chunk-length) $item-count)
+
+        var chunk = $items[$start-index..$exclusive-end-index]
+
+        conj $chunks $chunk
+      } |
+      all (all)
+  } else {
+    var chunks = [(repeat $chunk-count [])]
+
+    var chunk-index = 0
+
+    each { |item|
+      var current-chunk = $chunks[$chunk-index]
 
     var updated-chunk = [$@current-chunk $item]
 
-    set chunks = (assoc $chunks $chunk-index $updated-chunk)
+      set chunks = (assoc $chunks $chunk-index $updated-chunk)
 
-    set chunk-index = (
-      + $chunk-index 1 |
-        % (all) $chunk-count
-    )
+      set chunk-index = (
+        + $chunk-index 1 |
+          % (all) $chunk-count
+      )
+    }
+
+    all $chunks |
+      keep-if { |chunk| not-eq $chunk [] }
   }
-
-  all $chunks |
-    keep-if { |chunk| not-eq $chunk [] }
 }
 
 #
