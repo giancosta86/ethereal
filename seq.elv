@@ -104,7 +104,7 @@ fn get-prefix { |@arguments|
   range 0 (math:min (count $left) (count $right)) |
     reduce [] { |partial index|
       if (eq $left[$index] $right[$index]) {
-        put [$@partial $left[$index]]
+        conj $partial $left[$index]
       } else {
         break
       }
@@ -180,7 +180,7 @@ fn split-by-chunk-count { |&fast=$false chunk-count|
     each { |item|
       var current-chunk = $chunks[$chunk-index]
 
-    var updated-chunk = [$@current-chunk $item]
+      var updated-chunk = (conj $current-chunk $item)
 
       set chunks = (assoc $chunks $chunk-index $updated-chunk)
 
@@ -228,7 +228,7 @@ fn equivalence-classes { |&equality=$eq~|
         if ($equality $value $class-representative) {
           var equivalence-class = $cumulated-map[$class-representative]
 
-          var updated-class = [$@equivalence-class $value]
+          var updated-class = (conj $equivalence-class $value)
 
           assoc $cumulated-map $class-representative $updated-class
 

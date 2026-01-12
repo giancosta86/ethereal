@@ -177,10 +177,7 @@ fn spy { |@arguments|
     }
 
     &command={ |@arguments|
-      set runs = [
-        $@runs
-        $arguments
-      ]
+      set runs = (conj $runs $arguments)
 
       if $block {
         $block $@arguments
