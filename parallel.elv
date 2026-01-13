@@ -16,7 +16,7 @@ var DEFAULT-NUM-WORKERS = 8
 #
 fn fork-join { |&num-workers=$DEFAULT-NUM-WORKERS chunk-mapper joiner|
   all |
-    seq:split-by-chunk-count $num-workers |
+    seq:split-by-chunk-count &fast $num-workers |
     peach &num-workers=$num-workers { |chunk|
       $chunk-mapper $@chunk
     } |
