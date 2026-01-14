@@ -158,6 +158,11 @@ fn split-by-chunk-count { |&fast=$false chunk-count|
     var items = [(all)]
     var item-count = (count $items)
 
+    if (== $item-count 0) {
+      all []
+      return
+    }
+
     var chunk-length = (
       / (count $items) $chunk-count |
         math:ceil (all)

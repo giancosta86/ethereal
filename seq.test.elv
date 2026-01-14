@@ -530,7 +530,8 @@ use ./seq
   }
 
   >> 'when performing fast allocation' {
-    range 65 (+ 65 26) |
+    >> 'should work' {
+      range 65 (+ 65 26) |
       each $str:from-codepoints~ |
       seq:split-by-chunk-count &fast 7 |
       should-emit [
@@ -542,6 +543,13 @@ use ./seq
         [U V W X]
         [Y Z]
       ]
+    }
+
+    >> 'should support 0 items' {
+      all [] |
+        seq:split-by-chunk-count &fast 7 |
+        should-emit []
+    }
   }
 
   >> 'converting a single value to list' {
