@@ -112,14 +112,21 @@ fn get-prefix { |@arguments|
 }
 
 #
-# If the input collection is empty, emits a default value of any kind;
-# otherwise, emits the collection itself.
+# If the input collection is empty, emits the given default value ($nil, by default); otherwise, emits the collection itself.
 #
-fn coalesce-empty { |&default=$nil @arguments|
+fn empty-to-default { |&default=$nil @arguments|
   var source = (lang:get-single-input $arguments)
 
   > (count $source) 0 |
     lang:ternary (all) $source $default
+}
+
+#
+# If the input collection is empty, emits the given default value ($nil, by default); otherwise, emits the collection itself.
+#
+fn coalesce-empty { |&default=$nil @arguments|
+  deprecate 'Use empty-to-default instead'
+  empty-to-default &default=$default $@arguments
 }
 
 #
