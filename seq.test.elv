@@ -277,7 +277,7 @@ use ./seq
     }
   }
 
-  >> 'coalescing an empty sequence' {
+  >> 'the deprecated coalesce-empty' {
     >> 'for strings' {
       >> 'when empty' {
         >> 'when not passing a default value' {
@@ -340,6 +340,74 @@ use ./seq
       >> 'when not empty' {
         put [&omega=98] |
           seq:coalesce-empty |
+          should-be [&omega=98]
+      }
+    }
+  }
+
+  >> 'converting an empty sequence to default' {
+    >> 'for strings' {
+      >> 'when empty' {
+        >> 'when not passing a default value' {
+          put '' |
+            seq:empty-to-default |
+            should-be $nil
+        }
+
+        >> 'when passing a default value' {
+          put '' |
+            seq:empty-to-default &default=Dodo |
+            should-be Dodo
+        }
+      }
+
+      >> 'when not empty' {
+        put Yogi |
+          seq:empty-to-default |
+          should-be Yogi
+      }
+    }
+
+    >> 'for lists' {
+      >> 'when empty' {
+        >> 'when not passing a default value' {
+          put [] |
+            seq:empty-to-default |
+            should-be $nil
+        }
+
+        >> 'when passing a default value' {
+          put [] |
+            seq:empty-to-default &default=[Cip Ciop] |
+            should-be [Cip Ciop]
+        }
+      }
+
+      >> 'when not empty' {
+        put [90 92 95] |
+          seq:empty-to-default |
+          should-be [90 92 95]
+      }
+    }
+
+    >> 'for maps' {
+      >> 'when empty' {
+        >> 'when not passing a default value' {
+          put [&] |
+            seq:empty-to-default |
+            should-be $nil
+        }
+
+        >> 'when passing a default value' {
+          put [&] |
+            seq:empty-to-default &default=[&alpha=90] |
+            should-be [&alpha=90]
+        }
+      }
+
+      >> 'when not empty' {
+        put [&omega=98] |
+          seq:empty-to-default |
           should-be [&omega=98]
       }
     }
