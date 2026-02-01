@@ -9,7 +9,8 @@ fn custom-binary-add { |left right|
     var custom-add~ = (operator:multi-value 0 $custom-binary-add~)
 
     >> 'when no operands are passed' {
-      custom-add |
+      all [] |
+        custom-add |
         should-be 0
     }
 
