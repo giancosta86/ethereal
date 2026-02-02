@@ -166,3 +166,15 @@ fn is-seq { |@arguments|
   }
 }
 
+#
+# Emits $true if the given value is neither $nil nor an empty sequence, $false otherwise.
+#
+fn is-substantial { |@arguments|
+  var value = (get-single-input $arguments)
+
+  if (is-seq $value) {
+    > (count $value) 0
+  } else {
+    not-eq $value $nil
+  }
+}

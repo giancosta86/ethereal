@@ -366,4 +366,57 @@ use ./lang
         should-be $true
     }
   }
+
+  >> 'testing for substantial values' {
+    >> 'when passing $nil' {
+      lang:is-substantial $nil |
+        should-be $false
+    }
+
+    >> 'when passing a string' {
+      >> 'when non-empty' {
+        lang:is-substantial 'Hello' |
+          should-be $true
+      }
+
+      >> 'when empty' {
+        lang:is-substantial '' |
+          should-be $false
+      }
+    }
+
+    >> 'when passing a list' {
+      >> 'when non-empty' {
+        lang:is-substantial [90 92] |
+          should-be $true
+      }
+
+      >> 'when empty' {
+        lang:is-substantial [] |
+          should-be $false
+      }
+    }
+
+    >> 'when passing a map' {
+      >> 'when non-empty' {
+        lang:is-substantial [&k=90] |
+          should-be $true
+      }
+
+      >> 'when empty' {
+        lang:is-substantial [&] |
+          should-be $false
+      }
+    }
+
+    >> 'when passing just a number' {
+      lang:is-substantial (num 90) |
+        should-be $true
+    }
+
+    >> 'when passing an exception' {
+      lang:is-substantial ?(fail DODO) |
+        should-be $true
+    }
+  }
 }

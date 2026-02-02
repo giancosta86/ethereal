@@ -707,59 +707,6 @@ use ./seq
     }
   }
 
-  >> 'testing for substantial values' {
-    >> 'when passing $nil' {
-      seq:is-substantial $nil |
-        should-be $false
-    }
-
-    >> 'when passing a string' {
-      >> 'when non-empty' {
-        seq:is-substantial 'Hello' |
-          should-be $true
-      }
-
-      >> 'when empty' {
-        seq:is-substantial '' |
-          should-be $false
-      }
-    }
-
-    >> 'when passing a list' {
-      >> 'when non-empty' {
-        seq:is-substantial [90 92] |
-          should-be $true
-      }
-
-      >> 'when empty' {
-        seq:is-substantial [] |
-          should-be $false
-      }
-    }
-
-    >> 'when passing a map' {
-      >> 'when non-empty' {
-        seq:is-substantial [&k=90] |
-          should-be $true
-      }
-
-      >> 'when empty' {
-        seq:is-substantial [&] |
-          should-be $false
-      }
-    }
-
-    >> 'when passing just a number' {
-      seq:is-substantial (num 90) |
-        should-be $true
-    }
-
-    >> 'when passing an exception' {
-      seq:is-substantial ?(fail DODO) |
-        should-be $true
-    }
-  }
-
   >> 'associating only substantial values' {
     var test-source = [&x=90]
 
