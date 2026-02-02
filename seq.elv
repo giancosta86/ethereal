@@ -5,6 +5,19 @@ use ./string
 pragma unknown-command = disallow
 
 #
+# Emits $true if the given value is a sequence, $false otherwise.
+#
+fn is-seq { |value|
+  try {
+    count $value | only-bytes
+  } catch {
+    put $false
+  } else {
+    put $true
+  }
+}
+
+#
 # Emits $true if the passed input sequence has no items, $false otherwise.
 #
 fn is-empty { |@arguments|
