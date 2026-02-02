@@ -334,4 +334,36 @@ use ./lang
       }
     }
   }
+
+  >> 'testing for a sequence' {
+    >> 'applied to $nil' {
+      lang:is-seq $nil |
+        should-be $false
+    }
+
+    >> 'applied to a number' {
+      lang:is-seq (num 90) |
+        should-be $false
+    }
+
+    >> 'applied to a boolean' {
+      lang:is-seq $true |
+        should-be $false
+    }
+
+    >> 'applied to a string' {
+      lang:is-seq Dodo |
+        should-be $true
+    }
+
+    >> 'applied to a list' {
+      lang:is-seq [90 92 95] |
+        should-be $true
+    }
+
+    >> 'applied to a map' {
+      lang:is-seq [&alpha=90 &beta=92] |
+        should-be $true
+    }
+  }
 }

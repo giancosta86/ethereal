@@ -4,19 +4,9 @@ use ./string
 
 pragma unknown-command = disallow
 
-#
-# Emits $true if the given value is a sequence, $false otherwise.
-#
 fn is-seq { |@arguments|
-  var value = (lang:get-single-input $arguments)
-
-  try {
-    count $value | only-bytes
-  } catch {
-    put $false
-  } else {
-    put $true
-  }
+  deprecate 'Use `lang:is-seq` instead`'
+  lang:is-seq $@arguments
 }
 
 #
