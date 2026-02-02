@@ -273,3 +273,15 @@ fn equivalence-classes { |&equality=$eq~|
     put $classes-by-representative[$representative]
   }
 }
+
+#
+# Emits $true if the given value is neither $nil nor an empty sequence, $false otherwise.
+#
+fn is-substantial { |value|
+  if (is-seq $value) {
+    is-non-empty $value
+  } else {
+    not-eq $value $nil
+  }
+}
+
