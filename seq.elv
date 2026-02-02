@@ -266,17 +266,9 @@ fn equivalence-classes { |&equality=$eq~|
   }
 }
 
-#
-# Emits $true if the given value is neither $nil nor an empty sequence, $false otherwise.
-#
 fn is-substantial { |@arguments|
-  var value = (lang:get-single-input $arguments)
-
-  if (is-seq $value) {
-    is-non-empty $value
-  } else {
-    not-eq $value $nil
-  }
+  deprecate 'Use `lang:is-substantial` instead'
+  lang:is-substantial $@arguments
 }
 
 #
