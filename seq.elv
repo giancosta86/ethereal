@@ -285,3 +285,14 @@ fn is-substantial { |value|
   }
 }
 
+#
+# Just like the builtin `assoc` if `is-substantial` is $true for `value`;
+# otherwise, `sequence` is emitted unaltered.
+#
+fn assoc-substantial { |sequence key value|
+  if (is-substantial $value) {
+    assoc $sequence $key $value
+  } else {
+    put $sequence
+  }
+}

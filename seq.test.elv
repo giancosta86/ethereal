@@ -792,4 +792,69 @@ use ./seq
     }
   }
 
+  >> 'associating only substantial values' {
+    var test-source = [&x=90]
+
+    >> 'when associating $nil' {
+      seq:assoc-substantial $test-source k $nil |
+        should-be $test-source
+    }
+
+    >> 'when associating a number' {
+      seq:assoc-substantial $test-source k (num 98) |
+        should-be &strict [
+          &x=90
+          &k=(num 98)
+        ]
+    }
+
+    >> 'when associating a string' {
+      >> 'when non-empty' {
+        seq:assoc-substantial $test-source k Hello |
+          should-be [
+            &x=90
+            &k=Hello
+          ]
+      }
+
+      >> 'when empty' {
+        seq:assoc-substantial $test-source k '' |
+          should-be $test-source
+      }
+    }
+
+    >> 'when associating a list' {
+      >> 'when non-empty' {
+        seq:assoc-substantial $test-source k [92] |
+          should-be [
+            &x=90
+            &k=[92]
+          ]
+      }
+
+      >> 'when empty' {
+        seq:assoc-substantial $test-source k [] |
+          should-be [
+            &x=90
+          ]
+      }
+    }
+
+    >> 'when associating a map' {
+      >> 'when non-empty' {
+        seq:assoc-substantial $test-source k [&sub-key=95] |
+          should-be [
+            &x=90
+            &k=[&sub-key=95]
+          ]
+      }
+
+      >> 'when empty' {
+        seq:assoc-substantial $test-source k [&] |
+          should-be [
+            &x=90
+          ]
+      }
+    }
+  }
 }
