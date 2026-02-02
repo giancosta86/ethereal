@@ -150,3 +150,19 @@ fn get-value { |&default=$nil @arguments|
     put $default
   }
 }
+
+#
+# Emits $true if the given value is a sequence, $false otherwise.
+#
+fn is-seq { |@arguments|
+  var value = (get-single-input $arguments)
+
+  try {
+    count $value | only-bytes
+  } catch {
+    put $false
+  } else {
+    put $true
+  }
+}
+

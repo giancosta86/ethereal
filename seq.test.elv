@@ -2,38 +2,6 @@ use str
 use ./seq
 
 >> 'In seq module' {
-  >> 'testing for a sequence' {
-    >> 'applied to $nil' {
-      seq:is-seq $nil |
-        should-be $false
-    }
-
-    >> 'applied to a number' {
-      seq:is-seq (num 90) |
-        should-be $false
-    }
-
-    >> 'applied to a boolean' {
-      seq:is-seq $true |
-        should-be $false
-    }
-
-    >> 'applied to a string' {
-      seq:is-seq Dodo |
-        should-be $true
-    }
-
-    >> 'applied to a list' {
-      seq:is-seq [90 92 95] |
-        should-be $true
-    }
-
-    >> 'applied to a map' {
-      seq:is-seq [&alpha=90 &beta=92] |
-        should-be $true
-    }
-  }
-
   >> 'testing for emptiness' {
     >> 'when the source is a list' {
       >> 'when the list is empty' {
