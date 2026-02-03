@@ -772,4 +772,61 @@ use ./seq
       }
     }
   }
+
+  >> 'grouping items via selector' {
+    >> 'with empty list' {
+      seq:group-by [] { } |
+        should-be [&]
+    }
+
+    >> 'with empty string' {
+      seq:group-by '' { } |
+        should-be [&]
+    }
+
+    >> 'with non-empty list' {
+      seq:group-by [3 5 7] { |item| put 'X'(* $item 10) } |
+        should-be [
+          &X30=3
+          &X50=5
+          &X70=7
+        ]
+    }
+
+    >> 'with non-empty string' {
+      seq:group-by 'ABC' { |letter| put $letter$letter } |
+        should-be [
+          &AA=A
+          &BB=B
+          &CC=C
+        ]
+    }
+
+    >> 'with duplicated item' {
+      seq:group-by [R S R X R X Y Z] { |letter| put $letter'-'$letter } |
+        should-be [
+          &R-R=R
+          &S-S=S
+          &X-X=X
+          &Y-Y=Y
+          &Z-Z=Z
+        ]
+    }
+
+    >> 'passing no items via pipe' {
+      all [] |
+        seq:group-by { } |
+        should-be [&]
+    }
+
+    >> 'passing items via pipe' {
+      all [90 92 98] |
+        seq:group-by { |item| * $item 10 } |
+        should-be [
+          &900=90
+          &920=92
+          &980=98
+        ]
+    }
+  }
 }

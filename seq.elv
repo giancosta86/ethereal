@@ -282,3 +282,26 @@ fn assoc-substantial { |sequence key value|
     put $sequence
   }
 }
+
+#
+# Given a `source` sequence as input and a `selector` as argument, where `selector` is a function taking an item as argument and emitting the related key, emits a map having the defined key-item entries.
+#
+fn group-by { |@arguments|
+  var source selector
+
+  if (== (count $arguments) 1) {
+    set source selector = [(all)] $arguments[0]
+  } elif (== (count $arguments) 2) {
+    set source selector = (all $arguments[..2])
+  } else {
+    fail 'arity mismatch: 1 or 2 arguments expected'
+  }
+
+  all $source | each { |item|
+    put [
+      ($selector $item)
+      $item
+    ]
+  } |
+    make-map
+}
