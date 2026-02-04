@@ -305,3 +305,16 @@ fn group-by { |@arguments|
   } |
     make-map
 }
+
+#
+# Creates a function taking a single collection - list or map - and drilling into it
+# by iteratively applying the given keys.
+#
+fn make-getter { |@keys|
+  put { |source|
+    all $keys |
+      reduce $source { |current-level current-key|
+        put $current-level[$current-key]
+      }
+  }
+}
