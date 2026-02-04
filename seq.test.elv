@@ -829,4 +829,67 @@ use ./seq
         ]
     }
   }
+
+  >> 'making a getter' {
+    >> 'when applied to a map' {
+      var test-map = [
+        &alpha=[
+          &beta=[
+            &gamma=90
+          ]
+        ]
+      ]
+
+      >> 'when no keys are passed' {
+        (seq:make-getter) $test-map |
+          should-be $test-map
+      }
+
+      >> 'when 1 key is passed' {
+        (seq:make-getter alpha) $test-map |
+          should-be $test-map[alpha]
+      }
+
+      >> 'when 2 keys are passed' {
+        (seq:make-getter alpha beta) $test-map |
+          should-be $test-map[alpha][beta]
+      }
+
+      >> 'when 3 keys are passed' {
+        (seq:make-getter alpha beta gamma) $test-map |
+          should-be $test-map[alpha][beta][gamma]
+      }
+    }
+
+    >> 'when applied to a list' {
+      var test-list = [
+        90
+        [
+          92
+          95
+          [ 98 ]
+        ]
+      ]
+
+      >> 'when no keys are passed' {
+        (seq:make-getter) $test-list |
+          should-be $test-list
+      }
+
+      >> 'when 1 key is passed' {
+        (seq:make-getter 1) $test-list |
+          should-be $test-list[1]
+      }
+
+      >> 'when 2 keys are passed' {
+        (seq:make-getter 1 2) $test-list |
+          should-be $test-list[1][2]
+      }
+
+      >> 'when 3 keys are passed' {
+        (seq:make-getter 1 2 0) $test-list |
+          should-be $test-list[1][2][0]
+      }
+    }
+  }
 }
