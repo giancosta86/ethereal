@@ -276,7 +276,7 @@ fn is-substantial { |@arguments|
 # otherwise, `sequence` is emitted unaltered.
 #
 fn assoc-substantial { |sequence key value|
-  if (is-substantial $value) {
+  if (lang:is-substantial $value) {
     assoc $sequence $key $value
   } else {
     put $sequence
