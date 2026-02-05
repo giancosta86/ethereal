@@ -281,3 +281,19 @@ fn find-duplicates { |@arguments|
             keep-if { |equal-files| > (count $equal-files) 1 }
       }
 }
+
+#
+# Emits all the `.elv` script files in the current directory tree, recursively navigating subdirectories.
+#
+# If the `include-tests` flag is enabled, `.test.elv` test scripts for Velvet are listed as well.
+#
+fn find-scripts { |&include-tests=$false|
+  if $include-tests {
+    put **.elv
+  } else {
+    put **.elv |
+      keep-if { |script-path|
+        not (str:has-suffix $script-path '.test.elv')
+      }
+  }
+}

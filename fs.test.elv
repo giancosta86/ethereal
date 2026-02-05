@@ -637,4 +637,40 @@ fn create-temp-tree { |temp-root|
         ]
     }
   }
+
+  >> 'finding script files' {
+    cd (path:dir (src)[name])
+
+    >> 'by default' {
+      var actual-scripts = [(fs:find-scripts)]
+
+      put $actual-scripts |
+        should-contain fs.elv
+
+      put $actual-scripts |
+        should-not-contain fs.test.elv
+
+      put $actual-scripts |
+        should-contain tracer/on-off.elv
+
+      put $actual-scripts |
+        should-not-contain tracer/on-off.test.elv
+    }
+
+    >> 'when including test scripts' {
+      var actual-scripts = [(fs:find-scripts &include-tests)]
+
+      put $actual-scripts |
+        should-contain fs.elv
+
+      put $actual-scripts |
+        should-contain fs.test.elv
+
+      put $actual-scripts |
+        should-contain tracer/on-off.elv
+
+      put $actual-scripts |
+        should-contain tracer/on-off.test.elv
+    }
+  }
 }
