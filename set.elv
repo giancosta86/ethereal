@@ -30,6 +30,30 @@ fn of { |@arguments|
 }
 
 #
+# Iterates over the given set - which can be passed via pipe or
+# as the first argument - and, for each of its items, calls the
+# consumer - a function passed as the last argument and
+# taking the item as its only argument.
+#
+fn iterate { |@arguments|
+  var argument-count = (count $arguments)
+
+  var source
+  var consumer
+
+  if (== $argument-count 1) {
+    set source = (one)
+    set consumer = $arguments[0]
+  } elif (== $argument-count 2) {
+    set source = $arguments[0]
+    set consumer = $arguments[1]
+  } else {
+    fail 'arity mismatch: <consumer> or <set><consumer> expected'
+  }
+
+  keys $source[-set-items] | each $consumer
+}
+#
 # Emits a list containing the items of the given input set, in unspecified order.
 #
 fn to-list { |@arguments|
