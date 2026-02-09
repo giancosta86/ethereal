@@ -58,6 +58,25 @@ use ./set
     }
   }
 
+  >> 'iterating over the items' {
+    >> 'when the set is empty' {
+      set:iterate $set:empty { fail 'This should not be called' }
+    }
+
+    >> 'when the set is non-empty' {
+      var result = []
+
+      set:of A B C D E F G |
+        set:iterate { |letter|
+          set result = (conj $result $letter)
+        }
+
+      all $result |
+        order |
+        should-emit [A B C D E F G]
+    }
+  }
+
   >> 'converting to list' {
     >> 'when the set is empty' {
       put $set:empty |
