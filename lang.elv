@@ -12,6 +12,46 @@ fn ternary { |condition when-true when-false|
 }
 
 #
+# Takes in input - via pipe or as the first argument - a `value`, then compares it
+# with the value-block map of `cases` passed as the last argument:
+#
+# * If `value` is a key in the `cases` map, the associated *no-arg* block is invoked
+#
+# * Otherwise, the `default` flag is considered:
+#
+#   * if it's declared, it must be a block taking the **value** as its only parameter
+#
+#   * otherwise, an explanatory failure is raised
+#
+# Please, note: both the case blocks and the default block, despite having different signatures,
+# can emit any number of values: the `switch` construct is structurally equivalent, for example,
+# to the `if` construct.
+#
+fn switch { |&default=$nil @arguments|
+  var value
+  var cases
+
+  var argument-count = (count $arguments)
+
+  if (== $argument-count 1) {
+    set value = (one)
+    set cases = $arguments[0]
+  } elif (== $argument-count 2) {
+    set value cases = (all $arguments)
+  } else {
+    fail 'arity error: expected 1 or 2 arguments'
+  }
+
+  if (has-key $cases $value) {
+    $cases[$value]
+  } elif $default {
+    $default $value
+  } else {
+    fail 'Unexpected value in switch: '$value
+  }
+}
+
+#
 # This function is designed to be called from within a function whose argument list ends with @arguments,
 # so as to support both pipe input and argument input at once; it emits:
 #

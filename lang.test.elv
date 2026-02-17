@@ -30,6 +30,53 @@ use ./lang
     }
   }
 
+  >> 'switch construct' {
+    >> 'when the value has a matching case' {
+      lang:switch 92 [
+        &90={ put Hello }
+        &92={ put World }
+        &95={ put Test }
+      ] |
+        should-be World
+    }
+
+    >> 'when the value has no matching case' {
+      >> 'when the default is declared' {
+        lang:switch 90 [
+          &92={ put Something }
+        ] &default={ |value|
+          + $value 100
+        } |
+          should-be 190
+      }
+
+      >> 'when the default is missing' {
+        fails {
+          lang:switch 90 [
+            &92={ put Something }
+          ]
+        } |
+          should-be 'Unexpected value in switch: 90'
+      }
+    }
+
+    >> 'should be able to emit multiple values' {
+      put 90 |
+        lang:switch [
+          &90={
+            put Alpha
+            put Beta
+            put Gamma
+          }
+        ] |
+          should-emit [
+            Alpha
+            Beta
+            Gamma
+          ]
+    }
+  }
+
   >> 'getting single input' {
     >> 'when it is passed as argument list' {
       lang:get-single-input [Alpha] |
