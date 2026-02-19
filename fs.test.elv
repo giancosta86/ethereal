@@ -672,5 +672,21 @@ fn create-temp-tree { |temp-root|
       put $actual-scripts |
         should-contain tracer/on-off.test.elv
     }
+
+    >> 'when there are no scripts' {
+      fs:with-temp-dir { |temp-dir|
+        cd $temp-dir
+
+        >> 'when not requesting tests' {
+          fs:find-scripts |
+            should-emit []
+        }
+
+        >> 'when requesting tests' {
+          fs:find-scripts &include-tests |
+            should-emit []
+        }
+      }
+    }
   }
 }

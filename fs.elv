@@ -289,9 +289,9 @@ fn find-duplicates { |@arguments|
 #
 fn find-scripts { |&include-tests=$false|
   if $include-tests {
-    put **.elv
+    put **[nomatch-ok].elv
   } else {
-    put **.elv |
+    put **[nomatch-ok].elv |
       keep-if { |script-path|
         not (str:has-suffix $script-path '.test.elv')
       }
