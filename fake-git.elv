@@ -33,6 +33,8 @@ fn create-command { |@arguments|
 
   var context-by-dest = [&]
 
+  var default-branch = main
+
   fn checkout { |@arguments|
     var reference = $arguments[-1]
 
@@ -61,6 +63,12 @@ fn create-command { |@arguments|
     keys $reference-files | each { |entry-path|
       fs:save-all $entry-path $reference-files[$entry-path]
     }
+
+    var new-context = (assoc $context reference $reference)
+
+    set context-by-dest = (
+      assoc $context-by-dest $pwd $new-context
+    )
   }
 
   fn clone { |@arguments|
@@ -76,6 +84,7 @@ fn create-command { |@arguments|
     set context-by-dest = (
       assoc $context-by-dest (path:abs $dest) [
         &source-url=$source-url
+        &reference=$default-branch
       ]
     )
 
@@ -83,7 +92,7 @@ fn create-command { |@arguments|
 
     tmp pwd = $dest
 
-    checkout main
+    checkout $default-branch
   }
 
   var commands = [
