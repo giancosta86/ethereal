@@ -28,7 +28,7 @@ var valid-fake-git~ = (
       fails {
         valid-fake-git DODO
       } |
-        should-be 'Fake Git: unsupported "DODO" command'
+        should-be 'Unsupported "DODO" command'
     }
   }
 
@@ -40,7 +40,7 @@ var valid-fake-git~ = (
         fails {
           fake-git clone '<some url>' (os:temp-dir)
         } |
-          should-be 'Fake Git: missing source url "<some url>" in source map'
+          should-be 'Missing source url "<some url>" in source map'
       }
     }
 
@@ -53,7 +53,7 @@ var valid-fake-git~ = (
         fails {
           fake-git clone '<some url>' (os:temp-dir)
         } |
-          should-be 'Fake Git: missing reference "main" in repository at source url "<some url>"'
+          should-be 'Missing reference "main" in repository at source url "<some url>"'
       }
     }
 
@@ -102,7 +102,7 @@ var valid-fake-git~ = (
           fails {
             valid-fake-git checkout UNDECLARED
           } |
-            should-be 'Fake Git: missing reference "UNDECLARED" in repository at source url "<some url>"'
+            should-be 'Missing reference "UNDECLARED" in repository at source url "<some url>"'
         }
       }
     }
@@ -115,7 +115,7 @@ var valid-fake-git~ = (
           fails {
             valid-fake-git checkout secondary
           } |
-            should-be (printf 'Fake Git: the directory "%s" was not cloned via this command instance!' $dest)
+            should-be (printf 'The directory "%s" was not cloned via this command instance!' $dest)
         }
       }
     }
@@ -241,6 +241,76 @@ var valid-fake-git~ = (
 
         valid-fake-git rev-parse --abbrev-ref HEAD |
           should-be secondary
+      }
+    }
+  }
+
+  >> 'pulling' {
+    var initial-map = [
+      &'<some url>'=[
+        &main=[
+          &alpha.txt='ALPHA - FIRST VERSION'
+        ]
+        &secondary=[
+          &beta.txt='BETA - FIRST VERSION'
+        ]
+      ]
+    ]
+
+    var updated-map = [
+      &'<some url>'=[
+        &secondary=[
+          &beta.txt='BETA - UPDATED VERSION'
+        ]
+      ]
+    ]
+
+    var current-map = $initial-map
+
+    >> 'should update the files' {
+      fs:with-temp-dir { |temp-dir|
+        var transient-fake-git~ = (fake-git:create-command { put $current-map })
+
+        transient-fake-git clone '<some url>' $temp-dir
+
+        cd $temp-dir
+
+        {
+          slurp < alpha.txt |
+            should-be $initial-map['<some url>'][main][alpha.txt]
+
+          os:is-regular beta.txt |
+            should-be $false
+        }
+
+        transient-fake-git checkout secondary
+
+        {
+          os:is-regular alpha.txt |
+            should-be $false
+
+          slurp < beta.txt |
+            should-be $initial-map['<some url>'][secondary][beta.txt]
+        }
+
+        set current-map = $updated-map
+
+        transient-fake-git checkout main
+
+        transient-fake-git checkout secondary
+
+        {
+          os:is-regular alpha.txt |
+            should-be $false
+
+          slurp < beta.txt |
+            should-be $initial-map['<some url>'][secondary][beta.txt]
+        }
+
+        transient-fake-git pull
+
+        slurp < beta.txt |
+            should-be $updated-map['<some url>'][secondary][beta.txt]
       }
     }
   }
