@@ -218,4 +218,30 @@ var valid-fake-git~ = (
       }
     }
   }
+
+  >> 'getting the current reference' {
+    >> 'after cloning' {
+      fs:with-temp-dir { |temp-dir|
+        valid-fake-git clone '<some url>' $temp-dir
+
+        cd $temp-dir
+
+        valid-fake-git rev-parse --abbrev-ref HEAD |
+          should-be main
+      }
+    }
+
+    >> 'after checkout' {
+      fs:with-temp-dir { |temp-dir|
+        valid-fake-git clone '<some url>' $temp-dir
+
+        cd $temp-dir
+
+        valid-fake-git checkout secondary
+
+        valid-fake-git rev-parse --abbrev-ref HEAD |
+          should-be secondary
+      }
+    }
+  }
 }

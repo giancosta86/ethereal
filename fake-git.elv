@@ -35,15 +35,19 @@ fn create-command { |@arguments|
 
   var default-branch = main
 
-  fn checkout { |@arguments|
-    var reference = $arguments[-1]
-
+  fn get-context {
     if (not (has-key $context-by-dest $pwd)) {
       printf 'Fake Git: the directory "%s" was not cloned via this command instance!' $pwd |
         fail (all)
     }
 
-    var context = $context-by-dest[$pwd]
+    put $context-by-dest[$pwd]
+  }
+
+  fn checkout { |@arguments|
+    var context = (get-context)
+
+    var reference = $arguments[-1]
 
     var source-url = $context[source-url]
 
@@ -95,9 +99,23 @@ fn create-command { |@arguments|
     checkout $default-branch
   }
 
+  fn rev-parse { |@arguments|
+    var context = (get-context)
+
+    var allowed-arguments = [--abbrev-ref HEAD]
+
+    if (not-eq $arguments $allowed-arguments) {
+      printf 'Allowed argument list: %s' $allowed-arguments |
+        fail (all)
+    }
+
+    put $context[reference]
+  }
+
   var commands = [
     &clone=$clone~
     &checkout=$checkout~
+    &rev-parse=$rev-parse~
   ]
 
   fn fake-git { |@git-arguments|
