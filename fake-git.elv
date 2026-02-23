@@ -31,17 +31,19 @@ pragma unknown-command = disallow
 fn create-command { |@arguments|
   var potential-source-map = (lang:get-single-input $arguments)
 
-  var source-urls-by-dest = [&]
+  var context-by-dest = [&]
 
   fn checkout { |@arguments|
     var reference = $arguments[-1]
 
-    if (not (has-key $source-urls-by-dest $pwd)) {
+    if (not (has-key $context-by-dest $pwd)) {
       printf 'Fake Git: the directory "%s" was not cloned via this command instance!' $pwd |
         fail (all)
     }
 
-    var source-url = $source-urls-by-dest[$pwd]
+    var context = $context-by-dest[$pwd]
+
+    var source-url = $context[source-url]
 
     var source-map = (lang:resolve $potential-source-map)
 
@@ -71,8 +73,10 @@ fn create-command { |@arguments|
         fail (all)
     }
 
-    set source-urls-by-dest = (
-      assoc $source-urls-by-dest (path:abs $dest) $source-url
+    set context-by-dest = (
+      assoc $context-by-dest (path:abs $dest) [
+        &source-url=$source-url
+      ]
     )
 
     os:mkdir-all $dest
