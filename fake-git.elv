@@ -28,6 +28,8 @@ pragma unknown-command = disallow
 #
 # * `pull`: if the `source-map` argument passed when creating the command was a function, calls it and retrieves the latest version of the source map, then updates the files in the target directory.
 #
+# * `remote get-url origin`: returns the source url for the repository in the current directory
+#
 # The execution of both commands can be altered - just like Git - via the optional `-C <current directory>` flag.
 #
 # Please, note: SOURCE-URL and GIT-REFERENCE can actually be arbitrary strings, without the usual constraints.
@@ -139,11 +141,24 @@ fn create-command { |@arguments|
     update-repository-files
   }
 
+  fn remote { |@arguments|
+    var allowed-arguments = [get-url origin]
+
+    if (not-eq $arguments $allowed-arguments) {
+      printf 'Allowed argument list: %s' $allowed-arguments |
+        fail (all)
+    }
+
+    var context = (get-context)
+    put $context[source-url]
+  }
+
   var commands = [
     &clone=$clone~
     &checkout=$checkout~
     &rev-parse=$rev-parse~
     &pull=$pull~
+    &remote=$remote~
   ]
 
   fn fake-git { |@git-arguments|

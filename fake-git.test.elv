@@ -314,4 +314,14 @@ var valid-fake-git~ = (
       }
     }
   }
+
+  >> 'getting the source url' {
+    fs:with-temp-dir { |temp-dir|
+      valid-fake-git clone '<some url>' $temp-dir
+
+      cd $temp-dir
+
+      valid-fake-git remote get-url origin
+    }
+  }
 }
