@@ -58,14 +58,14 @@ var valid-fake-git~ = (
     }
 
     >> 'when a source url with a main reference is requested' {
-      >> 'should clone its files to the destination directory' {
-        fs:with-temp-dir { |dest|
-          valid-fake-git clone '<some url>' $dest
+      >> 'should clone its files to the target directory' {
+        fs:with-temp-dir { |temp-dir|
+          valid-fake-git clone '<some url>' $temp-dir
 
-          slurp < (path:join $dest alpha.txt) |
+          slurp < (path:join $temp-dir alpha.txt) |
             should-be 'This is a sample test'
 
-          slurp < (path:join $dest beta gamma delta.txt) |
+          slurp < (path:join $temp-dir beta gamma delta.txt) |
             should-be 'This is another test!'
         }
       }
@@ -73,15 +73,15 @@ var valid-fake-git~ = (
 
     >> 'when cloning with -C' {
       >> 'should clone to a directory within the context of the temporary pwd' {
-        fs:with-temp-dir { |dest|
+        fs:with-temp-dir { |temp-dir|
           var previous-pwd = $pwd
 
-          valid-fake-git -C $dest clone '<some url>' omega
+          valid-fake-git -C $temp-dir clone '<some url>' omega
 
-          slurp < (path:join $dest omega alpha.txt) |
+          slurp < (path:join $temp-dir omega alpha.txt) |
             should-be 'This is a sample test'
 
-          slurp < (path:join $dest omega beta gamma delta.txt) |
+          slurp < (path:join $temp-dir omega beta gamma delta.txt) |
             should-be 'This is another test!'
 
           put $pwd |
@@ -94,10 +94,10 @@ var valid-fake-git~ = (
   >> 'checkout' {
     >> 'when the branch was not declared in the source map' {
       >> 'should fail' {
-        fs:with-temp-dir { |dest|
-          valid-fake-git clone '<some url>' $dest
+        fs:with-temp-dir { |temp-dir|
+          valid-fake-git clone '<some url>' $temp-dir
 
-          cd $dest
+          cd $temp-dir
 
           fails {
             valid-fake-git checkout UNDECLARED
@@ -109,37 +109,37 @@ var valid-fake-git~ = (
 
     >> 'when the target directory is not a cloned repository' {
       >> 'should fail' {
-        fs:with-temp-dir { |dest|
-          cd $dest
+        fs:with-temp-dir { |temp-dir|
+          cd $temp-dir
 
           fails {
             valid-fake-git checkout secondary
           } |
-            should-be (printf 'The directory "%s" was not cloned via this command instance!' $dest)
+            should-be (printf 'The directory "%s" was not cloned via this command instance!' $temp-dir)
         }
       }
     }
 
     >> 'when the branch in the source map is declared' {
       fn test-scenario { |@git-arguments|
-        fs:with-temp-dir { |dest|
-          valid-fake-git clone '<some url>' $dest
+        fs:with-temp-dir { |temp-dir|
+          valid-fake-git clone '<some url>' $temp-dir
 
-          cd $dest
+          cd $temp-dir
 
           valid-fake-git $@git-arguments
 
-          slurp < (path:join $dest alpha.txt) |
+          slurp < (path:join $temp-dir alpha.txt) |
             should-be 'This is another copy of alpha'
 
-          path:join $dest beta gamma delta.txt |
+          path:join $temp-dir beta gamma delta.txt |
             os:is-regular (all) |
             should-be $false
 
-          slurp < (path:join $dest pi.txt) |
+          slurp < (path:join $temp-dir pi.txt) |
             should-be 'This is Pi'
 
-          slurp < (path:join $dest sigma tau.txt) |
+          slurp < (path:join $temp-dir sigma tau.txt) |
             should-be 'This is Tau'
         }
       }
@@ -154,24 +154,24 @@ var valid-fake-git~ = (
 
       >> 'when performing the checkout with -C' {
         >> 'the checkout should occur within the directory passed to -C' {
-          fs:with-temp-dir { |dest|
+          fs:with-temp-dir { |temp-dir|
             var previous-pwd = $pwd
 
-            valid-fake-git clone '<some url>' $dest
+            valid-fake-git clone '<some url>' $temp-dir
 
-            valid-fake-git -C $dest checkout secondary
+            valid-fake-git -C $temp-dir checkout secondary
 
-            slurp < (path:join $dest alpha.txt) |
+            slurp < (path:join $temp-dir alpha.txt) |
               should-be 'This is another copy of alpha'
 
-            path:join $dest beta gamma delta.txt |
+            path:join $temp-dir beta gamma delta.txt |
               os:is-regular (all) |
               should-be $false
 
-            slurp < (path:join $dest pi.txt) |
+            slurp < (path:join $temp-dir pi.txt) |
               should-be 'This is Pi'
 
-            slurp < (path:join $dest sigma tau.txt) |
+            slurp < (path:join $temp-dir sigma tau.txt) |
               should-be 'This is Tau'
 
             put $pwd |
@@ -183,10 +183,10 @@ var valid-fake-git~ = (
 
     >> 'when the branch is empty' {
       >> 'the target should contain no more files' {
-        fs:with-temp-dir { |dest|
-          valid-fake-git clone '<some url>' $dest
+        fs:with-temp-dir { |temp-dir|
+          valid-fake-git clone '<some url>' $temp-dir
 
-          cd $dest
+          cd $temp-dir
 
           valid-fake-git checkout empty
 
