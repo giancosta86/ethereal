@@ -466,4 +466,35 @@ use ./lang
         should-be $true
     }
   }
+
+  >> 'negating a function' {
+    fn greater-than-ninety { |x| > $x 90 }
+
+    >> 'should create a function returning the negated result' {
+      var not-greater-than-ninety~ = (lang:negate $greater-than-ninety~)
+
+      not-greater-than-ninety 2 |
+        should-be $true
+
+      not-greater-than-ninety 90 |
+        should-be $true
+
+      not-greater-than-ninety 92 |
+        should-be $false
+    }
+
+    >> 'should create a function easily pluggable into a functional pipeline' {
+      all [
+        2
+        90
+        92
+      ] |
+        each (lang:negate $greater-than-ninety~) |
+        should-emit [
+          $true
+          $true
+          $false
+        ]
+    }
+  }
 }
