@@ -218,3 +218,13 @@ fn is-substantial { |@arguments|
     not-eq $value $nil
   }
 }
+
+#
+# Takes the given function and returns another function forwarding its arguments to the former and then negating its result.
+#
+fn negate { |base-function|
+  put { |@arguments|
+    $base-function $@arguments |
+      not (all)
+  }
+}
