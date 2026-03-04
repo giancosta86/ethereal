@@ -3,6 +3,9 @@ pragma unknown-command = disallow
 #
 # If `condition` is trueish, `when-true` is emitted - emitting `when-false` otherwise.
 #
+# Please, note: **both arguments** are evaluated when calling the function!
+# Should you need lazy evaluation, use `if` instead!
+#
 fn ternary { |condition when-true when-false|
   if $condition {
     put $when-true
@@ -64,13 +67,14 @@ fn switch { |&default=$nil @arguments|
 # To use this function, simply call it passing the `$arguments` list.
 #
 fn get-single-input { |argument-list|
-  var arg-count = (count $argument-list)
-
-  if (== $arg-count 0) {
-    one
-  } elif (== $arg-count 1) {
-    put $argument-list[0]
-  } else {
+  switch (count $argument-list) [
+    &(num 0)={
+      one
+    }
+    &(num 1)={
+      put $argument-list[0]
+    }
+  ] &default={ |_|
     fail 'arity mismatch: at most 1 argument expected!'
   }
 }
@@ -99,7 +103,7 @@ fn get-inputs { |argument-list|
 fn is-function { |@arguments|
   get-single-input $arguments |
     kind-of (all) |
-    eq (all) fn
+    ==s (all) fn
 }
 
 #
@@ -127,11 +131,11 @@ var -flat-num-transforms-by-kind
 #
 # * numbers are expressed as the more compact «X» string.
 #
-# * lists are recursively processed so that every numeric value if flattened.
+# * lists are recursively processed so that every numeric value is flattened.
 #
 # * maps are recursively processed so that numeric keys and values are flattened.
 #
-# In other words, this function ensures that numbers are always expressed in a consistent, minimalist way.
+# In other words, this function ensures that numbers are always expressed in a consistent, minimalist string way.
 #
 fn flat-num { |@arguments|
   var value = (get-single-input $arguments)
@@ -178,8 +182,8 @@ fn resolve { |@arguments|
 }
 
 #
-# If the given `source` sequence has the given `key`, emits its value;
-# otherwise, emits the requested `default` (by default, $nil).
+# If the given `source` object has the given `key`, emits its value;
+# otherwise, emits the requested `default` (i.e., $nil, if omitted).
 #
 fn get-value { |&default=$nil @arguments|
   var source key = (get-inputs $arguments)
@@ -225,6 +229,6 @@ fn is-substantial { |@arguments|
 fn negate { |base-function|
   put { |@arguments|
     $base-function $@arguments |
-      not (all)
+      not (one)
   }
 }

@@ -1,6 +1,5 @@
 use flag
 use os
-use path
 use ./fs
 use ./lang
 
