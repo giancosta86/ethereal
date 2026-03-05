@@ -7,8 +7,8 @@ pragma unknown-command = disallow
 var -diff~ = (external diff)
 
 #
-# Outputs the unified, coloured diff between the `print` output of two input values, using the `diff` system command;
-# in case of errors - for example if the command is not available - just does nothing, unless
+# Outputs the unified, colored diff between the `print` output of two input values, using the `diff` system command;
+# in case of execution errors - for example if the command is not available - just does nothing, unless
 # the `throw` flag is set.
 #
 fn diff { |&throw=$false @arguments|
