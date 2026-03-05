@@ -1,4 +1,3 @@
-use str
 use ./edit
 use ./fs
 
@@ -50,14 +49,12 @@ use ./fs
           to-json > $temp-path
 
         slurp < $temp-path |
-          str:contains (all) beta |
-          should-be $true
+          should-contain beta
 
         edit:json $temp-path 'del(.beta)'
 
         slurp < $temp-path |
-          str:contains (all) beta |
-          should-be $false
+          should-not-contain beta
       }
     }
   }

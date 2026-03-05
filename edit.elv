@@ -6,7 +6,7 @@ var -jq~ = (external jq)
 # Reads the entire content of the given `path` and passes it to `transformer`,
 # which must be a function taking such content and returning either the new content or $nil.
 #
-# If the returned value is not $nil, it replaces the original file content.
+# If the returned value is not $nil, it replaces the original file content on disk.
 #
 fn file { |path transformer|
   var updated-content = (
@@ -26,6 +26,5 @@ fn file { |path transformer|
 #
 fn json { |path @jq-arguments|
   -jq $@jq-arguments < $path |
-    slurp |
     to-lines > $path
 }
