@@ -124,8 +124,6 @@ fn ensure-put { |&default=$nil|
   }
 }
 
-var -flat-num-transforms-by-kind
-
 #
 # Emits the given input value as it is, except a few cases:
 #
@@ -137,34 +135,40 @@ var -flat-num-transforms-by-kind
 #
 # In other words, this function ensures that numbers are always expressed in a consistent, minimalist string way.
 #
-fn flat-num { |@arguments|
-  var value = (get-single-input $arguments)
+var flat-num~ = (
+  var transforms-by-kind
 
-  var kind = (kind-of $value)
+  var actual-flat-num~ = { |@arguments|
+    var value = (get-single-input $arguments)
 
-  if (has-key $-flat-num-transforms-by-kind $kind) {
-    $-flat-num-transforms-by-kind[$kind] $value
-  } else {
-    put $value
-  }
-}
+    var kind = (kind-of $value)
 
-set -flat-num-transforms-by-kind = [
-  &number={ |value|
-    to-string $value
+    if (has-key $transforms-by-kind $kind) {
+      $transforms-by-kind[$kind] $value
+    } else {
+      put $value
+    }
   }
-  &list={ |list|
-    all $list |
-      each $flat-num~ |
-      put [(all)]
-  }
-  &map={ |map|
-    keys $map | each { |key|
-      put [(flat-num $key) (flat-num $map[$key])]
-    } |
-      make-map
-  }
-]
+
+  set transforms-by-kind = [
+    &number={ |value|
+      to-string $value
+    }
+    &list={ |list|
+      all $list |
+        each $actual-flat-num~ |
+        put [(all)]
+    }
+    &map={ |map|
+      keys $map | each { |key|
+        put [(actual-flat-num $key) (actual-flat-num $map[$key])]
+      } |
+        make-map
+    }
+  ]
+
+  put $actual-flat-num~
+)
 
 #
 # If the input value is a block, emits the (single) value emitted by such function;
