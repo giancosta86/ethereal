@@ -22,10 +22,8 @@ fn with-factory-reset-curl { |block|
       command:capture &stream=err {
         curl $test-website
       } |
-        put (all)[data] |
-        str:join "\n" (all) |
-        str:contains (all) % |
-          should-be $true
+        str:join "\n" (all)[data] |
+        should-contain %
     }
   }
 
@@ -36,10 +34,8 @@ fn with-factory-reset-curl { |block|
       command:capture &stream=err {
         curl $test-website
       } |
-        put (all)[data] |
-        str:join "\n" (all) |
-        str:contains (all) % |
-          should-be $false
+        str:join "\n" (all)[data] |
+        should-not-contain %
     }
   }
 }
