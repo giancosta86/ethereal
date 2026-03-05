@@ -1,5 +1,7 @@
 use ./seq
 
+pragma unknown-command = disallow
+
 var DEFAULT-NUM-WORKERS = 8
 
 #
