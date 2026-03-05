@@ -236,3 +236,12 @@ fn negate { |base-function|
       not (one)
   }
 }
+
+#
+# Emits $true if the input value is an exception, $false otherwise.
+#
+fn is-exception { |@arguments|
+  get-single-input $arguments |
+    kind-of (all) |
+    ==s (all) exception
+}

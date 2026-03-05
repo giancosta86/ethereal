@@ -473,4 +473,26 @@ use ./lang
         ]
     }
   }
+
+  >> 'detecting an exception' {
+    >> 'applied to number' {
+      lang:is-exception 90 |
+        should-be $false
+    }
+
+    >> 'applied to divide-by-zero error' {
+      lang:is-exception ?(/ 8 0) |
+        should-be $true
+    }
+
+    >> 'applied to fail' {
+      lang:is-exception ?(fail DODO) |
+        should-be $true
+    }
+
+    >> 'applied to return' {
+      lang:is-exception ?(return) |
+        should-be $true
+    }
+  }
 }

@@ -2,13 +2,9 @@ use ./lang
 
 pragma unknown-command = disallow
 
-#
-# Emits $true if the input value is an exception, $false otherwise.
-#
 fn is-exception { |@arguments|
-  lang:get-single-input $arguments |
-    kind-of (all) |
-    eq (all) exception
+  deprecate 'Use lang:is-exception instead'
+  lang:is-exception $@arguments
 }
 
 #
@@ -18,7 +14,7 @@ fn get-reason { |@arguments|
   var potential-exception = (lang:get-single-input $arguments)
 
   if (
-    and (is-exception $potential-exception) (has-key $potential-exception reason)
+    and (lang:is-exception $potential-exception) (has-key $potential-exception reason)
   ) {
     put $potential-exception[reason]
   } else {
