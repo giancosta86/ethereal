@@ -13,10 +13,8 @@ fn is-exception { |@arguments|
 fn get-reason { |@arguments|
   var potential-exception = (lang:get-single-input $arguments)
 
-  if (
-    and (lang:is-exception $potential-exception) (has-key $potential-exception reason)
-  ) {
-    put $potential-exception[reason]
+  if (lang:is-exception $potential-exception) {
+    lang:get-value $potential-exception reason
   } else {
     put $nil
   }
@@ -31,7 +29,8 @@ fn is-fail { |@arguments|
       get-reason (all)
   )
 
-  and (not-eq $reason $nil) (has-key $reason type) (eq $reason[type] fail)
+  and $reason (has-key $reason type) (eq $reason[type] fail) |
+    bool (all)
 }
 
 #

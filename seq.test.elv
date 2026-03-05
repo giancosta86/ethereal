@@ -210,7 +210,7 @@ use ./seq
     >> 'should support break' {
       all [65 25 8] |
         seq:reduce 0 { |left right|
-          if (==s $right 8) {
+          if (eq $right 8) {
             break
           }
 
@@ -222,7 +222,7 @@ use ./seq
     >> 'should support continue' {
       all [65 25 8 5] |
         seq:reduce 0 { |left right|
-          if (==s $right 8) {
+          if (eq $right 8) {
             continue
           }
 

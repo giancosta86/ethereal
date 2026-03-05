@@ -11,7 +11,7 @@ pragma unknown-command = disallow
 fn prefix-lines { |&empty-too=$false prefix|
   to-lines |
     each { |line|
-      if (and (==s $line '') (not $empty-too)) {
+      if (and (eq $line '') (not $empty-too)) {
         echo
       } else {
         echo $prefix''$line

@@ -103,7 +103,7 @@ fn get-inputs { |argument-list|
 fn is-function { |@arguments|
   get-single-input $arguments |
     kind-of (all) |
-    ==s (all) fn
+    eq (all) fn
 }
 
 #
@@ -243,5 +243,5 @@ fn negate { |base-function|
 fn is-exception { |@arguments|
   get-single-input $arguments |
     kind-of (all) |
-    ==s (all) exception
+    eq (all) exception
 }

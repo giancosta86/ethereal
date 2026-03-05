@@ -301,7 +301,8 @@ use ./set
 
     >> 'difference' {
       >> 'with no operands' {
-        set:difference |
+        all [] |
+          set:difference |
           should-be $set:empty
       }
 
