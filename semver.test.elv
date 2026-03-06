@@ -99,6 +99,86 @@ var full-source = $major'.'$minor'.'$patch'-'$pre-release'+'$build
     }
   }
 
+  >> 'finding all the semver in a string' {
+    >> 'when the string is empty' {
+      semver:find '' |
+        should-emit []
+    }
+
+    >> 'when the string matches exactly a semver' {
+      semver:find 'v2.4.5' |
+        should-be [
+          &major=2
+          &minor=4
+          &patch=5
+          &pre-release=$nil
+          &build=$nil
+        ]
+    }
+
+    >> 'when the string contains a semver among other data' {
+      semver:find 'xyz v2.4.5 sd4j' |
+        should-be [
+          &major=2
+          &minor=4
+          &patch=5
+          &pre-release=$nil
+          &build=$nil
+        ]
+    }
+
+    >> 'when the string contains two semver''s among other data' {
+      semver:find 'xyz v2.4.5 sd4j v3.9.17-beta.2+sigma ab5c' |
+        should-emit [
+          [
+            &major=2
+            &minor=4
+            &patch=5
+            &pre-release=$nil
+            &build=$nil
+          ]
+
+          [
+            &major=3
+            &minor=9
+            &patch=17
+            &pre-release=beta.2
+            &build=sigma
+          ]
+        ]
+    }
+
+    >> 'when the string contains three semver''s among other data' {
+      put 'xyz v2.4.5 sd4j v3.9.17-beta.2+sigma ab5c 8.19' |
+        semver:find |
+        should-emit [
+          [
+            &major=2
+            &minor=4
+            &patch=5
+            &pre-release=$nil
+            &build=$nil
+          ]
+
+          [
+            &major=3
+            &minor=9
+            &patch=17
+            &pre-release=beta.2
+            &build=sigma
+          ]
+
+          [
+            &major=8
+            &minor=19
+            &patch=0
+            &pre-release=$nil
+            &build=$nil
+          ]
+        ]
+    }
+  }
+
   >> 'converting to string' {
     >> 'when there is only major' {
       semver:parse $major |
@@ -163,13 +243,13 @@ var full-source = $major'.'$minor'.'$patch'-'$pre-release'+'$build
     }
 
     >> 'for version with pre-release and build' {
-      semver:parse $major'.'$minor'.'$patch'-'$pre-release'+'$build |
+      semver:parse $full-source |
         semver:is-stable |
         should-be $false
     }
   }
 
-  >> 'detecting new major' {
+  >> 'detecting new major status' {
     >> 'for new stable version' {
       semver:parse $major'.0.0' |
         semver:is-new-major |
@@ -194,8 +274,7 @@ var full-source = $major'.'$minor'.'$patch'-'$pre-release'+'$build
       (semver:parse 4.5.0)
     ] |
       order &less-than=$semver:less-than~ |
-      put [(all)] |
-      should-be [
+      should-emit [
         (semver:parse 1.0.0)
         (semver:parse 3.2.1-beta-1)
         (semver:parse 3.2.1-beta-2)

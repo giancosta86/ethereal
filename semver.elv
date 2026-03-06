@@ -21,7 +21,7 @@ var -build-fragment = '[0-9a-zA-Z-]+'
 
 var -pattern = (
   all [
-    '^'
+    '\b'
     'v?'
     '(?P<major>'
       $@-numeric-component-fragment
@@ -62,40 +62,12 @@ var -pattern = (
         ')*'
       ')'
     ')?'
-    '$'
+    '\b'
   ] |
     str:join ''
 )
 
-#
-# Parses the given input string and emits a semantic version, i.e., a map containing the following keys:
-#
-# * major: always a number, required.
-#
-# * minor: always a number, 0 if missing.
-#
-# * patch: always a number, 0 if missing.
-#
-# * pre-release: a string, or $nil if missing.
-#
-# * build: a string, or $nil if missing.
-#
-# The string to parse can contain an optional leading 'v', that will be ignored.
-#
-# In case of invalid format, an exception is thrown.
-#
-fn parse { |@arguments|
-  var source = (lang:get-single-input $arguments)
-
-  var match = (
-    re:find $-pattern $source |
-      lang:ensure-put
-  )
-
-  if (not $match) {
-    fail 'Invalid semver value: '''$source'''!'
-  }
-
+fn -from-match { |match|
   var groups = $match[groups]
 
   put [
@@ -126,6 +98,49 @@ fn parse { |@arguments|
         seq:empty-to-default
     )
   ]
+}
+
+#
+# Parses the given input string and emits a semantic version, i.e., a map containing the following keys:
+#
+# * major: always a number, required.
+#
+# * minor: always a number, 0 if missing.
+#
+# * patch: always a number, 0 if missing.
+#
+# * pre-release: a string, or $nil if missing.
+#
+# * build: a string, or $nil if missing.
+#
+# The string to parse can contain an optional leading 'v', that will be ignored - but it can't contain other data.
+#
+# In case of invalid format, an exception is thrown.
+#
+fn parse { |@arguments|
+  var source = (lang:get-single-input $arguments)
+
+  var match = (
+    re:find '^'$-pattern'$' $source |
+      lang:ensure-put |
+      one
+  )
+
+  if (not $match) {
+    fail 'Invalid semver value: '''$source'''!'
+  }
+
+  -from-match $match
+}
+
+#
+# Emits all the semver instances found at any position in the given source string.
+#
+fn find { |@arguments|
+  var source = (lang:get-single-input $arguments)
+
+  re:find $-pattern $source |
+    each $-from-match~
 }
 
 #
@@ -194,7 +209,7 @@ fn is-new-major { |@arguments|
 fn less-than { |@arguments|
   var left right = (lang:get-inputs $arguments)
 
-  for component [major minor patch] {
+  all [major minor patch] | each { |component|
     if (< $left[$component] $right[$component]) {
       put $true
       return
@@ -204,15 +219,30 @@ fn less-than { |@arguments|
     }
   }
 
+  # At this point, both operands must have the same <major>, <minor> and <patch> components.
+  #
+  # Consequently, if the left operand does not have a pre-release,
+  # it just can't be less than the right operand, because:
+  #
+  # * if the right operand does not have a pre-release, both versions will be equal, as `build` is not taken into account;
+  #
+  # * if the right operand has a pre-release, the right version will come first.
+  #
   if (not $left[pre-release]) {
     put $false
     return
   }
 
-  if (and $left[pre-release] (not $right[pre-release])) {
+  # At this point, the left operand certainly has a pre-release,
+  # so a non-prelease right operand will always come later.
+  #
+  if (not $right[pre-release]) {
     put $true
     return
   }
 
+  # Finally, the pre-release components are both present and
+  # they must be compared lexicographically.
+  #
   <s $left[pre-release] $right[pre-release]
 }
