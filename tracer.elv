@@ -4,12 +4,6 @@ use ./writer
 
 pragma unknown-command = disallow
 
-fn -trace { |enabled writer block|
-  if (lang:resolve $enabled) {
-    $writer $block
-  }
-}
-
 #
 # Creates a tracer - an object containing the following methods:
 #
@@ -25,13 +19,13 @@ fn -trace { |enabled writer block|
 #
 # * `inspect-input-map`: calls `inspect` to display a map used as input.
 #
-# * `section`: shows the given emoji and the given description, then:
+# * `section`: shows the given emoji and the given description, then goes to a new line and:
 #
 #   * if the last argument is a string, echoes it.
 #
 #   * if the last argument is a function, calls it.
 #
-#   Finally, outputs 3 times the given emoji, to mark the end of the section
+#   Finally, outputs 3 times the given emoji, to mark the end of the section.
 #
 # This constructor takes 2 parameter:
 #
@@ -49,10 +43,18 @@ fn -trace { |enabled writer block|
 fn create { |&writer=$writer:out @arguments|
   var enabled = (lang:get-single-input $arguments)
 
+  fn trace { |block|
+    if (lang:resolve $enabled) {
+      $writer $block
+    } else {
+      # Just do nothing
+    }
+  }
+
   fn inspect { |&emoji=🔎 description @arguments|
     var value = (lang:get-single-input $arguments)
 
-    -trace $enabled $writer {
+    trace {
       printf '%s %s: ' $emoji $description
 
       pprint $value
@@ -61,19 +63,19 @@ fn create { |&writer=$writer:out @arguments|
 
   put [
     &echo={ |@arguments|
-      -trace $enabled $writer {
+      trace {
         echo $@arguments
       }
     }
 
     &print={ |@arguments|
-      -trace $enabled $writer {
+      trace {
         print $@arguments
       }
     }
 
     &printf={ |&newline=$false template @values|
-      -trace $enabled $writer {
+      trace {
         printf $template $@values
 
         if $newline {
@@ -82,9 +84,9 @@ fn create { |&writer=$writer:out @arguments|
       }
     }
 
-    &pprint={ |@values|
-      -trace $enabled $writer {
-        pprint $@values
+    &pprint={ |@arguments|
+      trace {
+        pprint $@arguments
       }
     }
 
@@ -99,7 +101,7 @@ fn create { |&writer=$writer:out @arguments|
     &section={ |&emoji=🔎 description @arguments|
       var string-or-block = (lang:get-single-input $arguments)
 
-      -trace $enabled $writer {
+      trace {
         echo $emoji' '$description":"
 
         if (lang:is-function $string-or-block) {

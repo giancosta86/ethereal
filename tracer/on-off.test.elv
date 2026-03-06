@@ -4,14 +4,13 @@ use ./on-off
   var tracer = (on-off:create)
 
   var tracer-test-block = {
-    $tracer[section] &emoji=🐬 Description 'Test content'
+    $tracer[section] &emoji=🐬 Description 'Test content' 2>&1
   }
 
   >> 'upon creation' {
     >> 'should be disabled by default' {
       $tracer-test-block |
-        put [(all)] |
-        should-be []
+        should-emit []
     }
   }
 
@@ -20,8 +19,7 @@ use ./on-off
       $tracer[enable]
 
       $tracer-test-block |
-        put [(all)] |
-        should-be [
+        should-emit [
           '🐬 Description:'
           'Test content'
           🐬🐬🐬
@@ -35,8 +33,7 @@ use ./on-off
       $tracer[disable]
 
       $tracer-test-block |
-        put [(all)] |
-        should-be []
+        should-emit []
     }
   }
 
@@ -46,8 +43,7 @@ use ./on-off
     var test-message = '🐞 Hello, world!'
 
     $tracer[echo] $test-message |
-      put [(all)] |
-      should-be [
+      should-emit [
         $test-message
       ]
   }
