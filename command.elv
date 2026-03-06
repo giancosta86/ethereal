@@ -5,46 +5,6 @@ pragma unknown-command = disallow
 
 var -bash~ = (external bash)
 
-var -redirectors-by-stream = [
-  &both={ |block|
-    put { $block 2>&1 }
-  }
-
-  &out={ |block|
-    put { $block 2>$os:dev-null }
-  }
-
-  &err={ |block|
-    put {
-      { $block | only-bytes } 2>&1 >$os:dev-null
-    }
-  }
-
-  &none={ |block|
-    put {
-      { $block | only-bytes } >$os:dev-null 2>&1
-    }
-  }
-]
-
-var -data-filter-by-type = [
-  &both={ |block|
-    put $block
-  }
-
-  &bytes={ |block|
-    put { $block | only-bytes }
-  }
-
-  &values={ |block|
-    put { $block | only-values }
-  }
-
-  &none={ |block|
-    put { $block | only-bytes | only-values }
-  }
-]
-
 #
 # Runs the given block provided as input and:
 #
@@ -58,66 +18,86 @@ var -data-filter-by-type = [
 #
 # In the end, emits a map containing the `data` and `exception` keys.
 #
-fn capture { |&stream=both &type=both @arguments|
-  if (not (has-key $-redirectors-by-stream $stream)) {
-    fail 'Invalid stream option: '$stream
-  }
+var capture~ = (
+  var redirectors-by-stream = [
+    &both={ |block|
+      put { $block 2>&1 }
+    }
 
-  if (not (has-key $-data-filter-by-type $type)) {
-    fail 'Invalid type option: '$type
-  }
+    &out={ |block|
+      put { $block 2>$os:dev-null }
+    }
 
-  var block = (lang:get-single-input $arguments)
-
-  var redirector~ = $-redirectors-by-stream[$stream]
-  var data-filter~ = $-data-filter-by-type[$type]
-
-  var decorated-block = (
-    put $block |
-      redirector (all) |
-      data-filter (all)
-  )
-
-  var exception = $nil
-
-  var data = (
-    {
-      try {
-        $decorated-block
-      } catch e {
-        set exception = $e
+    &err={ |block|
+      put {
+        { $block | only-bytes } 2>&1 >$os:dev-null
       }
-    } |
-      put [(all)]
-  )
+    }
 
-  put [
-    &data=$data
-    &exception=$exception
+    &none={ |block|
+      put {
+        { $block | only-bytes } >$os:dev-null 2>&1
+      }
+    }
   ]
-}
 
-var -silence-exception-strategies = [
-  &both={ |capture-result|
-    all $capture-result[data] | each { |item|
-      echo $item
+  var data-filter-by-type = [
+    &both={ |block|
+      put $block
     }
 
-    fail $capture-result[exception]
-  }
-
-  &data={ |capture-result|
-    all $capture-result[data] | each { |item|
-      echo $item
+    &bytes={ |block|
+      put { $block | only-bytes }
     }
-  }
 
-  &exception={ |capture-result|
-    fail $capture-result[exception]
-  }
+    &values={ |block|
+      put { $block | only-values }
+    }
 
-  &none={ |_| }
-]
+    &none={ |block|
+      put { $block | only-bytes | only-values }
+    }
+  ]
+
+  put { |&stream=both &type=both @arguments|
+    if (not (has-key $redirectors-by-stream $stream)) {
+      fail 'Invalid stream option: '$stream
+    }
+
+    if (not (has-key $data-filter-by-type $type)) {
+      fail 'Invalid type option: '$type
+    }
+
+    var block = (lang:get-single-input $arguments)
+
+    var redirector~ = $redirectors-by-stream[$stream]
+    var data-filter~ = $data-filter-by-type[$type]
+
+    var decorated-block = (
+      put $block |
+        redirector (all) |
+        data-filter (all)
+    )
+
+    var exception = $nil
+
+    var data = (
+      {
+        try {
+          $decorated-block
+        } catch e {
+          set exception = $e
+        }
+      } |
+        put [(all)]
+    )
+
+    put [
+      &data=$data
+      &exception=$exception
+    ]
+  }
+)
 
 #
 # Silences the given block - preventing it from emitting anything from both stdout and stderr.
@@ -132,21 +112,45 @@ var -silence-exception-strategies = [
 #
 # * **none**: just does nothing.
 #
-fn silence { |&on-exception=both @arguments|
-  if (not (has-key $-silence-exception-strategies $on-exception)) {
-    fail 'Invalid value for the "&on-exception" option: '$on-exception
+var silence~ = (
+  var strategies = [
+    &both={ |capture-result|
+      all $capture-result[data] | each { |item|
+        echo $item
+      }
+
+      fail $capture-result[exception]
+    }
+
+    &data={ |capture-result|
+      all $capture-result[data] | each { |item|
+        echo $item
+      }
+    }
+
+    &exception={ |capture-result|
+      fail $capture-result[exception]
+    }
+
+    &none={ |_| }
+  ]
+
+  put { |&on-exception=both @arguments|
+    if (not (has-key $strategies $on-exception)) {
+      fail 'Invalid value for the "&on-exception" option: '$on-exception
+    }
+
+    var command = (lang:get-single-input $arguments)
+
+    var capture-result = (
+      capture &stream=both &type=both $command
+    )
+
+    if (not-eq $capture-result[exception] $nil) {
+      $strategies[$on-exception] $capture-result
+    }
   }
-
-  var command = (lang:get-single-input $arguments)
-
-  var capture-result = (
-    capture &stream=both &type=both $command
-  )
-
-  if (not-eq $capture-result[exception] $nil) {
-    $-silence-exception-strategies[$on-exception] $capture-result
-  }
-}
+)
 
 #
 # Emits $true if the given command is available in Bash - even as an alias - by invoking `type`;
