@@ -13,7 +13,7 @@ var empty = [
 ]
 
 #
-# Take items as input - from either variable argument list or pipe - and
+# Takes items as input - from either varargs or pipe - and
 # returns a set containing such items.
 #
 fn of { |@arguments|
