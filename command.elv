@@ -19,6 +19,10 @@ var -bash~ = (external bash)
 # In the end, emits a map containing the `data` and `exception` keys.
 #
 var capture~ = (
+  #
+  # Each redirector takes in input a block and returns another block,
+  # where the original block is called, but with altered stdout/stderr.
+  #
   var redirectors-by-stream = [
     &both={ |block|
       put { $block 2>&1 }
@@ -41,6 +45,10 @@ var capture~ = (
     }
   ]
 
+  #
+  # Each filter takes in input a block and returns another block,
+  # where the original block is called with downstream byte/value filters.
+  #
   var data-filter-by-type = [
     &both={ |block|
       put $block
@@ -70,27 +78,26 @@ var capture~ = (
 
     var block = (lang:get-single-input $arguments)
 
-    var redirector~ = $redirectors-by-stream[$stream]
-    var data-filter~ = $data-filter-by-type[$type]
+    var redirector = $redirectors-by-stream[$stream]
+    var data-filter = $data-filter-by-type[$type]
 
     var decorated-block = (
       put $block |
-        redirector (all) |
-        data-filter (all)
+        $redirector (all) |
+        $data-filter (all)
     )
 
     var exception = $nil
 
-    var data = (
+    var data = [(
       {
         try {
           $decorated-block
         } catch e {
           set exception = $e
         }
-      } |
-        put [(all)]
-    )
+      }
+    )]
 
     put [
       &data=$data
@@ -104,7 +111,7 @@ var capture~ = (
 #
 # In case of exception, the `on-exception` option selects the strategy:
 #
-# * **both**: outputs to stdout every line/value emitted by the command, then throws the exception.
+# * **both**: outputs to stdout every line/value emitted by the command, then throws the exception. This is the default.
 #
 # * **data**: outputs to stdout every line/value emitted by the command, but does not throw the exception.
 #
@@ -166,9 +173,9 @@ fn exists-in-bash { |@arguments|
 #
 # Takes as optional argument a block and creates a map - especially useful in tests - with the following keys:
 #
-# * `command`: a command that can be invoked - with any number of arguments; upon invocation, it adds the current arguments to its log, then executes the optional block, passing the arguments.
+# * `command`: a command that can be invoked - with any number of arguments; upon invocation, it adds the current arguments to its log, then executes the optional block (if present), passing the arguments.
 #
-# * `get-runs`: emits the list of runs of the above `command` up to that moment - where each run is represented by a sublist containing its arguments.
+# * `get-runs`: emits the list of runs of the above `command` up to that moment - where each run is represented by a sublist containing the arguments for that specific run.
 #
 fn spy { |@arguments|
   var block = (lang:get-value $arguments 0)
