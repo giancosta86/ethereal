@@ -6,14 +6,18 @@ use ./lang
 pragma unknown-command = disallow
 
 #
-# Takes as input a SOURCE-URL => REPOSITORY-MAP map,
-# where REPOSITORY-MAP is a GIT-REFERENCE => FILE-MAP map containing at least a `main` key,
-# where, in turn, FILE-MAP is a RELATIVE-PATH => FILE-CONTENT map;
-# the result is a command - another function - supporting a tiny subset of Git's functionality.
+# Takes as input a SOURCE-URL => REPOSITORY-MAP map, where:
+#
+# * SOURCE-URL can be an arbritrary string
+#
+# * REPOSITORY-MAP is a GIT-REFERENCE => FILE-MAP map containing at least a `main` key and,
+# in turn, FILE-MAP is a RELATIVE-PATH => FILE-CONTENT map. Relative paths can include path separators like '/'.
+#
+# The result is a command - another function - supporting a tiny subset of Git's functionality.
 #
 # In other words, `source-map` is a map potentially describing multiple branches/tags/...
 # within multiple repositories at multiple urls;
-# as a plus, it can be a function, that will be evaluated every time a related command is performed.
+# as a plus, it can be a function, that will be evaluated every time a command is performed.
 #
 # In particular, the supported commands are:
 #
@@ -25,11 +29,11 @@ pragma unknown-command = disallow
 #
 # * `rev-parse --abbrev-ref HEAD`: returns the current reference from the previous `checkout` (or `clone`) operation
 #
-# * `pull`: if the `source-map` argument passed when creating the command was a function, calls it and retrieves the latest version of the source map, then updates the files in the target directory.
+# * `pull`: if the `source-map` argument passed when creating the command was a function, calls it and retrieves the latest version of the source map, then rewrites the current directory to mirror the described directory tree.
 #
 # * `remote get-url origin`: returns the source url for the repository in the current directory
 #
-# The execution of both commands can be altered - just like Git - via the optional `-C <current directory>` flag.
+# The execution of all the commands can be altered - just like Git - via the optional `-C <current directory>` flag.
 #
 # Please, note: SOURCE-URL and GIT-REFERENCE can actually be arbitrary strings, without the usual constraints.
 #
@@ -38,20 +42,27 @@ fn create-command { |@arguments|
 
   var default-branch = main
 
-  var context-by-dir = [&]
+  var get-context~ set-context~ = (
+    var context-by-dir = [&]
 
-  fn get-context {
-    if (not (has-key $context-by-dir $pwd)) {
-      printf 'The directory "%s" was not cloned via this command instance!' $pwd |
-        fail (all)
+    fn get-context {
+      if (not (has-key $context-by-dir $pwd)) {
+        printf 'The directory "%s" was not cloned via this command instance!' $pwd |
+          fail (all)
+      }
+
+      put $context-by-dir[$pwd]
     }
 
-    put $context-by-dir[$pwd]
-  }
+    fn set-context { |new-context|
+      set context-by-dir = (assoc $context-by-dir $pwd $new-context)
+    }
 
-  fn set-context { |new-context|
-    set context-by-dir = (assoc $context-by-dir $pwd $new-context)
-  }
+    all [
+      $get-context~
+      $set-context~
+    ]
+  )
 
   fn update-repository-files {
     var context = (get-context)
