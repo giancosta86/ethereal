@@ -82,36 +82,32 @@ var test-git~ = (
   }
 
   >> 'checkout' {
-    >> 'when the branch was not declared in the source map' {
-      >> 'should fail' {
-        fs:with-temp-dir { |temp-dir|
-          test-git clone '<some url>' $temp-dir
+    >> 'when the target directory is not a cloned repository' {
+      fs:with-temp-dir { |temp-dir|
+        cd $temp-dir
 
-          cd $temp-dir
-
-          fails {
-            test-git checkout UNDECLARED
-          } |
-            should-be 'Missing reference "UNDECLARED" in repository at source url "<some url>"'
-        }
+        fails {
+          test-git checkout secondary
+        } |
+          should-be (printf 'The directory "%s" was not cloned via this command instance!' $temp-dir)
       }
     }
 
-    >> 'when the target directory is not a cloned repository' {
-      >> 'should fail' {
-        fs:with-temp-dir { |temp-dir|
-          cd $temp-dir
+    >> 'when the branch was not declared in the source map' {
+      fs:with-temp-dir { |temp-dir|
+        test-git clone '<some url>' $temp-dir
 
-          fails {
-            test-git checkout secondary
-          } |
-            should-be (printf 'The directory "%s" was not cloned via this command instance!' $temp-dir)
-        }
+        cd $temp-dir
+
+        fails {
+          test-git checkout UNDECLARED
+        } |
+          should-be 'Missing reference "UNDECLARED" in repository at source url "<some url>"'
       }
     }
 
     >> 'when the branch in the source map is declared' {
-      fn test-scenario { |@git-arguments|
+      fn common-scenario { |@git-arguments|
         fs:with-temp-dir { |temp-dir|
           test-git clone '<some url>' $temp-dir
 
@@ -123,8 +119,7 @@ var test-git~ = (
             should-be 'This is another copy of alpha'
 
           path:join $temp-dir beta gamma delta.txt |
-            os:is-regular (all) |
-            should-be $false
+            should-not-be-regular
 
           slurp < (path:join $temp-dir pi.txt) |
             should-be 'This is Pi'
@@ -135,11 +130,11 @@ var test-git~ = (
       }
 
       >> 'the target should contain only the files in that branch' {
-        test-scenario checkout secondary
+        common-scenario checkout secondary
       }
 
       >> 'should support --detach' {
-        test-scenario checkout --detach secondary
+        common-scenario checkout --detach secondary
       }
 
       >> 'when performing the checkout with -C' {
@@ -155,8 +150,7 @@ var test-git~ = (
               should-be 'This is another copy of alpha'
 
             path:join $temp-dir beta gamma delta.txt |
-              os:is-regular (all) |
-              should-be $false
+              should-not-be-regular
 
             slurp < (path:join $temp-dir pi.txt) |
               should-be 'This is Pi'
@@ -172,18 +166,15 @@ var test-git~ = (
     }
 
     >> 'when the branch is empty' {
-      >> 'the target should contain no more files' {
-        fs:with-temp-dir { |temp-dir|
-          test-git clone '<some url>' $temp-dir
+      fs:with-temp-dir { |temp-dir|
+        test-git clone '<some url>' $temp-dir
 
-          cd $temp-dir
+        cd $temp-dir
 
-          test-git checkout empty
+        test-git checkout empty
 
-          put *[nomatch-ok] |
-            put [(all)] |
-            should-be []
-        }
+        put *[nomatch-ok] |
+          should-emit []
       }
     }
 
@@ -198,12 +189,10 @@ var test-git~ = (
           test-git -C $secondary-dir checkout secondary
 
           path:join $main-dir beta gamma delta.txt |
-            os:is-regular (all) |
-            should-be $true
+            should-be-regular
 
           path:join $secondary-dir sigma tau.txt |
-            os:is-regular (all) |
-            should-be $true
+            should-be-regular
         }
       }
     }
@@ -257,50 +246,69 @@ var test-git~ = (
 
     var current-map = $initial-map
 
+    fn should-be-on-initial-main-branch {
+      slurp < alpha.txt |
+        should-be $initial-map['<some url>'][main][alpha.txt]
+
+      put beta.txt |
+        should-not-be-regular
+    }
+
+    fn should-be-on-initial-secondary-branch {
+      put alpha.txt |
+        should-not-be-regular
+
+      slurp < beta.txt |
+        should-be $initial-map['<some url>'][secondary][beta.txt]
+    }
+
+    fn should-be-on-updated-secondary-branch {
+      put alpha.txt |
+        should-not-be-regular
+
+      slurp < beta.txt |
+        should-be $updated-map['<some url>'][secondary][beta.txt]
+    }
+
     >> 'should update the files' {
       fs:with-temp-dir { |temp-dir|
-        var transient-fake-git~ = (fake-git:create-command { put $current-map })
+        var lambda-provider = { put $current-map }
 
-        transient-fake-git clone '<some url>' $temp-dir
-
-        cd $temp-dir
+        var transient-git~ = (fake-git:create-command $lambda-provider)
 
         {
-          slurp < alpha.txt |
-            should-be $initial-map['<some url>'][main][alpha.txt]
+          transient-git clone '<some url>' $temp-dir
 
-          os:is-regular beta.txt |
-            should-be $false
+          cd $temp-dir
+
+          should-be-on-initial-main-branch
         }
 
-        transient-fake-git checkout secondary
-
         {
-          os:is-regular alpha.txt |
-            should-be $false
+          transient-git checkout secondary
 
-          slurp < beta.txt |
-            should-be $initial-map['<some url>'][secondary][beta.txt]
+          should-be-on-initial-secondary-branch
         }
 
         set current-map = $updated-map
 
-        transient-fake-git checkout main
-
-        transient-fake-git checkout secondary
-
         {
-          os:is-regular alpha.txt |
-            should-be $false
+          transient-git checkout main
 
-          slurp < beta.txt |
-            should-be $initial-map['<some url>'][secondary][beta.txt]
+          should-be-on-initial-main-branch
         }
 
-        transient-fake-git pull
+        {
+          transient-git checkout secondary
 
-        slurp < beta.txt |
-            should-be $updated-map['<some url>'][secondary][beta.txt]
+          should-be-on-initial-secondary-branch
+        }
+
+        {
+          transient-git pull
+
+          should-be-on-updated-secondary-branch
+        }
       }
     }
   }
@@ -311,7 +319,8 @@ var test-git~ = (
 
       cd $temp-dir
 
-      test-git remote get-url origin
+      test-git remote get-url origin |
+        should-be '<some url>'
     }
   }
 }
