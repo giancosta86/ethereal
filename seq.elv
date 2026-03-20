@@ -65,7 +65,7 @@ fn spread { |consumer|
 #
 # and must emit the new partial result.
 #
-# In the end, returns the most recent partial result; as a plus, the `debug` option
+# In the end, emits the most recent partial result; as a plus, the `debug` flag
 # enables useful debug messages.
 #
 # Please, note: the `operator` function can call `break` or `continue` to influence the loop.
@@ -101,19 +101,26 @@ fn reduce { |&debug=$false initial-value operator|
 }
 
 #
-# Given two sequences, emits the longest initial subsequence shared by both.
+# Given two sequences as input, emits the longest initial subsequence shared by both.
 #
 fn get-prefix { |@arguments|
   var left right = (lang:get-inputs $arguments)
 
-  range 0 (math:min (count $left) (count $right)) |
-    reduce [] { |partial index|
-      if (eq $left[$index] $right[$index]) {
-        conj $partial $left[$index]
-      } else {
-        break
-      }
+  var last-prefix-index = -1
+
+  range 0 (math:min (count $left) (count $right)) | each { |index|
+    if (eq $left[$index] $right[$index]) {
+      set last-prefix-index = $index
+    } else {
+      break
     }
+  }
+
+  if (>= $last-prefix-index 0) {
+    put $left[..(+ $last-prefix-index 1)]
+  } else {
+    put []
+  }
 }
 
 #
@@ -126,9 +133,6 @@ fn empty-to-default { |&default=$nil @arguments|
     lang:ternary (all) $source $default
 }
 
-#
-# If the input collection is empty, emits the given default value ($nil, by default); otherwise, emits the collection itself.
-#
 fn coalesce-empty { |&default=$nil @arguments|
   deprecate 'Use empty-to-default instead'
   empty-to-default &default=$default $@arguments
@@ -154,6 +158,23 @@ fn drill-down { |&default=$nil source @properties|
   put $current-source
 }
 
+fn -split-by-chunk-count-sequential { |&chunk-count=$nil &items=$nil &item-count=$nil &chunk-length=$nil|
+  range 0 $item-count &step=$chunk-length | each { |start-index|
+    var exclusive-end-index = (math:min (+ $start-index $chunk-length) $item-count)
+
+    put $items[$start-index..$exclusive-end-index]
+  }
+}
+
+fn -split-by-chunk-count-round-robin { |&chunk-count=$nil &items=$nil &item-count=$nil &chunk-length=$nil|
+  range 0 (math:min $chunk-count $item-count) | each { |start-index|
+    range $start-index $item-count &step=$chunk-count | each { |current-index|
+      put $items[$current-index]
+    } |
+      put [(all)]
+  }
+}
+
 #
 # Creates the given (positive) number of chunks, then subdivides the items received via pipe
 # into such chunks, by default with a round-robin algorithm - which can be disabled
@@ -166,50 +187,29 @@ fn split-by-chunk-count { |&fast=$false chunk-count|
     fail 'The chunk count must be > 0! Requested: '$chunk-count
   }
 
-  if $fast {
-    var items = [(all)]
-    var item-count = (count $items)
+  var items = [(all)]
 
-    if (== $item-count 0) {
-      all []
-      return
-    }
+  var item-count = (count $items)
 
-    var chunk-length = (
-      / (count $items) $chunk-count |
-        math:ceil (all)
-    )
-
-    range 0 (count $items) &step=$chunk-length |
-      reduce [] { |chunks start-index|
-        var exclusive-end-index = (math:min (+ $start-index $chunk-length) $item-count)
-
-        var chunk = $items[$start-index..$exclusive-end-index]
-
-        conj $chunks $chunk
-      } |
-      all (all)
-  } else {
-    var chunks = [(repeat $chunk-count [])]
-
-    var chunk-index = 0
-
-    each { |item|
-      var current-chunk = $chunks[$chunk-index]
-
-      var updated-chunk = (conj $current-chunk $item)
-
-      set chunks = (assoc $chunks $chunk-index $updated-chunk)
-
-      set chunk-index = (
-        + $chunk-index 1 |
-          % (all) $chunk-count
-      )
-    }
-
-    all $chunks |
-      keep-if { |chunk| not-eq $chunk [] }
+  if (== $item-count 0) {
+    all []
+    return
   }
+
+  var chunk-length = (
+    / $item-count $chunk-count |
+      math:ceil (all)
+  )
+
+  var algorithm = (
+    if $fast {
+      put $-split-by-chunk-count-sequential~
+    } else {
+      put $-split-by-chunk-count-round-robin~
+    }
+  )
+
+  $algorithm &chunk-count=$chunk-count &items=$items &item-count=$item-count &chunk-length=$chunk-length
 }
 
 #
@@ -284,7 +284,7 @@ fn assoc-substantial { |sequence key value|
 }
 
 #
-# Given a `source` sequence as input and a `selector` as argument, where `selector` is a function taking an item as argument and emitting the related key, emits a map having the defined key-item entries.
+# Given a `source` sequence as input (via pipe or argument) and a `selector` as argument, where `selector` is a function taking an item as argument and emitting the related key, emits a map having the defined <key>-<item> entries.
 #
 fn group-by { |@arguments|
   var source selector

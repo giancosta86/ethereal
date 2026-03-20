@@ -529,7 +529,7 @@ use ./seq
     }
   }
 
-  >> 'when performing fast allocation' {
+  >> 'when performing fast, segmented allocation' {
     >> 'should work' {
       range 65 (+ 65 26) |
       each $str:from-codepoints~ |
