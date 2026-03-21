@@ -705,19 +705,19 @@ use ./seq
     }
   }
 
-  >> 'grouping items via selector' {
+  >> 'converting to map' {
     >> 'with empty list' {
-      seq:group-by [] { } |
+      seq:to-map [] { } |
         should-be [&]
     }
 
     >> 'with empty string' {
-      seq:group-by '' { } |
+      seq:to-map '' { } |
         should-be [&]
     }
 
     >> 'with non-empty list' {
-      seq:group-by [3 5 7] { |item| put 'X'(* $item 10) } |
+      seq:to-map [3 5 7] { |item| put 'X'(* $item 10) } |
         should-be [
           &X30=3
           &X50=5
@@ -726,7 +726,7 @@ use ./seq
     }
 
     >> 'with non-empty string' {
-      seq:group-by 'ABC' { |letter| put $letter$letter } |
+      seq:to-map 'ABC' { |letter| put $letter$letter } |
         should-be [
           &AA=A
           &BB=B
@@ -735,7 +735,7 @@ use ./seq
     }
 
     >> 'with duplicated item' {
-      seq:group-by [R S R X R X Y Z] { |letter| put $letter'-'$letter } |
+      seq:to-map [R S R X R X Y Z] { |letter| put $letter'-'$letter } |
         should-be [
           &R-R=R
           &S-S=S
@@ -747,13 +747,13 @@ use ./seq
 
     >> 'passing no items via pipe' {
       all [] |
-        seq:group-by { } |
+        seq:to-map { } |
         should-be [&]
     }
 
     >> 'passing items via pipe' {
       all [90 92 98] |
-        seq:group-by { |item| * $item 10 } |
+        seq:to-map { |item| * $item 10 } |
         should-be [
           &900=90
           &920=92

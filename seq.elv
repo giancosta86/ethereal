@@ -286,7 +286,9 @@ fn assoc-substantial { |sequence key value|
 #
 # Given a `source` sequence as input (via pipe or argument) and a `selector` as argument, where `selector` is a function taking an item as argument and emitting the related key, emits a map having the defined <key>-<item> entries.
 #
-fn group-by { |@arguments|
+# Please, note: if the same key is generated from different items, only the latest one will be stored into the map; for multiple values associated to a key, please refer to `map:multi-value`.
+#
+fn to-map { |@arguments|
   var source selector
 
   if (== (count $arguments) 1) {
@@ -304,6 +306,12 @@ fn group-by { |@arguments|
     ]
   } |
     make-map
+}
+
+fn group-by { |@arguments|
+  deprecate 'Use to-map instead'
+
+  to-map $@arguments
 }
 
 #
