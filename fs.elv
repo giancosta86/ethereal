@@ -202,6 +202,17 @@ fn mkcd { |&perm=0o755 @arguments|
 }
 
 #
+# Emits $true if the path passed as input is the `/` file system root, $false otherwise.
+#
+fn is-root { |@arguments|
+  var path = (lang:get-single-input $arguments)
+
+  var abs-path = (path:abs $path)
+
+  eq $abs-path /
+}
+
+#
 # Given as input a (potentially non-existent) file/directory path and a block,
 # ensures that, after the execution of the block, the entire path is restored to its original state.
 #
@@ -214,7 +225,7 @@ fn mkcd { |&perm=0o755 @arguments|
 # Please, note: the command also accepts a relative path, such as '.': in the case of a directory,
 # `$pwd` will remain unaltered after the cleanup activities.
 #
-# Please, note: it is impossible to apply the function to the root path `/` itself.
+# Please, note: it is impossible to apply the function to the `/` root path itself.
 #
 fn with-path-sandbox { |@arguments|
   var path block = (lang:get-inputs $arguments)

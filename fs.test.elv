@@ -431,6 +431,19 @@ fn create-temp-tree { |temp-root|
     }
   }
 
+  >> 'detecting the file system root' {
+    >> 'when applied to /' {
+      fs:is-root / |
+        should-be $true
+    }
+
+    >> 'when applied to an intermediate directory' {
+      put /dodo |
+        fs:is-root |
+        should-be $false
+    }
+  }
+
   >> 'working in a path sandbox' {
     >> 'when operating on a file' {
       >> 'if the path existed' {
