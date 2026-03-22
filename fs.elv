@@ -121,8 +121,7 @@ fn ensure-file { |@arguments|
 }
 
 #
-# Given a `directory` passed as input,
-# removes all the files and subdirectories within it,
+# Given a `directory` passed as input, removes all the files and subdirectories within it,
 # leaving just the empty directory itself.
 #
 fn clean-dir { |@arguments|
@@ -206,11 +205,16 @@ fn mkcd { |&perm=0o755 @arguments|
 # Given as input a (potentially non-existent) file/directory path and a block,
 # ensures that, after the execution of the block, the entire path is restored to its original state.
 #
-# In particular, if the path did not exist at the beginning of the block,
-# it will be deleted thereafter - including an entire directory tree.
+# In particular:
+#
+# * if the path did not exist, it will be deleted thereafter - including a potential entire directory tree - after ensuring that `$pwd` is not below it.
+#
+# * if the path existed, its entire content will be restored - be it the data of a single file or even the entire layout and content of a directory tree
 #
 # Please, note: the command also accepts a relative path, such as '.': in the case of a directory,
-# the `$pwd` current directory will not be affected by the sandbox restore operations.
+# `$pwd` will remain unaltered after the cleanup activities.
+#
+# Please, note: it is impossible to apply the function to the root path `/` itself.
 #
 fn with-path-sandbox { |@arguments|
   var path block = (lang:get-inputs $arguments)
