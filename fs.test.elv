@@ -182,7 +182,7 @@ fn create-temp-tree { |temp-root|
       var content = 'Hello, world!'
 
       put $content |
-        fs:save-all $target-path
+        fs:save-anywhere $target-path
 
       slurp < $target-path |
         should-be $content

@@ -90,13 +90,19 @@ fn temp-file-path { |&dir='' &pattern=$nil|
 # Given a `path`, passed as argument, and its `content` - passed as argument or via pipe -
 # creates all the intermediate directories so as to be able to save `content` into `path`.
 #
-fn save-all { |path @arguments|
+fn save-anywhere { |path @arguments|
   var content = (lang:get-single-input $arguments)
 
   var parent = (path:dir $path)
   os:mkdir-all $parent
 
   print $content > $path
+}
+
+fn save-all { |path @arguments|
+  deprecate 'Use `save-anywhere` instead'
+
+  save-anywhere $path $@arguments
 }
 
 #
@@ -110,7 +116,7 @@ fn ensure-file { |@arguments|
       fail 'Path "'$path'" exists, but it is not a file!'
     }
   } else {
-    save-all $path ''
+    save-anywhere $path ''
   }
 }
 

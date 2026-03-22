@@ -83,7 +83,7 @@ fn create-command { |@arguments|
     fs:clean-dir $pwd
 
     keys $reference-files | each { |entry-path|
-      fs:save-all $entry-path $reference-files[$entry-path]
+      fs:save-anywhere $entry-path $reference-files[$entry-path]
     }
   }
 
