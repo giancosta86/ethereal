@@ -230,23 +230,23 @@ fn is-root { |@arguments|
 fn with-path-sandbox { |@arguments|
   var path block = (lang:get-inputs $arguments)
 
+  if (is-root $path) {
+    fail 'Cannot apply a sandbox to the file system root!'
+  }
+
+  var abs-path = (path:abs $path)
+
   var backup-path = (
-    if (os:exists $path) {
+    if (os:exists $abs-path) {
       temp-file-path
     } else {
       put $nil
     }
   )
 
-  var abs-path = (path:abs $path)
-
-  if (eq $abs-path /) {
-    fail 'Cannot apply a sandbox to the file system root!'
-  }
-
   if $backup-path {
     os:remove-all $backup-path
-    copy $path $backup-path
+    copy $abs-path $backup-path
   }
 
   try {
@@ -255,7 +255,7 @@ fn with-path-sandbox { |@arguments|
     var previous-dir = $pwd
 
     try {
-      ensure-not-in-dir $path
+      ensure-not-in-dir $abs-path
 
       os:remove-all $abs-path
 
@@ -315,12 +315,13 @@ fn find-duplicates { |@arguments|
 # If the `include-tests` flag is enabled, `.test.elv` test scripts for Velvet are listed as well.
 #
 fn find-scripts { |&include-tests=$false|
-  if $include-tests {
-    put **[nomatch-ok].elv
-  } else {
-    put **[nomatch-ok].elv |
+  put **[nomatch-ok].elv | {
+    if $include-tests {
+      all
+    } else {
       keep-if { |script-path|
         not (str:has-suffix $script-path '.test.elv')
       }
+    }
   }
 }
