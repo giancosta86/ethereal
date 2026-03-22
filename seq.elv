@@ -49,8 +49,8 @@ fn enumerate { |&start-index=0 @arguments|
 # calls the given `consumer` - passing each sub-item as an argument, in order.
 #
 fn spread { |consumer|
-  each { |current-sequence|
-    call $consumer $current-sequence [&]
+  each { |sub-sequence|
+    call $consumer $sub-sequence [&]
   }
 }
 
@@ -63,7 +63,7 @@ fn spread { |consumer|
 #
 # * the current item
 #
-# and must emit the new partial result.
+# and must emit a new partial result.
 #
 # In the end, emits the most recent partial result; as a plus, the `debug` flag
 # enables useful debug messages.
