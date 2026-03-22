@@ -22,13 +22,15 @@ fn relative-to { |dir-path @arguments|
     str:trim-suffix $dir-path $path:separator
   )
 
+  var prefix-to-trim = $simplified-dir-path''$path:separator
+
   lang:get-inputs $arguments | each { |path|
-    str:trim-prefix $path $simplified-dir-path''$path:separator
+    str:trim-prefix $path $prefix-to-trim
   }
 }
 
 #
-# Takes a path as input and emits the core and the ext
+# Takes a path as input and emits its core part and the ext
 # as subsequent values, where `ext` can be either a dotted extension or the empty string.
 #
 # In case of multiple extensions, only the last one is returned -
@@ -39,7 +41,9 @@ fn split-ext { |@arguments|
 
   var ext = (path:ext $source-path)
 
-  put (str:trim-suffix $source-path $ext) $ext
+  var core = (str:trim-suffix $source-path $ext)
+
+  put $core $ext
 }
 
 #
@@ -51,7 +55,9 @@ fn switch-ext { |@arguments|
 
   var core ext = (split-ext $source-path)
 
-  put $core'.'(str:trim-prefix $new-ext .)
+  var simplified-new-ext = (str:trim-prefix $new-ext .)
+
+  put $core'.'$simplified-new-ext
 }
 
 #
@@ -69,7 +75,7 @@ fn ensure-not-in-dir { |@arguments|
 }
 
 #
-# Returns the path of a created temp file - but without an associated open file structure.
+# Returns the path of a newly-created temp file - but without an associated open file structure.
 #
 fn temp-file-path { |&dir='' &pattern=$nil|
   var temp-file = (
