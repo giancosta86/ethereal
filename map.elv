@@ -41,7 +41,6 @@ fn entries { |@arguments|
   }
 }
 
-
 #
 # Emits the values of the given map, according to the internal map order.
 #
@@ -64,7 +63,7 @@ fn merge { |@arguments|
 #
 # Takes as arguments a `source` map, whose `[key value]` pairs are passed, one by one, to the given `mapper` function,
 # which must take the key and the value as separate arguments and emit an arbitrary (even empty)
-# stream of related entries for the result map.
+# stream of related `[key value]` entries for the result map.
 #
 fn transform { |source mapper|
   iterate $source { |key value|
@@ -94,7 +93,7 @@ fn keep-if { |source key-value-predicate|
 fn multi-value { |@arguments|
   lang:get-inputs $arguments |
     seq:reduce [&] { |cumulated-map entry|
-      var key value = (put $@entry)
+      var key value = (all $entry)
 
       var existing-values = (lang:get-value $cumulated-map $key &default=[])
 
