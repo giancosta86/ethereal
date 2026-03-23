@@ -93,12 +93,14 @@ fn create-temp-tree { |temp-root|
 
     >> 'when the source path has a single extension' {
       >> 'when the new extension has a leading dot' {
-        fs:switch-ext alpha.jpg .png |
+        put alpha.jpg |
+          fs:switch-ext .png |
           should-be alpha.png
       }
 
       >> 'when the new extension has no dot' {
-        fs:switch-ext alpha.jpg png |
+        put alpha.jpg |
+          fs:switch-ext png |
           should-be alpha.png
       }
     }

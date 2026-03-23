@@ -47,11 +47,12 @@ fn split-ext { |@arguments|
 }
 
 #
-# Given a `source-path` and an `extension` (with or without leading dot) passed as input,
+# Given a `source-path` passed via pipe or first argument,
+# and an `extension` (with or without leading dot) passed as last argument,
 # emits a new path where the given `extension` replaces the extension in `source-path`.
 #
 fn switch-ext { |@arguments|
-  var source-path new-ext = (lang:get-inputs $arguments)
+  var source-path new-ext = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
 
   var core ext = (split-ext $source-path)
 
@@ -275,7 +276,7 @@ fn with-path-sandbox { |@arguments|
 # emits $true if they are equal in binary terms, according to the `cmp` command.
 #
 fn equal-files { |@arguments|
-  var left-path right-path = (lang:get-inputs $arguments)
+  var left-path right-path = (lang:get-mixed-inputs &min-values=2 &max-values=2 $arguments)
 
   put ?(-cmp --silent $left-path $right-path) |
     eq (all) $ok

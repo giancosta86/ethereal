@@ -15,8 +15,67 @@ fn ternary { |condition when-true when-false|
 }
 
 #
-# Takes in input - via pipe or as the first argument - a `value`, then compares it
-# with the value-block map of `cases` passed as the last argument:
+# Reads a number of inputs - from pipe and/or arguments - according to the following logic:
+#
+# 1. Detect the number of arguments in `argument-list`, ensuring it is no less than &min-args.
+#
+# 2. If there are no arguments - or if the number of arguments is less then &min-values - read all the values in the pipe.
+#
+# 3. Create a list of values, by combining in this order:
+#
+#    * the data read from the pipe at the previous step - or an empty list if the pipe was not accessed
+#
+#    * the arguments
+#
+# 4. Ensure that the overall number of values is in the [&min-values; &max-values] range.
+#
+# In the end, the resulting values are emitted one by one.
+#
+fn get-mixed-inputs { |&min-values=0 &max-values=$nil &min-args=0 argument-list|
+  if $max-values {
+    if (> $min-values $max-values) {
+      fail 'It must be &min-values <= &max-values'
+    }
+
+    if (> $min-args $max-values) {
+      fail 'It must be &min-args <= &max-values'
+    }
+  }
+
+  var arg-count = (count $argument-list)
+
+  if (< $arg-count $min-args) {
+    fail 'At least '$min-args' argument(s) must be passed, not just '$arg-count
+  }
+
+  var piped = (
+    if (
+      or (== $arg-count 0) (< $arg-count $min-values)
+    ) {
+      put [(all)]
+    } else {
+      put []
+    }
+  )
+
+  var values = (conj $piped $@argument-list)
+
+  var value-count = (count $values)
+
+  if (< $value-count $min-values) {
+    fail 'At least '$min-values' value(s) must be passed via pipe or arguments - not just '$value-count
+  }
+
+  if (and $max-values (> $value-count $max-values)) {
+    fail 'At most '$max-values' value(s) can be passed via pipe or arguments - not '$value-count
+  }
+
+  all $values
+}
+
+#
+# Takes in input - via pipe or as arguments - a `value` and value-block map of `cases`, then compares `value`
+# with the keys in the map:
 #
 # * If `value` is a key in the `cases` map, the associated *no-arg* block is invoked
 #
@@ -31,19 +90,7 @@ fn ternary { |condition when-true when-false|
 # to the `if` construct.
 #
 fn switch { |&default=$nil @arguments|
-  var value
-  var cases
-
-  var argument-count = (count $arguments)
-
-  if (== $argument-count 1) {
-    set value = (one)
-    set cases = $arguments[0]
-  } elif (== $argument-count 2) {
-    set value cases = (all $arguments)
-  } else {
-    fail 'arity error: expected 1 or 2 arguments'
-  }
+  var value cases = (get-mixed-inputs &min-values=2 &max-values=2 $arguments)
 
   if (has-key $cases $value) {
     $cases[$value]
@@ -67,16 +114,7 @@ fn switch { |&default=$nil @arguments|
 # To use this function, simply call it passing the `$arguments` list.
 #
 fn get-single-input { |argument-list|
-  switch (count $argument-list) [
-    &(num 0)={
-      one
-    }
-    &(num 1)={
-      put $argument-list[0]
-    }
-  ] &default={ |_|
-    fail 'arity mismatch: at most 1 argument expected!'
-  }
+  get-mixed-inputs &min-values=1 &max-values=1 $argument-list
 }
 
 #
@@ -90,11 +128,7 @@ fn get-single-input { |argument-list|
 # To use this function, simply call it passing the `$arguments` list.
 #
 fn get-inputs { |argument-list|
-  if (== (count $argument-list) 0) {
-    all
-  } else {
-    all $argument-list
-  }
+  get-mixed-inputs &min-values=0 $argument-list
 }
 
 #

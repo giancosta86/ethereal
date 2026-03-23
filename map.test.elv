@@ -86,12 +86,13 @@ use ./map
     }
 
     >> 'with non-empty map' {
-      map:transform [
+      put [
         &Alpha=90
         &Beta=18
-      ] { |key value|
-        put [$key''$key (+ $value 3)]
-      } |
+      ] |
+        map:transform { |key value|
+          put [$key''$key (+ $value 3)]
+        } |
         should-be [
           &AlphaAlpha=(num 93)
           &BetaBeta=(num 21)

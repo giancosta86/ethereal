@@ -384,7 +384,8 @@ use ./set
       }
 
       >> 'with empty and non-empty set' {
-        set:symmetric-difference $set:empty $right |
+        put $set:empty |
+          set:symmetric-difference $right |
           should-be $right
       }
 

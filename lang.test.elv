@@ -1,6 +1,11 @@
 use str
 use ./lang
 
+var test-piped = [RO SIGMA]
+var test-args = [ALPHA BETA GAMMA]
+var test-mixed = [$@test-piped $@test-args]
+
+
 >> 'In lang module' {
   >> 'ternary selector' {
     >> 'when the condition is true' {
@@ -29,6 +34,204 @@ use ./lang
 
       $block |
         should-be Left
+    }
+  }
+
+  >> 'getting mixed input' {
+    >> 'when passing no options' {
+      >> 'when there are arguments' {
+        all $test-piped |
+          lang:get-mixed-inputs $test-args |
+          should-emit $test-args
+      }
+
+      >> 'when there are no arguments' {
+        all $test-piped |
+          lang:get-mixed-inputs [] |
+          should-emit $test-piped
+      }
+    }
+
+    >> 'when requiring just &min-values' {
+      >> 'when passing enough arguments' {
+        all $test-piped |
+          lang:get-mixed-inputs &min-values=2 $test-args |
+          should-emit $test-args
+      }
+
+      >> 'when passing not enough arguments' {
+        >> 'when passing enough complementary values via pipe' {
+          all $test-piped |
+            lang:get-mixed-inputs &min-values=4 $test-args |
+            should-emit $test-mixed
+        }
+
+        >> 'when passing not enough complementary values via pipe' {
+          fails {
+            all $test-piped |
+              lang:get-mixed-inputs &min-values=6 $test-args
+          } |
+            should-be 'At least 6 value(s) must be passed via pipe or arguments - not just 5'
+        }
+      }
+    }
+
+    >> 'when requiring just &max-values' {
+      >> 'when passing no values' {
+        all [] |
+          lang:get-mixed-inputs &max-values=90 [] |
+          should-emit []
+      }
+
+      >> 'when passing an acceptable number of arguments' {
+        all $test-piped |
+          lang:get-mixed-inputs &max-values=90 $test-args |
+          should-emit $test-args
+      }
+
+      >> 'when passing too many arguments' {
+        fails {
+          all $test-piped |
+            lang:get-mixed-inputs &max-values=2 $test-args
+        } |
+          should-be 'At most 2 value(s) can be passed via pipe or arguments - not 3'
+      }
+
+      >> 'when passing too many values via pipe only' {
+        fails {
+          all $test-piped |
+            lang:get-mixed-inputs &max-values=1 []
+        } |
+          should-be 'At most 1 value(s) can be passed via pipe or arguments - not 2'
+      }
+    }
+
+    >> 'when passing both &min-values and &max-values' {
+      >> 'when passing &min-values > &max-values' {
+        fails {
+          all [] |
+            lang:get-mixed-inputs &min-values=90 &max-values=2 []
+        } |
+          should-be 'It must be &min-values <= &max-values'
+      }
+
+      >> 'when &min-values and &max-values are the same' {
+        >> 'when passing enough arguments' {
+          all [R S T] |
+            lang:get-mixed-inputs &min-values=3 &max-values=3 [A B C] |
+            should-emit [
+              A
+              B
+              C
+            ]
+        }
+
+        >> 'when passing via pipe only' {
+          all [R S T] |
+            lang:get-mixed-inputs &min-values=3 &max-values=3 [] |
+            should-emit [
+              R
+              S
+              T
+            ]
+        }
+
+        >> 'when passing a mix' {
+          >> 'mainly via args' {
+            all [R] |
+              lang:get-mixed-inputs &min-values=3 &max-values=3 [A B] |
+              should-emit [
+                R
+                A
+                B
+              ]
+          }
+
+          >> 'mainly via pipe' {
+            all [R S] |
+              lang:get-mixed-inputs &min-values=3 &max-values=3 [A] |
+              should-emit [
+                R
+                S
+                A
+              ]
+          }
+
+          >> 'when passing too many mixed values' {
+            fails {
+              all $test-piped |
+                lang:get-mixed-inputs &min-values=4 &max-values=4 $test-args
+            } |
+              should-be 'At most 4 value(s) can be passed via pipe or arguments - not 5'
+          }
+        }
+      }
+    }
+
+    >> 'when passing just &min-args' {
+      >> 'when passing enough arguments' {
+        all $test-piped |
+          lang:get-mixed-inputs &min-args=2 $test-args |
+          should-emit $test-args
+      }
+
+      >> 'when passing not enough arguments' {
+        fails {
+          all $test-piped |
+            lang:get-mixed-inputs &min-args=4 $test-args
+        } |
+          should-be 'At least 4 argument(s) must be passed, not just 3'
+      }
+    }
+
+    >> 'when passing &min-values, &max-values, &min-args at once' {
+      >> 'when &min-args > &max-values' {
+        fails {
+          all [] |
+            lang:get-mixed-inputs &min-values=1 &max-values=3 &min-args=4 []
+        } |
+          should-be 'It must be &min-args <= &max-values'
+      }
+
+      >> 'when there are not enough arguments and not enough values' {
+        fails {
+          all $test-piped |
+            lang:get-mixed-inputs &min-values=7 &max-values=9 &min-args=4 $test-args
+        } |
+          should-be 'At least 4 argument(s) must be passed, not just 3'
+      }
+
+      >> 'when there are enough values, but not enough arguments' {
+        fails {
+          all $test-piped |
+            lang:get-mixed-inputs &min-values=2 &max-values=9 &min-args=4 $test-args
+        } |
+          should-be 'At least 4 argument(s) must be passed, not just 3'
+      }
+
+      >> 'when there are enough arguments, but not enough values' {
+        fails {
+          all $test-piped |
+            lang:get-mixed-inputs &min-values=7 &max-values=9 &min-args=2 $test-args
+        } |
+          should-be 'At least 7 value(s) must be passed via pipe or arguments - not just 5'
+      }
+
+      >> 'when there are enough values and enough arguments' {
+        >> 'when there are too many values' {
+          fails {
+            all $test-piped |
+              lang:get-mixed-inputs &min-values=4 &max-values=4 &min-args=1 $test-args
+          } |
+            should-be 'At most 4 value(s) can be passed via pipe or arguments - not 5'
+          }
+
+        >> 'when the values satisfy all the requirements' {
+          all $test-piped |
+            lang:get-mixed-inputs &min-values=4 &max-values=5 &min-args=1 $test-args |
+            should-emit $test-mixed
+        }
+      }
     }
   }
 
@@ -95,16 +298,15 @@ use ./lang
       fails {
         lang:get-single-input [Alpha Beta]
       } |
-        should-contain 'arity mismatch'
+        should-be 'At most 1 value(s) can be passed via pipe or arguments - not 2'
     }
 
     >> 'when multiple values are passed via pipe' {
-      throws {
+      fails {
         put Alpha Beta |
           lang:get-single-input []
       } |
-        to-string (all) |
-        should-contain 'arity mismatch'
+        should-be 'At most 1 value(s) can be passed via pipe or arguments - not 2'
     }
 
     >> 'when both argument list and pipe values are passed' {

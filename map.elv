@@ -10,20 +10,7 @@ pragma unknown-command = disallow
 # taking the key and the value, respectively, as arguments.
 #
 fn iterate { |@arguments|
-  var argument-count = (count $arguments)
-
-  var map
-  var consumer
-
-  if (== $argument-count 1) {
-    set map = (one)
-    set consumer = $arguments[0]
-  } elif (== $argument-count 2) {
-    set map = $arguments[0]
-    set consumer = $arguments[1]
-  } else {
-    fail 'arity mismatch: <consumer> or <map><consumer> expected'
-  }
+  var map consumer = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
 
   keys $map | each { |key|
     $consumer $key $map[$key]
@@ -61,11 +48,14 @@ fn merge { |@arguments|
 }
 
 #
-# Takes as arguments a `source` map, whose `[key value]` pairs are passed, one by one, to the given `mapper` function,
+# Takes as arguments a `source` map (via pipe or as first argument),
+# whose `[key value]` pairs are passed, one by one, to the given `mapper` function (passed as last argument),
 # which must take the key and the value as separate arguments and emit an arbitrary (even empty)
 # stream of related `[key value]` entries for the result map.
 #
-fn transform { |source mapper|
+fn transform { |@arguments|
+  var source mapper = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
+
   iterate $source { |key value|
     $mapper $key $value
   } |
@@ -73,10 +63,13 @@ fn transform { |source mapper|
 }
 
 #
-# Takes a `source` map and a predicate - taking a key and a value, and emitting $true
+# Takes a `source` map (via pipe or as first argument) and
+# a predicate (as last argument) - taking a key and a value, and emitting $true
 # if the entry must be preserved in the result map.
 #
-fn keep-if { |source key-value-predicate|
+fn keep-if { |@arguments|
+  var source key-value-predicate = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
+
   transform $source { |key value|
     if ($key-value-predicate $key $value) {
       put [$key $value]
