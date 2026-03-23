@@ -4,6 +4,10 @@ use str
 use ./fs
 
 fn create-temp-tree { |temp-root|
+  if (not (os:is-dir $temp-root)) {
+    fail 'Not an existing directory: '$temp-root
+  }
+
   var alpha-file = (path:join $temp-root alpha)
   print Alpha > $alpha-file
 
@@ -31,7 +35,7 @@ fn create-temp-tree { |temp-root|
       (path:join ro sigma.txt)
     ]
 
-    var expected-paths = [
+    var expected-paths-relative-to-beta = [
       gamma.txt
       (path:join delta epsilon.txt)
       x.txt
@@ -42,8 +46,7 @@ fn create-temp-tree { |temp-root|
       var dir-path = (path:join alpha beta)''$path:separator
 
       fs:relative-to $dir-path $@source-paths |
-        put [(all)] |
-        should-be $expected-paths
+        should-emit $expected-paths-relative-to-beta
     }
 
     >> 'if the directory prefix does not end with path separator' {
@@ -51,16 +54,14 @@ fn create-temp-tree { |temp-root|
 
       all $source-paths |
         fs:relative-to $dir-path |
-        put [(all)] |
-        should-be $expected-paths
+        should-emit $expected-paths-relative-to-beta
     }
   }
 
   >> 'splitting the extension' {
     >> 'when the extension is missing' {
       fs:split-ext alpha |
-        put [(all)] |
-        should-be [
+        should-emit [
           alpha
           ''
         ]
@@ -69,8 +70,7 @@ fn create-temp-tree { |temp-root|
     >> 'when the extension is present' {
       put beta.elv |
         fs:split-ext |
-        put [(all)] |
-        should-be [
+        should-emit [
           beta
           .elv
         ]
@@ -78,8 +78,7 @@ fn create-temp-tree { |temp-root|
 
     >> 'when there are multiple extensions' {
       fs:split-ext gamma.test.elv |
-        put [(all)] |
-        should-be [
+        should-emit [
           gamma.test
           .elv
         ]
@@ -119,9 +118,6 @@ fn create-temp-tree { |temp-root|
 
     cd $nested-path
 
-    put $pwd |
-      should-be $nested-path
-
     fs:ensure-not-in-dir $temp-dir
 
     put $pwd |
@@ -133,8 +129,8 @@ fn create-temp-tree { |temp-root|
       var temp-path = (fs:temp-file-path)
       defer { os:remove-all $temp-path }
 
-      os:exists $temp-path |
-        should-be $true
+      put $temp-path |
+        should-be-regular
 
       os:stat $temp-path |
         put (all)[size] |
@@ -142,14 +138,12 @@ fn create-temp-tree { |temp-root|
     }
 
     >> 'when not passing a pattern' {
-      >> 'should use the default pattern' {
         var temp-path = (fs:temp-file-path)
         defer { os:remove-all $temp-path }
 
         path:base $temp-path |
           str:has-prefix (all) elvish- |
           should-be $true
-      }
     }
 
     >> 'when passing a custom pattern' {
@@ -173,99 +167,19 @@ fn create-temp-tree { |temp-root|
     }
   }
 
-  >> 'saving a file to any location' {
-    >> 'should create intermediate directories' {
-      var temp-dir = (os:temp-dir)
-      defer { os:remove-all $temp-dir }
-
-      var target-path = (path:join $temp-dir alpha beta gamma delta.txt)
-      var content = 'Hello, world!'
-
-      put $content |
-        fs:save-anywhere $target-path
-
-      slurp < $target-path |
-        should-be $content
-    }
-  }
-
-  >> 'ensuring a file exists' {
-    var temp-path = (fs:temp-file-path)
-    defer { os:remove-all $temp-path }
-
-    >> 'when the path already exists' {
-      >> 'when the path is a actually a file' {
-        fs:ensure-file $temp-path
-      }
-
-      >> 'when the path is not a file' {
-        os:remove-all $temp-path
-        os:mkdir $temp-path
-
-        fails {
-          fs:ensure-file $temp-path
-        } |
-          should-be 'Path "'$temp-path'" exists, but it is not a file!'
-      }
-    }
-
-    >> 'when the path does not exist' {
-      os:remove-all $temp-path
-
-      fs:ensure-file $temp-path
-
-      os:is-regular $temp-path |
-        should-be $true
-    }
-  }
-
-  >> 'cleaning a directory' {
-    var temp-dir = (os:temp-dir)
-    defer { os:remove-all $temp-dir }
-
-    create-temp-tree $temp-dir
-
-    put $temp-dir/*[type:regular] |
-      count |
-      should-be 1
-
-    put $temp-dir/*[type:dir] |
-      count |
-      should-be 1
-
-    fs:clean-dir $temp-dir
-
-    >> 'should delete its files' {
-      put $temp-dir/*[type:regular][nomatch-ok] |
-        count |
-        should-be 0
-    }
-
-    >> 'should delete its directories' {
-      put $temp-dir/*[type:dir][nomatch-ok] |
-        count |
-        should-be 0
-    }
-
-    >> 'should keep the directory itself' {
-      os:is-dir $temp-dir |
-        should-be $true
-    }
-  }
-
   >> 'consuming a temp file path' {
     >> 'should delete the temp path after the consumer runs' {
       var actual-path
 
       fs:with-temp-file { |temp-path|
-        os:is-regular $temp-path |
-          should-be $true
+        put $temp-path |
+          should-be-regular
 
         set actual-path = $temp-path
       }
 
-      os:is-regular $actual-path |
-        should-be $false
+      put $actual-path |
+        should-not-exist
     }
 
     >> 'should support a custom pattern' {
@@ -289,28 +203,142 @@ fn create-temp-tree { |temp-root|
       var actual-path
 
       fs:with-temp-dir { |temp-dir|
-        os:is-dir $temp-dir |
-          should-be $true
+        put $temp-dir |
+          should-be-dir
 
         set actual-path = $temp-dir
       }
 
-      os:is-dir $actual-path |
-        should-be $false
+      put $actual-path |
+        should-not-exist
     }
 
     >> 'should support a custom pattern' {
       var custom-prefix = alpha-
       var custom-suffix = -omega
 
-      fs:with-temp-dir &pattern=$custom-prefix'*'$custom-suffix { |temp-path|
-        var temp-base = (path:base $temp-path)
+      fs:with-temp-dir &pattern=$custom-prefix'*'$custom-suffix { |temp-dir|
+        var temp-base = (path:base $temp-dir)
 
         str:has-prefix $temp-base $custom-prefix |
           should-be $true
 
         str:has-suffix $temp-base $custom-suffix |
           should-be $true
+      }
+    }
+
+    >> 'should not automatically move pwd to the created temp directory' {
+      fs:with-temp-dir { |temp-dir|
+        put $pwd |
+          should-not-be $temp-dir
+      }
+    }
+
+    >> 'should ensure that pwd is out of the created temp directory' {
+      var temp-parent
+
+      fs:with-temp-dir { |temp-dir|
+        set temp-parent = (path:dir $temp-dir)
+
+        cd $temp-dir
+
+        os:mkdir A
+        cd A
+
+        os:mkdir B
+        cd B
+
+        os:mkdir C
+        cd C
+      }
+
+      put $pwd |
+        should-be $temp-parent
+    }
+  }
+
+  >> 'saving a file to any location' {
+    >> 'should create intermediate directories' {
+      fs:with-temp-dir { |temp-dir|
+        var target-path = (path:join $temp-dir alpha beta gamma delta.txt)
+        var content = 'Hello, world!'
+
+        put $content |
+          fs:save-anywhere $target-path
+
+        slurp < $target-path |
+          should-be $content
+      }
+    }
+  }
+
+  >> 'ensuring a file exists' {
+    fs:with-temp-file { |temp-path|
+      >> 'when the path already exists' {
+        >> 'when the path is a actually a file' {
+          os:remove-all $temp-path
+
+          print Alpha > $temp-path
+
+          fs:ensure-file $temp-path
+
+          slurp < $temp-path |
+            should-be Alpha
+        }
+
+        >> 'when the path is not a file' {
+          os:remove-all $temp-path
+
+          os:mkdir $temp-path
+
+          fails {
+            fs:ensure-file $temp-path
+          } |
+            should-be 'Path "'$temp-path'" exists, but it is not a file!'
+        }
+      }
+
+      >> 'when the path does not exist' {
+        os:remove-all $temp-path
+
+        fs:ensure-file $temp-path
+
+        put $temp-path |
+          should-be-regular
+      }
+    }
+  }
+
+  >> 'cleaning a directory' {
+    fs:with-temp-dir { |temp-dir|
+      create-temp-tree $temp-dir
+
+      put $temp-dir/*[type:regular] |
+        count |
+        should-be 1
+
+      put $temp-dir/*[type:dir] |
+        count |
+        should-be 1
+
+      fs:clean-dir $temp-dir
+
+      >> 'should delete its files' {
+        put $temp-dir/*[type:regular][nomatch-ok] |
+          count |
+          should-be 0
+      }
+
+      >> 'should delete its directories' {
+        put $temp-dir/*[type:dir][nomatch-ok] |
+          count |
+          should-be 0
+      }
+
+      >> 'should keep the directory itself' {
+        put $temp-dir |
+          should-be-dir
       }
     }
   }
@@ -323,8 +351,8 @@ fn create-temp-tree { |temp-root|
 
           fs:copy $sigma-path $tau-path
 
-          os:is-regular $sigma-path |
-            should-be $true
+          put $sigma-path |
+            should-be-regular
 
           slurp < $tau-path |
             should-be Sigma
@@ -340,11 +368,11 @@ fn create-temp-tree { |temp-root|
 
         fs:copy $temp-tree[beta-dir] $omega-path
 
-        os:is-dir $temp-tree[beta-dir] |
-          should-be $true
+        put $temp-tree[beta-dir] |
+          should-be-dir
 
-        os:is-dir $omega-path |
-          should-be $true
+        put $omega-path |
+          should-be-dir
 
         var omega-content-path = (path:join $omega-path gamma delta)
 
@@ -362,8 +390,8 @@ fn create-temp-tree { |temp-root|
 
           fs:move $sigma-path $tau-path
 
-          os:is-regular $sigma-path |
-            should-be $false
+          put $sigma-path |
+            should-not-exist
 
           slurp < $tau-path |
             should-be Sigma
@@ -379,11 +407,11 @@ fn create-temp-tree { |temp-root|
 
         fs:move $temp-tree[beta-dir] $omega-path
 
-        os:is-dir $temp-tree[beta-dir] |
-          should-be $false
+        put $temp-tree[beta-dir] |
+          should-not-exist
 
-        os:is-dir $omega-path |
-          should-be $true
+        put $omega-path |
+          should-be-dir
 
         var omega-content-path = (path:join $omega-path gamma delta)
 
@@ -395,15 +423,14 @@ fn create-temp-tree { |temp-root|
 
   >> 'the mkcd command' {
     >> 'when the target directory does not exist' {
-      fs:with-temp-dir { |test-root|
+      fs:with-temp-dir { |temp-dir|
         var components = [alpha beta gamma delta]
 
-        fs:mkcd $test-root $@components
+        fs:mkcd $temp-dir $@components
 
         >> 'should create that directory and its parents' {
-          path:join $test-root $@components |
-            os:is-dir (all) |
-            should-be $true
+          path:join $temp-dir $@components |
+            should-be-dir
         }
 
         >> 'should move to that directory' {
@@ -415,8 +442,8 @@ fn create-temp-tree { |temp-root|
 
     >> 'when the target directory already exists' {
       >> 'should just move to that directory' {
-        fs:with-temp-dir { |test-root|
-          tmp pwd = $test-root
+        fs:with-temp-dir { |temp-dir|
+          cd $temp-dir
 
           var components = [ro sigma tau]
 
@@ -470,21 +497,21 @@ fn create-temp-tree { |temp-root|
           >> 'should restore the original file' {
             fs:with-temp-file { |test-file|
               fs:with-path-sandbox $test-file {
-                os:remove-all $test-file
+                os:remove $test-file
 
-                os:is-regular $test-file |
-                  should-be $false
+                put $test-file |
+                  should-not-exist
               }
 
-              os:is-regular $test-file |
-                should-be $true
+              put $test-file |
+                should-be-regular
             }
           }
         }
       }
 
       >> 'if the path did not exist' {
-        >> 'should remove the file' {
+        >> 'should remove the file in the end' {
           fs:with-temp-dir { |temp-dir|
             cd $temp-dir
 
@@ -493,12 +520,12 @@ fn create-temp-tree { |temp-root|
             fs:with-path-sandbox $test-file {
               echo Some text > $test-file
 
-              os:is-regular $test-file |
-                should-be $true
+              put $test-file |
+                should-be-regular
             }
 
-            os:is-regular $test-file |
-              should-be $false
+            put $test-file |
+              should-not-exist
           }
         }
       }
@@ -526,21 +553,23 @@ fn create-temp-tree { |temp-root|
               os:mkdir-all $b
 
               var c = (path:join $b C.txt)
-              touch $c
+              echo Gamma > $c
 
               slurp < $sigma |
                 should-be LOL
 
-              os:is-regular $c |
-                should-be $true
+              put $c |
+                should-be-regular
             }
 
-            # Even despite the sandbox restore operations, the pwd is unaffected
+            put $pwd |
+              should-be $temp-dir
+
             slurp < $sigma |
               should-be Sigma
 
-            os:is-dir $a |
-              should-be $false
+            put $a |
+              should-not-exist
           }
         }
       }
@@ -554,18 +583,18 @@ fn create-temp-tree { |temp-root|
 
             var b = (path:join $a B)
 
-            os:is-dir $a |
-              should-be $false
-
             fs:with-path-sandbox $a {
+              put $a |
+                should-not-exist
+
               os:mkdir-all $b
 
-              os:is-dir $a |
-                should-be $true
+              put $a |
+                should-be-dir
             }
 
-            os:is-dir $a |
-              should-be $false
+            put $a |
+              should-not-exist
           }
         }
       }
@@ -573,7 +602,7 @@ fn create-temp-tree { |temp-root|
 
     >> 'if the path is the file system root' {
         fails {
-          fs:with-path-sandbox / {}
+          fs:with-path-sandbox / { fail 'THIS SHOULD NOT RUN' }
         } |
           should-be 'Cannot apply a sandbox to the file system root!'
       }
@@ -632,16 +661,14 @@ fn create-temp-tree { |temp-root|
 
       all $duplicate-lists[0] |
         order |
-        put [(all)] |
-        should-be [
+        should-emit [
           B1
           B2
         ]
 
       all $duplicate-lists[1] |
         order |
-        put [(all)] |
-        should-be [
+        should-emit [
           A1
           A2
           A3

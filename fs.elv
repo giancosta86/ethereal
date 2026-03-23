@@ -87,6 +87,38 @@ fn temp-file-path { |&dir='' &pattern=$nil|
 }
 
 #
+# Given as input a consumer block taking a file path as argument,
+# creates a temp file, passes its path to the block and, in the end,
+# ensures it gets deleted.
+#
+fn with-temp-file { |&dir='' &pattern=$nil @arguments|
+  var consumer = (lang:get-single-input $arguments)
+
+  var temp-path = (temp-file-path &dir=$dir &pattern=$pattern)
+  defer { os:remove-all $temp-path }
+
+  $consumer $temp-path
+}
+
+#
+# Given as input a consumer block taking a directory path as argument,
+# creates a temp directory, passes its path to the block and, in the end,
+# deletes its entire tree - after ensuring the pwd is out of it.
+#
+fn with-temp-dir { |&dir='' &pattern=$nil @arguments|
+  var consumer = (lang:get-single-input $arguments)
+
+  var temp-path = (os:temp-dir &dir=$dir (all (seq:value-as-list $pattern)))
+  defer {
+    ensure-not-in-dir $temp-path
+
+    os:remove-all $temp-path
+  }
+
+  $consumer $temp-path
+}
+
+#
 # Given a `path`, passed as argument, and its `content` - passed as argument or via pipe -
 # creates all the intermediate directories so as to be able to save `content` into `path`.
 #
@@ -130,38 +162,6 @@ fn clean-dir { |@arguments|
   put $dir/*[nomatch-ok] | each { |entry|
     os:remove-all $entry
   }
-}
-
-#
-# Given as input a consumer block taking a file path as argument,
-# creates a temp file, passes its path to the block and, in the end,
-# ensures it gets deleted.
-#
-fn with-temp-file { |&dir='' &pattern=$nil @arguments|
-  var consumer = (lang:get-single-input $arguments)
-
-  var temp-path = (temp-file-path &dir=$dir &pattern=$pattern)
-  defer { os:remove-all $temp-path }
-
-  $consumer $temp-path
-}
-
-#
-# Given as input a consumer block taking a directory path as argument,
-# creates a temp directory, passes its path to the block and, in the end,
-# deletes its entire tree - after ensuring the pwd is out of it.
-#
-fn with-temp-dir { |&dir='' &pattern=$nil @arguments|
-  var consumer = (lang:get-single-input $arguments)
-
-  var temp-path = (os:temp-dir &dir=$dir (all (seq:value-as-list $pattern)))
-  defer {
-    ensure-not-in-dir $temp-path
-
-    os:remove-all $temp-path
-  }
-
-  $consumer $temp-path
 }
 
 #

@@ -310,8 +310,7 @@ use ./lang
           should-be 90
       } |
         to-string (all) |
-        str:contains (all) 'arity mismatch' |
-        should-be $true
+        should-contain 'arity mismatch'
     }
   }
 

@@ -119,7 +119,7 @@ var test-git~ = (
             should-be 'This is another copy of alpha'
 
           path:join $temp-dir beta gamma delta.txt |
-            should-not-be-regular
+            should-not-exist
 
           slurp < (path:join $temp-dir pi.txt) |
             should-be 'This is Pi'
@@ -150,7 +150,7 @@ var test-git~ = (
               should-be 'This is another copy of alpha'
 
             path:join $temp-dir beta gamma delta.txt |
-              should-not-be-regular
+              should-not-exist
 
             slurp < (path:join $temp-dir pi.txt) |
               should-be 'This is Pi'
@@ -251,12 +251,12 @@ var test-git~ = (
         should-be $initial-map['<some url>'][main][alpha.txt]
 
       put beta.txt |
-        should-not-be-regular
+        should-not-exist
     }
 
     fn should-be-on-initial-secondary-branch {
       put alpha.txt |
-        should-not-be-regular
+        should-not-exist
 
       slurp < beta.txt |
         should-be $initial-map['<some url>'][secondary][beta.txt]
@@ -264,7 +264,7 @@ var test-git~ = (
 
     fn should-be-on-updated-secondary-branch {
       put alpha.txt |
-        should-not-be-regular
+        should-not-exist
 
       slurp < beta.txt |
         should-be $updated-map['<some url>'][secondary][beta.txt]
