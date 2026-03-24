@@ -3,7 +3,7 @@ use ./resources
 
 >> 'In resources module' {
   >> 'retrieving a resource' {
-    >> 'when passing inputs as arguments to both functions' {
+    >> 'when passing inputs as arguments' {
       var resources = (resources:for-script (src))
 
       var license-path = ($resources[get-path] LICENSE)
@@ -12,7 +12,7 @@ use ./resources
         should-contain Copyright
     }
 
-    >> 'when passing inputs via pipe to both functions' {
+    >> 'when passing inputs via pipe' {
       var resources = (src | resources:for-script)
 
       var license-path = (
