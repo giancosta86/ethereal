@@ -146,8 +146,7 @@ fn run-tests-for-tracer { |tracer stream|
       }
 
       from-lines < $temp-path |
-        put [(all)] |
-        should-be [
+        should-emit [
           Dodo
          '🧭 Basic test:'
          'Hello, world'

@@ -20,8 +20,7 @@ use ./string
       >> 'with 2 text lines' {
           put "Alpha\nBeta" |
             string:prefix-lines '****' |
-            put [(all)] |
-            should-be [
+            should-emit [
               '****Alpha'
               '****Beta'
             ]
@@ -30,8 +29,7 @@ use ./string
       >> 'with 2 text lines and final empty line' {
         put "Alpha\nBeta\n" |
           string:prefix-lines '****' |
-          put [(all)] |
-          should-be [
+          should-emit [
             '****Alpha'
             '****Beta'
             ''
@@ -41,8 +39,7 @@ use ./string
       >> 'with 2 text lines and intermediate empty lines' {
         put "Alpha\n\n\nBeta" |
           string:prefix-lines '****' |
-          put [(all)] |
-          should-be [
+          should-emit [
             '****Alpha'
             ''
             ''
@@ -53,8 +50,7 @@ use ./string
       >> 'with 3 text lines, intermediate empty lines and final empty lines' {
         put "Alpha\n\n\nBeta\n\n\n\n\nGamma\n\n" |
           string:prefix-lines '****' |
-          put [(all)] |
-          should-be [
+          should-emit [
             '****Alpha'
             ''
             ''
@@ -80,8 +76,7 @@ use ./string
       >> 'with 3 text lines, intermediate empty lines and final empty lines' {
         put "Alpha\n\n\nBeta\n\n\n\n\nGamma\n\n" |
           string:prefix-lines &empty-too '# ' |
-          put [(all)] |
-          should-be [
+          should-emit [
             '# Alpha'
             '# '
             '# '

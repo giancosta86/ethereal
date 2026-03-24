@@ -651,12 +651,11 @@ fn create-temp-tree { |temp-root|
       print A > A5
       cd ..
 
-      var duplicate-lists = (
+      var duplicate-lists = [(
         put ** |
           fs:find-duplicates |
-          order &key=$count~ |
-          put [(all)]
-      )
+          order &key=$count~
+      )]
 
       count $duplicate-lists |
         should-be 2
