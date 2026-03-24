@@ -108,13 +108,14 @@ fn get-prefix { |@arguments|
 
   var last-prefix-index = -1
 
-  range 0 (math:min (count $left) (count $right)) | each { |index|
-    if (eq $left[$index] $right[$index]) {
-      set last-prefix-index = $index
-    } else {
-      break
+  math:min (count $left) (count $right) |
+    range 0 (all) | each { |index|
+      if (eq $left[$index] $right[$index]) {
+        set last-prefix-index = $index
+      } else {
+        break
+      }
     }
-  }
 
   if (>= $last-prefix-index 0) {
     put $left[..(+ $last-prefix-index 1)]
