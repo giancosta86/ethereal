@@ -203,7 +203,8 @@ fn mkcd { |&perm=0o755 @arguments|
 }
 
 #
-# Emits $true if the path passed as input is the `/` file system root, $false otherwise.
+# Emits $true if the path passed as input is the `/` file system root,
+# even if it's a relative path; otherwise, $false is emitted.
 #
 fn is-root { |@arguments|
   var path = (lang:get-single-input $arguments)
