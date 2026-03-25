@@ -1,5 +1,4 @@
 use path
-use str
 use ./resources
 
 >> 'In resources module' {
@@ -9,10 +8,8 @@ use ./resources
 
       var license-path = ($resources[get-path] LICENSE)
 
-      var license-content = (slurp < $license-path)
-
-      str:contains $license-content Copyright |
-        should-be $true
+      slurp < $license-path |
+        should-contain Copyright
     }
 
     >> 'when passing inputs via pipe' {
@@ -23,10 +20,8 @@ use ./resources
           $resources[get-path]
       )
 
-      var license-content = (slurp < $license-path)
-
-      str:contains $license-content Copyright |
-        should-be $true
+      slurp < $license-path |
+        should-contain Copyright
     }
 
     >> 'should return an absolute path' {

@@ -13,22 +13,6 @@ var test-block-crashing = {
   fail DODO
 }
 
-fn should-emit-in-any-order { |expected-items|
-  var sorted-actual-items = [(
-    all |
-    order &key=$to-string~
-  )]
-
-  var sorted-expected-items = [(
-    all $expected-items |
-    order &key=$to-string~
-  )]
-
-  put $sorted-actual-items |
-    should-be $sorted-expected-items
-}
-
-
 >> 'In command module' {
   >> 'capturing a block' {
     var scenarios = [
@@ -148,7 +132,7 @@ fn should-emit-in-any-order { |expected-items|
           )
 
           all $capture-result[data] |
-            should-emit-in-any-order $scenario[expected-data]
+            should-emit &any-order $scenario[expected-data]
 
           put $capture-result[exception] |
             should-be $nil
@@ -160,7 +144,7 @@ fn should-emit-in-any-order { |expected-items|
           )
 
           all $capture-result[data] |
-            should-emit-in-any-order $scenario[expected-data]
+            should-emit &any-order $scenario[expected-data]
 
           put $capture-result[exception] |
             exception:get-fail-content |
@@ -190,7 +174,7 @@ fn should-emit-in-any-order { |expected-items|
         )
 
         all $capture-result[data] |
-          should-emit-in-any-order [
+          should-emit &any-order [
             STDOUT
             '[90 92 95 98]'
             STDERR
@@ -209,7 +193,7 @@ fn should-emit-in-any-order { |expected-items|
         )
 
         all $capture-result[data] |
-          should-emit-in-any-order [
+          should-emit &any-order [
             STDOUT
             '[90 92 95 98]'
             STDERR
@@ -259,8 +243,10 @@ fn should-emit-in-any-order { |expected-items|
     >> 'if the command is an alias' {
       var test-alias = myTestAlias
 
-      fs:with-path-sandbox ~/.bashrc {
-        echo 'alias '$test-alias'=''ls -l''' >> ~/.bashrc
+      var bashrc-path = ~/.bashrc
+
+      fs:with-path-sandbox $bashrc-path {
+        echo 'alias '$test-alias'=''ls -l''' >> $bashrc-path
 
         command:exists-in-bash $test-alias |
           should-be $true

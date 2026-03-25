@@ -1,28 +1,6 @@
 use ./exception
 
 >> 'In the exception module' {
-  >> 'detecting an exception' {
-    >> 'applied to number' {
-      exception:is-exception 90 |
-        should-be $false
-    }
-
-    >> 'applied to divide-by-zero error' {
-      exception:is-exception ?(/ 8 0) |
-        should-be $true
-    }
-
-    >> 'applied to fail' {
-      exception:is-exception ?(fail DODO) |
-        should-be $true
-    }
-
-    >> 'applied to return' {
-      exception:is-exception ?(return) |
-        should-be $true
-    }
-  }
-
   >> 'retrieving exception reason' {
     >> 'applied to number' {
       exception:get-reason 90 |

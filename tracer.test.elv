@@ -31,7 +31,7 @@ fn run-tests-for-tracer { |tracer stream|
     var value = 90
 
     assert-tracer-data {
-      $tracer[printf] &newline $base': %s' $value
+      $tracer[printf] &newline '%s: %s' $base $value
     } [
       $base': '$value
     ]
@@ -112,18 +112,19 @@ fn run-tests-for-tracer { |tracer stream|
       &writer=$writer:err
     ]
   ]
+
   all $scenarios | each { |scenario|
     var stream = $scenario[stream]
     var writer = $scenario[writer]
 
     >> 'when writing to '$stream {
-      >> 'when based on a variable' {
+      >> 'when enabled state is based on a variable' {
         var tracer = (tracer:create $true &writer=$writer)
 
         run-tests-for-tracer $tracer $stream
       }
 
-      >> 'when based on a block' {
+      >> 'when enabled state is based on a block' {
         var tracer = (tracer:create { put $true } &writer=$writer)
 
         run-tests-for-tracer $tracer $stream
@@ -145,8 +146,7 @@ fn run-tests-for-tracer { |tracer stream|
       }
 
       from-lines < $temp-path |
-        put [(all)] |
-        should-be [
+        should-emit [
           Dodo
          '🧭 Basic test:'
          'Hello, world'

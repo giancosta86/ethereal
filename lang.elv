@@ -3,6 +3,9 @@ pragma unknown-command = disallow
 #
 # If `condition` is trueish, `when-true` is emitted - emitting `when-false` otherwise.
 #
+# Please, note: **both arguments** are evaluated when calling the function!
+# Should you need lazy evaluation, use `if` instead!
+#
 fn ternary { |condition when-true when-false|
   if $condition {
     put $when-true
@@ -12,8 +15,70 @@ fn ternary { |condition when-true when-false|
 }
 
 #
-# Takes in input - via pipe or as the first argument - a `value`, then compares it
-# with the value-block map of `cases` passed as the last argument:
+# This function is designed to be called from within a function whose argument list ends with @arguments;
+# it reads a number of inputs - from pipe and/or arguments - according to the following logic:
+#
+# 1. Detect the number of arguments in `argument-list`, ensuring it is no less than &min-args.
+#
+# 2. If there are no arguments - or if the number of arguments is less then &min-values - read all the values in the pipe.
+#
+# 3. Create a list of values, by combining in this order:
+#
+#    * the data read from the pipe at the previous step - or an empty list if the pipe was not accessed
+#
+#    * the arguments
+#
+# 4. Ensure that the overall number of values is in the [&min-values; &max-values] range.
+#
+# In the end, the resulting values are emitted one by one.
+#
+# To use this function, you'll need to pass at least the `$arguments` list.
+#
+fn get-mixed-inputs { |&min-values=0 &max-values=$nil &min-args=0 argument-list|
+  if $max-values {
+    if (> $min-values $max-values) {
+      fail 'It must be &min-values <= &max-values'
+    }
+
+    if (> $min-args $max-values) {
+      fail 'It must be &min-args <= &max-values'
+    }
+  }
+
+  var arg-count = (count $argument-list)
+
+  if (< $arg-count $min-args) {
+    fail 'At least '$min-args' argument(s) must be passed, not just '$arg-count
+  }
+
+  var piped = (
+    if (
+      or (== $arg-count 0) (< $arg-count $min-values)
+    ) {
+      put [(all)]
+    } else {
+      put []
+    }
+  )
+
+  var values = (conj $piped $@argument-list)
+
+  var value-count = (count $values)
+
+  if (< $value-count $min-values) {
+    fail 'At least '$min-values' value(s) must be passed via pipe or arguments - not just '$value-count
+  }
+
+  if (and $max-values (> $value-count $max-values)) {
+    fail 'At most '$max-values' value(s) can be passed via pipe or arguments - not '$value-count
+  }
+
+  all $values
+}
+
+#
+# Takes in input - via pipe or as arguments - a `value` and value-block map of `cases`, then compares `value`
+# with the keys in the map:
 #
 # * If `value` is a key in the `cases` map, the associated *no-arg* block is invoked
 #
@@ -28,19 +93,7 @@ fn ternary { |condition when-true when-false|
 # to the `if` construct.
 #
 fn switch { |&default=$nil @arguments|
-  var value
-  var cases
-
-  var argument-count = (count $arguments)
-
-  if (== $argument-count 1) {
-    set value = (one)
-    set cases = $arguments[0]
-  } elif (== $argument-count 2) {
-    set value cases = (all $arguments)
-  } else {
-    fail 'arity error: expected 1 or 2 arguments'
-  }
+  var value cases = (get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
 
   if (has-key $cases $value) {
     $cases[$value]
@@ -64,15 +117,7 @@ fn switch { |&default=$nil @arguments|
 # To use this function, simply call it passing the `$arguments` list.
 #
 fn get-single-input { |argument-list|
-  var arg-count = (count $argument-list)
-
-  if (== $arg-count 0) {
-    one
-  } elif (== $arg-count 1) {
-    put $argument-list[0]
-  } else {
-    fail 'arity mismatch: at most 1 argument expected!'
-  }
+  get-mixed-inputs &min-values=1 &max-values=1 $argument-list
 }
 
 #
@@ -86,11 +131,7 @@ fn get-single-input { |argument-list|
 # To use this function, simply call it passing the `$arguments` list.
 #
 fn get-inputs { |argument-list|
-  if (== (count $argument-list) 0) {
-    all
-  } else {
-    all $argument-list
-  }
+  get-mixed-inputs $argument-list
 }
 
 #
@@ -120,47 +161,51 @@ fn ensure-put { |&default=$nil|
   }
 }
 
-var -flat-num-transforms-by-kind
-
 #
 # Emits the given input value as it is, except a few cases:
 #
 # * numbers are expressed as the more compact «X» string.
 #
-# * lists are recursively processed so that every numeric value if flattened.
+# * lists are recursively processed so that every numeric value is flattened.
 #
 # * maps are recursively processed so that numeric keys and values are flattened.
 #
-# In other words, this function ensures that numbers are always expressed in a consistent, minimalist way.
+# In other words, this function ensures that numbers are always expressed in a consistent, minimalist string way.
 #
-fn flat-num { |@arguments|
-  var value = (get-single-input $arguments)
+var flat-num~ = (
+  var transforms-by-kind
 
-  var kind = (kind-of $value)
+  var actual-flat-num~ = { |@arguments|
+    var value = (get-single-input $arguments)
 
-  if (has-key $-flat-num-transforms-by-kind $kind) {
-    $-flat-num-transforms-by-kind[$kind] $value
-  } else {
-    put $value
-  }
-}
+    var kind = (kind-of $value)
 
-set -flat-num-transforms-by-kind = [
-  &number={ |value|
-    to-string $value
+    if (has-key $transforms-by-kind $kind) {
+      $transforms-by-kind[$kind] $value
+    } else {
+      put $value
+    }
   }
-  &list={ |list|
-    all $list |
-      each $flat-num~ |
-      put [(all)]
-  }
-  &map={ |map|
-    keys $map | each { |key|
-      put [(flat-num $key) (flat-num $map[$key])]
-    } |
-      make-map
-  }
-]
+
+  set transforms-by-kind = [
+    &number={ |value|
+      to-string $value
+    }
+    &list={ |list|
+      all $list |
+        each $actual-flat-num~ |
+        put [(all)]
+    }
+    &map={ |map|
+      keys $map | each { |key|
+        put [(actual-flat-num $key) (actual-flat-num $map[$key])]
+      } |
+        make-map
+    }
+  ]
+
+  put $actual-flat-num~
+)
 
 #
 # If the input value is a block, emits the (single) value emitted by such function;
@@ -178,8 +223,8 @@ fn resolve { |@arguments|
 }
 
 #
-# If the given `source` sequence has the given `key`, emits its value;
-# otherwise, emits the requested `default` (by default, $nil).
+# If the given `source` object has the given `key`, emits its value;
+# otherwise, emits the requested `default` (i.e., $nil, if omitted).
 #
 fn get-value { |&default=$nil @arguments|
   var source key = (get-inputs $arguments)
@@ -225,6 +270,15 @@ fn is-substantial { |@arguments|
 fn negate { |base-function|
   put { |@arguments|
     $base-function $@arguments |
-      not (all)
+      not (one)
   }
+}
+
+#
+# Emits $true if the input value is an exception, $false otherwise.
+#
+fn is-exception { |@arguments|
+  get-single-input $arguments |
+    kind-of (all) |
+    eq (all) exception
 }

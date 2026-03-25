@@ -3,27 +3,27 @@ use ./map
 >> 'In map module' {
   >> 'getting the entries of a map' {
     >> 'when the map is empty' {
-      >> 'should output nothing' {
-        map:entries [&] |
-          put [(all)] |
-          should-be []
-      }
+      map:entries [&] |
+        should-emit []
     }
 
     >> 'when the map has entries' {
-      >> 'should output each of them' {
-        map:entries [&a=90 &b=92 &c=95] |
-          put [(all)] |
-          should-be [[a 90] [b 92] [c 95]]
-      }
+      map:entries [&a=90 &b=92 &c=95] |
+        order &key=(seq:make-getter 0) |
+        should-emit [
+          [a 90]
+          [b 92]
+          [c 95]
+        ]
     }
   }
 
-  >> 'iterating over the entries with a binary consumer' {
+  >> 'iterating over the entries' {
     >> 'when passing the map as argument' {
       map:iterate [&a=90 &b=92] { |key value|
         put [$key $value]
       } |
+        order &key=(seq:make-getter 0) |
         should-emit [
           [a 90]
           [b 92]
@@ -35,6 +35,7 @@ use ./map
         map:iterate { |key value|
           put [$key $value]
         } |
+        order &key=(seq:make-getter 0) |
         should-emit [
           [a 90]
           [b 92]
@@ -44,43 +45,31 @@ use ./map
 
   >> 'getting the values of a map' {
     >> 'when the map is empty' {
-      >> 'should return an empty list' {
-        map:values [&] |
-          put [(all)] |
-          should-be []
-      }
+      map:values [&] |
+        should-emit []
     }
 
     >> 'when the map has entries' {
-      >> 'should return the values' {
-        map:values [&X90=B &X92=T &X95=A &X98=S] |
-          order |
-          put [(all)] |
-          should-be [A B S T]
-      }
+      map:values [&X90=B &X92=T &X95=A &X98=S] |
+        order |
+        should-emit [A B S T]
     }
   }
 
   >> 'merging maps' {
     >> 'when the maps are empty' {
-      >> 'should return an empty map' {
-        map:merge [&] [&] [&] |
-          should-be [&]
-      }
+      map:merge [&] [&] [&] |
+        should-be [&]
     }
 
     >> 'when the maps have no overlaps' {
-      >> 'should return a map containing all the keys' {
-        map:merge [&a=90 &b=92] [&c=95 &d=98] [&e=99] |
-          should-be [&a=90 &b=92 &c=95 &d=98 &e=99]
-      }
+      map:merge [&a=90 &b=92] [&c=95 &d=98] [&e=99] |
+        should-be [&a=90 &b=92 &c=95 &d=98 &e=99]
     }
 
     >> 'when the maps have overlapping keys' {
-      >> 'should have keys from the latest map' {
-        map:merge [&a=90 &b=92] [&c=95 &a=89] [&a=3 &c=32] |
-          should-be [&a=3 &b=92 &c=32]
-      }
+      map:merge [&a=90 &b=92] [&c=95 &a=89] [&a=3 &c=32] |
+        should-be [&a=3 &b=92 &c=32]
     }
 
     >> 'when passing the maps via pipe' {
@@ -92,19 +81,18 @@ use ./map
 
   >> 'transforming a map' {
     >> 'with empty map' {
-      map:transform [&] { |key value|
-        fail 'This should not be called'
-      } |
+      map:transform [&] { |key value| fail 'THIS SHOULD NOT RUN' } |
         should-be [&]
     }
 
     >> 'with non-empty map' {
-      map:transform [
+      put [
         &Alpha=90
         &Beta=18
-      ] { |key value|
-        put [$key''$key (+ $value 3)]
-      } |
+      ] |
+        map:transform { |key value|
+          put [$key''$key (+ $value 3)]
+        } |
         should-be [
           &AlphaAlpha=(num 93)
           &BetaBeta=(num 21)
@@ -160,7 +148,10 @@ use ./map
     map:keep-if $source { |key value|
       put (and (> $value 90) (not-eq $key c))
     } |
-      should-be [&b=92 &d=300]
+      should-be [
+        &b=92
+        &d=300
+      ]
   }
 
   >> 'making multi-value map' {

@@ -22,13 +22,15 @@ fn relative-to { |dir-path @arguments|
     str:trim-suffix $dir-path $path:separator
   )
 
+  var prefix-to-trim = $simplified-dir-path''$path:separator
+
   lang:get-inputs $arguments | each { |path|
-    str:trim-prefix $path $simplified-dir-path''$path:separator
+    str:trim-prefix $path $prefix-to-trim
   }
 }
 
 #
-# Takes a path as input and emits the core and the ext
+# Takes a path as input and emits its core part and the ext
 # as subsequent values, where `ext` can be either a dotted extension or the empty string.
 #
 # In case of multiple extensions, only the last one is returned -
@@ -39,19 +41,24 @@ fn split-ext { |@arguments|
 
   var ext = (path:ext $source-path)
 
-  put (str:trim-suffix $source-path $ext) $ext
+  var core = (str:trim-suffix $source-path $ext)
+
+  put $core $ext
 }
 
 #
-# Given a `source-path` and an `extension` (with or without leading dot) passed as input,
+# Given a `source-path` passed via pipe or first argument,
+# and an `extension` (with or without leading dot) passed as last argument,
 # emits a new path where the given `extension` replaces the extension in `source-path`.
 #
 fn switch-ext { |@arguments|
-  var source-path new-ext = (lang:get-inputs $arguments)
+  var source-path new-ext = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
 
   var core ext = (split-ext $source-path)
 
-  put $core'.'(str:trim-prefix $new-ext .)
+  var simplified-new-ext = (str:trim-prefix $new-ext .)
+
+  put $core'.'$simplified-new-ext
 }
 
 #
@@ -69,7 +76,7 @@ fn ensure-not-in-dir { |@arguments|
 }
 
 #
-# Returns the path of a created temp file - but without an associated open file structure.
+# Returns the path of a newly-created temp file - but without an associated open file structure.
 #
 fn temp-file-path { |&dir='' &pattern=$nil|
   var temp-file = (
@@ -78,47 +85,6 @@ fn temp-file-path { |&dir='' &pattern=$nil|
   file:close $temp-file
 
   put $temp-file[name]
-}
-
-#
-# Given a `path`, passed as argument, and its `content` - passed as argument or via pipe -
-# creates all the intermediate directories so as to be able to save `content` into `path`.
-#
-fn save-all { |path @arguments|
-  var content = (lang:get-single-input $arguments)
-
-  var parent = (path:dir $path)
-  os:mkdir-all $parent
-
-  print $content > $path
-}
-
-#
-# If the given path exists, it must be a file; otherwise, it will be created.
-#
-fn ensure-file { |@arguments|
-  var path = (lang:get-single-input $arguments)
-
-  if (os:exists $path) {
-    if (not (os:is-regular $path)) {
-      fail 'Path "'$path'" exists, but it is not a file!'
-    }
-  } else {
-    save-all $path ''
-  }
-}
-
-#
-# Given a `directory` passed as input,
-# removes all the files and subdirectories within it,
-# leaving just the empty directory itself.
-#
-fn clean-dir { |@arguments|
-  var dir = (lang:get-single-input $arguments)
-
-  put $dir/*[nomatch-ok] | each { |entry|
-    os:remove-all $entry
-  }
 }
 
 #
@@ -151,6 +117,52 @@ fn with-temp-dir { |&dir='' &pattern=$nil @arguments|
   }
 
   $consumer $temp-path
+}
+
+#
+# Given a `path`, passed as argument, and its `content` - passed as argument or via pipe -
+# creates all the intermediate directories so as to be able to save `content` into `path`.
+#
+fn save-anywhere { |path @arguments|
+  var content = (lang:get-single-input $arguments)
+
+  var parent = (path:dir $path)
+  os:mkdir-all $parent
+
+  print $content > $path
+}
+
+fn save-all { |path @arguments|
+  deprecate 'Use `save-anywhere` instead'
+
+  save-anywhere $path $@arguments
+}
+
+#
+# If the given path exists, it must be a file; otherwise, it will be created.
+#
+fn ensure-file { |@arguments|
+  var path = (lang:get-single-input $arguments)
+
+  if (os:exists $path) {
+    if (not (os:is-regular $path)) {
+      fail 'Path "'$path'" exists, but it is not a file!'
+    }
+  } else {
+    save-anywhere $path ''
+  }
+}
+
+#
+# Given a `directory` passed as input, removes all the files and subdirectories within it,
+# leaving just the empty directory itself.
+#
+fn clean-dir { |@arguments|
+  var dir = (lang:get-single-input $arguments)
+
+  put $dir/*[nomatch-ok] | each { |entry|
+    os:remove-all $entry
+  }
 }
 
 #
@@ -191,35 +203,52 @@ fn mkcd { |&perm=0o755 @arguments|
 }
 
 #
+# Emits $true if the path passed as input is the `/` file system root,
+# even if it's a relative path; otherwise, $false is emitted.
+#
+fn is-root { |@arguments|
+  var path = (lang:get-single-input $arguments)
+
+  var abs-path = (path:abs $path)
+
+  eq $abs-path /
+}
+
+#
 # Given as input a (potentially non-existent) file/directory path and a block,
 # ensures that, after the execution of the block, the entire path is restored to its original state.
 #
-# In particular, if the path did not exist at the beginning of the block,
-# it will be deleted thereafter - including an entire directory tree.
+# In particular:
+#
+# * if the path did not exist, it will be deleted thereafter - including a potential entire directory tree - after ensuring that `$pwd` is not below it.
+#
+# * if the path existed, its entire content will be restored - be it the data of a single file or even the entire layout and content of a directory tree
 #
 # Please, note: the command also accepts a relative path, such as '.': in the case of a directory,
-# the `$pwd` current directory will not be affected by the sandbox restore operations.
+# `$pwd` will remain unaltered after the cleanup activities.
+#
+# Please, note: it is impossible to apply the function to the `/` root path itself.
 #
 fn with-path-sandbox { |@arguments|
   var path block = (lang:get-inputs $arguments)
 
+  if (is-root $path) {
+    fail 'Cannot apply a sandbox to the file system root!'
+  }
+
+  var abs-path = (path:abs $path)
+
   var backup-path = (
-    if (os:exists $path) {
+    if (os:exists $abs-path) {
       temp-file-path
     } else {
       put $nil
     }
   )
 
-  var abs-path = (path:abs $path)
-
-  if (eq $abs-path /) {
-    fail 'Cannot apply a sandbox to the file system root!'
-  }
-
   if $backup-path {
     os:remove-all $backup-path
-    copy $path $backup-path
+    copy $abs-path $backup-path
   }
 
   try {
@@ -228,7 +257,7 @@ fn with-path-sandbox { |@arguments|
     var previous-dir = $pwd
 
     try {
-      ensure-not-in-dir $path
+      ensure-not-in-dir $abs-path
 
       os:remove-all $abs-path
 
@@ -248,7 +277,7 @@ fn with-path-sandbox { |@arguments|
 # emits $true if they are equal in binary terms, according to the `cmp` command.
 #
 fn equal-files { |@arguments|
-  var left-path right-path = (lang:get-inputs $arguments)
+  var left-path right-path = (lang:get-mixed-inputs &min-values=2 &max-values=2 $arguments)
 
   put ?(-cmp --silent $left-path $right-path) |
     eq (all) $ok
@@ -288,12 +317,13 @@ fn find-duplicates { |@arguments|
 # If the `include-tests` flag is enabled, `.test.elv` test scripts for Velvet are listed as well.
 #
 fn find-scripts { |&include-tests=$false|
-  if $include-tests {
-    put **[nomatch-ok].elv
-  } else {
-    put **[nomatch-ok].elv |
+  put **[nomatch-ok].elv | {
+    if $include-tests {
+      all
+    } else {
       keep-if { |script-path|
         not (str:has-suffix $script-path '.test.elv')
       }
+    }
   }
 }

@@ -13,7 +13,7 @@ var empty = [
 ]
 
 #
-# Take items as input - from either variable argument list or pipe - and
+# Takes items as input - from either varargs or pipe - and
 # returns a set containing such items.
 #
 fn of { |@arguments|
@@ -30,26 +30,10 @@ fn of { |@arguments|
 }
 
 #
-# Iterates over the given set - which can be passed via pipe or
-# as the first argument - and, for each of its items, calls the
-# consumer - a function passed as the last argument and
-# taking the item as its only argument.
+# Iterates over the given set with a function taking the item as its only argument.
 #
 fn iterate { |@arguments|
-  var argument-count = (count $arguments)
-
-  var source
-  var consumer
-
-  if (== $argument-count 1) {
-    set source = (one)
-    set consumer = $arguments[0]
-  } elif (== $argument-count 2) {
-    set source = $arguments[0]
-    set consumer = $arguments[1]
-  } else {
-    fail 'arity mismatch: <consumer> or <set><consumer> expected'
-  }
+  var source consumer = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
 
   keys $source[-set-items] | each $consumer
 }
@@ -228,7 +212,7 @@ fn difference { |@arguments|
 # Takes 2 sets as input and emits their symmetric difference.
 #
 fn symmetric-difference { |@arguments|
-  var left right = (lang:get-inputs $arguments)
+  var left right = (lang:get-mixed-inputs &min-values=2 &max-values=2 $arguments)
 
   difference (union $left $right) (intersection $left $right)
 }

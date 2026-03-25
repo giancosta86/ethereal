@@ -21,7 +21,7 @@ fn custom-binary-add { |left right|
       }
 
       >> 'via pipe' {
-        all [3] |
+        put 3 |
           custom-add |
           should-be 3
       }

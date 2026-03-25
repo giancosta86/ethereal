@@ -4,28 +4,232 @@ use ./lang
 >> 'In lang module' {
   >> 'ternary selector' {
     >> 'when the condition is true' {
-      >> 'should return the left operand' {
-        lang:ternary $true 92 95 |
-          should-be 92
-      }
+      lang:ternary $true 92 95 |
+        should-be 92
     }
 
     >> 'when the condition is false' {
-      >> 'should return the right operand' {
-        lang:ternary $false 92 95 |
-          should-be 95
-      }
+      lang:ternary $false 92 95 |
+        should-be 95
+    }
+
+    >> 'should evaluate eagerly' {
+      throws {
+        lang:ternary $true [][90]
+      } |
+        to-string (all) |
+        should-contain 'out of range'
     }
 
     >> 'when passing code blocks' {
-      >> 'should return a code block without executing it' {
-        var block = (lang:ternary $true { put Left } { put Right })
+      var block = (lang:ternary $true { put Left } { put Right })
 
-        lang:is-function $block |
-          should-be $true
+      lang:is-function $block |
+        should-be $true
 
-        $block |
-          should-be Left
+      $block |
+        should-be Left
+    }
+  }
+
+  >> 'getting mixed input' {
+    var test-piped = [RO SIGMA]
+    var test-args = [ALPHA BETA GAMMA]
+    var test-mixed = [$@test-piped $@test-args]
+
+    >> 'when passing no options' {
+      >> 'when there are arguments' {
+        all $test-piped |
+          lang:get-mixed-inputs $test-args |
+          should-emit $test-args
+      }
+
+      >> 'when there are no arguments' {
+        all $test-piped |
+          lang:get-mixed-inputs [] |
+          should-emit $test-piped
+      }
+    }
+
+    >> 'when requiring just &min-values' {
+      >> 'when passing enough arguments' {
+        all $test-piped |
+          lang:get-mixed-inputs &min-values=2 $test-args |
+          should-emit $test-args
+      }
+
+      >> 'when passing not enough arguments' {
+        >> 'when passing enough complementary values via pipe' {
+          all $test-piped |
+            lang:get-mixed-inputs &min-values=4 $test-args |
+            should-emit $test-mixed
+        }
+
+        >> 'when passing not enough complementary values via pipe' {
+          fails {
+            all $test-piped |
+              lang:get-mixed-inputs &min-values=6 $test-args
+          } |
+            should-be 'At least 6 value(s) must be passed via pipe or arguments - not just 5'
+        }
+      }
+    }
+
+    >> 'when requiring just &max-values' {
+      >> 'when passing no values' {
+        all [] |
+          lang:get-mixed-inputs &max-values=90 [] |
+          should-emit []
+      }
+
+      >> 'when passing an acceptable number of arguments' {
+        all $test-piped |
+          lang:get-mixed-inputs &max-values=90 $test-args |
+          should-emit $test-args
+      }
+
+      >> 'when passing too many arguments' {
+        fails {
+          all $test-piped |
+            lang:get-mixed-inputs &max-values=2 $test-args
+        } |
+          should-be 'At most 2 value(s) can be passed via pipe or arguments - not 3'
+      }
+
+      >> 'when passing too many values via pipe only' {
+        fails {
+          all $test-piped |
+            lang:get-mixed-inputs &max-values=1 []
+        } |
+          should-be 'At most 1 value(s) can be passed via pipe or arguments - not 2'
+      }
+    }
+
+    >> 'when passing both &min-values and &max-values' {
+      >> 'when passing &min-values > &max-values' {
+        fails {
+          all [] |
+            lang:get-mixed-inputs &min-values=90 &max-values=2 []
+        } |
+          should-be 'It must be &min-values <= &max-values'
+      }
+
+      >> 'when &min-values and &max-values are the same' {
+        >> 'when passing enough arguments' {
+          all [R S T] |
+            lang:get-mixed-inputs &min-values=3 &max-values=3 [A B C] |
+            should-emit [
+              A
+              B
+              C
+            ]
+        }
+
+        >> 'when passing via pipe only' {
+          all [R S T] |
+            lang:get-mixed-inputs &min-values=3 &max-values=3 [] |
+            should-emit [
+              R
+              S
+              T
+            ]
+        }
+
+        >> 'when passing a mix' {
+          >> 'mainly via args' {
+            all [R] |
+              lang:get-mixed-inputs &min-values=3 &max-values=3 [A B] |
+              should-emit [
+                R
+                A
+                B
+              ]
+          }
+
+          >> 'mainly via pipe' {
+            all [R S] |
+              lang:get-mixed-inputs &min-values=3 &max-values=3 [A] |
+              should-emit [
+                R
+                S
+                A
+              ]
+          }
+
+          >> 'when passing too many mixed values' {
+            fails {
+              all $test-piped |
+                lang:get-mixed-inputs &min-values=4 &max-values=4 $test-args
+            } |
+              should-be 'At most 4 value(s) can be passed via pipe or arguments - not 5'
+          }
+        }
+      }
+    }
+
+    >> 'when passing just &min-args' {
+      >> 'when passing enough arguments' {
+        all $test-piped |
+          lang:get-mixed-inputs &min-args=2 $test-args |
+          should-emit $test-args
+      }
+
+      >> 'when passing not enough arguments' {
+        fails {
+          all $test-piped |
+            lang:get-mixed-inputs &min-args=4 $test-args
+        } |
+          should-be 'At least 4 argument(s) must be passed, not just 3'
+      }
+    }
+
+    >> 'when passing &min-values, &max-values, &min-args at once' {
+      >> 'when &min-args > &max-values' {
+        fails {
+          all [] |
+            lang:get-mixed-inputs &min-values=1 &max-values=3 &min-args=4 []
+        } |
+          should-be 'It must be &min-args <= &max-values'
+      }
+
+      >> 'when there are not enough arguments and also not enough values' {
+        fails {
+          all $test-piped |
+            lang:get-mixed-inputs &min-values=7 &max-values=9 &min-args=4 $test-args
+        } |
+          should-be 'At least 4 argument(s) must be passed, not just 3'
+      }
+
+      >> 'when there are enough values, but not enough arguments' {
+        fails {
+          all $test-piped |
+            lang:get-mixed-inputs &min-values=2 &max-values=9 &min-args=4 $test-args
+        } |
+          should-be 'At least 4 argument(s) must be passed, not just 3'
+      }
+
+      >> 'when there are enough arguments, but not enough values' {
+        fails {
+          all $test-piped |
+            lang:get-mixed-inputs &min-values=7 &max-values=9 &min-args=2 $test-args
+        } |
+          should-be 'At least 7 value(s) must be passed via pipe or arguments - not just 5'
+      }
+
+      >> 'when there are enough values and enough arguments' {
+        >> 'when there are too many values' {
+          fails {
+            all $test-piped |
+              lang:get-mixed-inputs &min-values=4 &max-values=4 &min-args=1 $test-args
+          } |
+            should-be 'At most 4 value(s) can be passed via pipe or arguments - not 5'
+          }
+
+        >> 'when the values satisfy all the requirements' {
+          all $test-piped |
+            lang:get-mixed-inputs &min-values=4 &max-values=5 &min-args=1 $test-args |
+            should-emit $test-mixed
+        }
       }
     }
   }
@@ -89,95 +293,82 @@ use ./lang
         should-be Alpha
     }
 
-    >> 'when multiple args are passed' {
-      >> 'should fail' {
-        fails {
-          lang:get-single-input [Alpha Beta]
-        } |
-          str:contains (all) 'arity mismatch'
-      }
+    >> 'when multiple arguments are passed' {
+      fails {
+        lang:get-single-input [Alpha Beta]
+      } |
+        should-be 'At most 1 value(s) can be passed via pipe or arguments - not 2'
     }
 
     >> 'when multiple values are passed via pipe' {
-      >> 'should fail' {
-        throws {
-          put Alpha Beta |
-            lang:get-single-input []
-        } |
-          to-string (all) |
-          str:contains (all) 'arity mismatch' |
-          should-be $true
-      }
+      fails {
+        put Alpha Beta |
+          lang:get-single-input []
+      } |
+        should-be 'At most 1 value(s) can be passed via pipe or arguments - not 2'
     }
 
     >> 'when both argument list and pipe values are passed' {
-      >> 'pipe values are ignored' {
-        put Alpha |
-          lang:get-inputs [Ro] |
-          put [(all)] |
-          should-be [Ro]
-      }
+      put Alpha |
+        lang:get-inputs [Ro] |
+        should-be Ro
     }
   }
 
   >> 'getting multiple inputs' {
     >> 'when multiple arguments in argument list are passed' {
       lang:get-inputs [Alpha Beta] |
-        put [(all)] |
-        should-be [Alpha Beta]
+        should-emit [
+          Alpha
+          Beta
+        ]
     }
 
     >> 'when multiple values are passed via pipe' {
       put Gamma Delta |
         lang:get-inputs [] |
-        put [(all)] |
-        should-be [Gamma Delta]
+        should-emit [
+          Gamma
+          Delta
+        ]
     }
 
     >> 'when both argument list and pipe values are passed' {
-      >> 'pipe values are ignored' {
-        put Alpha Beta |
-          lang:get-inputs [Ro Sigma] |
-          put [(all)] |
-          should-be [Ro Sigma]
-      }
+      put Alpha Beta |
+        lang:get-inputs [Ro Sigma] |
+        should-emit [
+          Ro
+          Sigma
+        ]
     }
   }
 
   >> 'function detector' {
     >> 'when passing a non-function value' {
-      >> 'should output $false' {
-        lang:is-function 98 |
-          should-be $false
-      }
+      lang:is-function 98 |
+        should-be $false
     }
 
     >> 'when passing a function' {
-      >> 'should output $true' {
-        fn my-function { echo Hello }
+      fn my-function { echo Hello }
 
-        lang:is-function $my-function~ |
-          should-be $true
-      }
+      lang:is-function $my-function~ |
+        should-be $true
     }
 
     >> 'when passing a code block' {
-      >> 'should output $true' {
-        var code = { echo Hello }
+      var code = { echo Hello }
 
-        lang:is-function $code |
-          should-be $true
-      }
+      lang:is-function $code |
+        should-be $true
     }
   }
 
   >> 'ensuring that a put is performed' {
     >> 'when a put is performed' {
-      >> 'should just do nothing' {
-        put Hello |
-          lang:ensure-put &default=World |
-          should-be Hello
-      }
+      put Hello |
+        lang:ensure-put &default=World |
+        should-be Hello
     }
 
     >> 'when no value is received via pipe' {
@@ -197,10 +388,8 @@ use ./lang
 
   >> 'flattening numbers' {
     >> 'for string' {
-      var value = 'This is a string!'
-
-      lang:flat-num $value |
-        should-be &strict $value
+      lang:flat-num X |
+        should-be &strict X
     }
 
     >> 'for number' {
@@ -322,33 +511,26 @@ use ./lang
           should-be 90
       } |
         to-string (all) |
-        str:contains (all) 'arity mismatch' |
-        should-be $true
+        should-contain 'arity mismatch'
     }
   }
 
   >> 'getting a value' {
     >> 'applied to a list' {
       >> 'when the index exists' {
-        >> 'should output the related value' {
-          lang:get-value [A B C] 2 |
-            should-be C
-        }
+        lang:get-value [A B C] 2 |
+          should-be C
       }
 
       >> 'when the index does not exist' {
         >> 'when a default value is passed' {
-          >> 'should output such default value' {
-            lang:get-value &default=Dodo [A B C] 90 |
-              should-be Dodo
-          }
+          lang:get-value &default=Dodo [A B C] 90 |
+            should-be Dodo
         }
 
         >> 'when no default value is passed' {
-          >> 'should output $nil' {
-            lang:get-value [A B C] 90 |
-              should-be $nil
-          }
+          lang:get-value [A B C] 90 |
+            should-be $nil
         }
       }
     }
@@ -357,26 +539,20 @@ use ./lang
       var map = [&a=98 &b=30]
 
       >> 'when the key exists' {
-        >> 'should return the related value' {
-          put $map b |
-            lang:get-value |
-            should-be 30
-        }
+        put $map b |
+          lang:get-value |
+          should-be 30
       }
 
       >> 'when the key does not exist' {
         >> 'when the default value is not passed' {
-          >> 'should return $nil' {
-            lang:get-value $map INEXISTING |
-              should-be $nil
-          }
+          lang:get-value $map INEXISTING |
+            should-be $nil
         }
 
         >> 'when the default value is passed' {
-          >> 'should return the default value' {
-            lang:get-value $map INEXISTING &default=4321 |
-              should-be 4321
-          }
+          lang:get-value $map INEXISTING &default=4321 |
+            should-be 4321
         }
       }
     }
@@ -495,6 +671,28 @@ use ./lang
           $true
           $false
         ]
+    }
+  }
+
+  >> 'detecting an exception' {
+    >> 'applied to number' {
+      lang:is-exception 90 |
+        should-be $false
+    }
+
+    >> 'applied to divide-by-zero error' {
+      lang:is-exception ?(/ 8 0) |
+        should-be $true
+    }
+
+    >> 'applied to fail' {
+      lang:is-exception ?(fail DODO) |
+        should-be $true
+    }
+
+    >> 'applied to return' {
+      lang:is-exception ?(return) |
+        should-be $true
     }
   }
 }

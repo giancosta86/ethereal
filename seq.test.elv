@@ -5,49 +5,37 @@ use ./seq
   >> 'testing for emptiness' {
     >> 'when the source is a list' {
       >> 'when the list is empty' {
-        >> 'should output $true' {
-          seq:is-empty [] |
-            should-be $true
-        }
+        seq:is-empty [] |
+          should-be $true
       }
 
       >> 'when the list is non-empty' {
-        >> 'should output $false' {
-          seq:is-empty [A B C] |
-            should-be $false
-        }
+        seq:is-empty [A B C] |
+          should-be $false
       }
     }
 
     >> 'when the source is a string' {
       >> 'when the string is empty' {
-        >> 'should output $true' {
-          seq:is-empty '' |
-            should-be $true
-        }
+        seq:is-empty '' |
+          should-be $true
       }
 
       >> 'when the string is non-empty' {
-        >> 'should output $false' {
-          seq:is-empty Hello |
-            should-be $false
-        }
+        seq:is-empty Hello |
+          should-be $false
       }
     }
 
     >> 'when the source is a map' {
       >> 'when the map is empty' {
-        >> 'should output $true' {
-          seq:is-empty [&] |
-            should-be $true
-        }
+        seq:is-empty [&] |
+          should-be $true
       }
 
       >> 'when the map is non-empty' {
-        >> 'should output $false' {
-          seq:is-empty [&A=90] |
-            should-be $false
-        }
+        seq:is-empty [&A=90] |
+          should-be $false
       }
     }
   }
@@ -55,70 +43,52 @@ use ./seq
   >> 'testing for non-emptiness' {
     >> 'when the source is a list' {
       >> 'when the list is empty' {
-        >> 'should output $false' {
-          seq:is-non-empty [] |
-            should-be $false
-        }
+        seq:is-non-empty [] |
+          should-be $false
       }
 
       >> 'when the list is non-empty' {
-        >> 'should output $true' {
-          seq:is-non-empty [A B C] |
-            should-be $true
-        }
+        seq:is-non-empty [A B C] |
+          should-be $true
       }
     }
 
     >> 'when the source is a string' {
       >> 'when the string is empty' {
-        >> 'should output $false' {
-          seq:is-non-empty '' |
-            should-be $false
-        }
+        seq:is-non-empty '' |
+          should-be $false
       }
 
       >> 'when the string is non-empty' {
-        >> 'should output $true' {
-          seq:is-non-empty World |
-            should-be $true
-        }
+        seq:is-non-empty World |
+          should-be $true
       }
     }
 
     >> 'when the source is a map' {
       >> 'when the map is empty' {
-        >> 'should output $false' {
-          seq:is-non-empty [&] |
-            should-be $false
-        }
+        seq:is-non-empty [&] |
+          should-be $false
       }
 
       >> 'when the map is non-empty' {
-        >> 'should output $true' {
-          seq:is-non-empty [&A=90] |
-            should-be $true
-        }
+        seq:is-non-empty [&A=90] |
+          should-be $true
       }
     }
   }
 
   >> 'enumerating' {
     >> 'when the sequence is empty' {
-      >> 'when passing the sequence via pipe' {
-        >> 'should emit nothing' {
-          all [] |
-            seq:enumerate |
-            put [(all)] |
-            should-be []
-        }
-      }
+      all [] |
+        seq:enumerate |
+        should-emit []
     }
 
     >> 'when the sequence is non-empty' {
       >> 'when passing the sequence as arguments' {
         seq:enumerate A B C |
-          put [(all)] |
-          should-be [
+          should-emit [
             [0 A]
             [1 B]
             [2 C]
@@ -128,8 +98,7 @@ use ./seq
       >> 'when passing the sequence via pipe' {
         all [A B C] |
           seq:enumerate |
-          put [(all)] |
-          should-be [
+          should-emit [
             [0 A]
             [1 B]
             [2 C]
@@ -138,49 +107,39 @@ use ./seq
     }
 
     >> 'when passing the first index' {
-      >> 'should start from the given index' {
-        all [A B C] |
-          seq:enumerate &start-index=35 |
-          put [(all)] |
-          should-be [
-            [35 A]
-            [36 B]
-            [37 C]
-          ]
-      }
+      all [A B C] |
+        seq:enumerate &start-index=35 |
+        should-emit [
+          [35 A]
+          [36 B]
+          [37 C]
+        ]
     }
   }
 
-  >> 'spreading each item as consumer arguments' {
+  >> 'spreading each sub-sequence as a function arguments' {
     >> 'when the sequence is empty' {
-      >> 'should not call the consumer' {
-        all [] |
-          seq:spread { |a b| fail 'THIS SHOULD NOT RUN' }
-      }
+      all [] |
+        seq:spread { |a b| fail 'THIS SHOULD NOT RUN' }
     }
 
-    >> 'when there are items' {
-      >> 'should call the consumer for each item' {
-        all [[a b 90] [x y 92]] |
-          seq:spread { |left right result|
-            put $left'+'$right'='$result
-          } |
-          put [(all)] |
-          should-be [
-            a+b=90
-            x+y=92
-          ]
-      }
+    >> 'when there are sub-sequences' {
+      all [[a b 90] [x y 92]] |
+        seq:spread { |left right result|
+          put $left'+'$right'='$result
+        } |
+        should-emit [
+          a+b=90
+          x+y=92
+        ]
     }
   }
 
   >> 'reduction' {
     >> 'when the sequence is empty' {
-      >> 'should return the initial value' {
-        all [] |
-          seq:reduce 0 $'+~' |
-          should-be 0
-      }
+      all [] |
+        seq:reduce 0 $'+~' |
+        should-be 0
     }
 
     >> 'when the sequence has one item' {
@@ -201,7 +160,7 @@ use ./seq
         should-be 98
     }
 
-    >> 'when the sequence has three items and a different initial value' {
+    >> 'when the sequence has three items and a non-zero initial value' {
       all [65 25 8] |
         seq:reduce 4000 $'+~' |
         should-be 4098
@@ -210,7 +169,7 @@ use ./seq
     >> 'should support break' {
       all [65 25 8] |
         seq:reduce 0 { |left right|
-          if (==s $right 8) {
+          if (eq $right 8) {
             break
           }
 
@@ -222,7 +181,7 @@ use ./seq
     >> 'should support continue' {
       all [65 25 8 5] |
         seq:reduce 0 { |left right|
-          if (==s $right 8) {
+          if (eq $right 8) {
             continue
           }
 
@@ -454,95 +413,101 @@ use ./seq
 
   >> 'splitting by chunk count' {
     >> 'when chunk count < 0' {
-      >> 'should fail' {
-        fails {
-          all [Alpha Beta] |
-            seq:split-by-chunk-count -1
-        } |
-          str:contains (all) 'The chunk count must be > 0' |
-          should-be $true
-      }
+      fails {
+        all [Alpha Beta] |
+          seq:split-by-chunk-count -1
+      } |
+        should-contain 'The chunk count must be > 0'
     }
 
     >> 'when chunk count is 0' {
-      >> 'should fail' {
-        fails {
-          all [Alpha Beta] |
-            seq:split-by-chunk-count 0
-        } |
-          str:contains (all) 'The chunk count must be > 0!' |
-          should-be $true
-      }
+      fails {
+        all [Alpha Beta] |
+          seq:split-by-chunk-count 0
+      } |
+        should-contain 'The chunk count must be > 0!'
     }
 
     >> 'when performing round-robin allocation' {
       >> 'should support 1 chunk and 4 items' {
         all [Alpha Beta Gamma Delta] |
           seq:split-by-chunk-count 1 |
-          put [(all)] |
-          should-be [[Alpha Beta Gamma Delta]]
+          should-emit [
+            [Alpha Beta Gamma Delta]
+          ]
       }
 
       >> 'with 3 chunks' {
         >> 'should support 0 items' {
           all [] |
             seq:split-by-chunk-count 3 |
-            put [(all)] |
-            should-be []
+            should-emit []
         }
 
         >> 'should support 1 item' {
           all [Alpha] |
             seq:split-by-chunk-count 3 |
-            put [(all)] |
-            should-be [[Alpha]]
+            should-emit [
+              [Alpha]
+            ]
         }
 
         >> 'should support 2 items' {
           all [Alpha Beta] |
             seq:split-by-chunk-count 3 |
-            put [(all)] |
-            should-be [[Alpha] [Beta]]
+            should-emit [
+              [Alpha]
+              [Beta]
+            ]
         }
 
         >> 'should support 3 items' {
           all [Alpha Beta Gamma] |
             seq:split-by-chunk-count 3 |
-            put [(all)] |
-            should-be [[Alpha] [Beta] [Gamma]]
+            should-emit [
+              [Alpha]
+              [Beta]
+              [Gamma]
+            ]
         }
 
         >> 'should support 4 items' {
           all [Alpha Beta Gamma Delta] |
             seq:split-by-chunk-count 3 |
-            put [(all)] |
-            should-be [[Alpha Delta] [Beta] [Gamma]]
+            should-emit [
+              [Alpha Delta]
+              [Beta]
+              [Gamma]
+            ]
         }
 
         >> 'should support 7 items' {
           all [Alpha Beta Gamma Delta Epsilon Zeta Eta] |
             seq:split-by-chunk-count 3 |
-            put [(all)] |
-            should-be [[Alpha Delta Eta] [Beta Epsilon] [Gamma Zeta]]
+            should-emit [
+              [Alpha Delta Eta]
+              [Beta Epsilon]
+              [Gamma Zeta]
+            ]
         }
       }
     }
   }
 
-  >> 'when performing fast allocation' {
-    >> 'should work' {
+  >> 'when performing fast, sequential allocation' {
+    >> 'should emit sequential segments' {
       range 65 (+ 65 26) |
-      each $str:from-codepoints~ |
-      seq:split-by-chunk-count &fast 7 |
-      should-emit [
-        [A B C D]
-        [E F G H]
-        [I J K L]
-        [M N O P]
-        [Q R S T]
-        [U V W X]
-        [Y Z]
-      ]
+        each $str:from-codepoints~ |
+        seq:split-by-chunk-count &fast 7 |
+        should-emit [
+          [A B C D]
+          [E F G H]
+          [I J K L]
+          [M N O P]
+          [Q R S T]
+          [U V W X]
+          [Y Z]
+        ]
     }
 
     >> 'should support 0 items' {
@@ -553,34 +518,31 @@ use ./seq
   }
 
   >> 'converting a single value to list' {
-    >> 'when the value is a string' {
-      >> 'should emit a list containing just the value' {
-        seq:value-as-list Dodo |
-          should-be [Dodo]
-      }
-    }
-
-    >> 'when the value is a number' {
-      >> 'should emit a list containing just the value' {
-        seq:value-as-list (num 90) |
-          should-be [(num 90)]
-      }
-    }
-
-    >> 'when the value is an exception' {
-      >> 'should emit a list containing just the value' {
-        var value = ?(fail DODO)
-
-        seq:value-as-list $value |
-          should-be [$value]
+    all [
+      [
+        &value-type=string
+        &value=Dodo
+      ]
+      [
+        &value-type=number
+        &value=(num 90)
+      ]
+      [
+        &value-type=exception
+        &value=?(fail DODO)
+      ]
+    ] | each { |scenario|
+      >> 'when the value is of type '$scenario[value-type] {
+        seq:value-as-list $scenario[value] |
+          should-be [
+            $scenario[value]
+          ]
       }
     }
 
     >> 'when the value is $nil' {
-      >> 'should emit an empty list' {
-        seq:value-as-list $nil |
-          should-be []
-      }
+      seq:value-as-list $nil |
+        should-be []
     }
   }
 
@@ -588,16 +550,14 @@ use ./seq
     >> 'with no items' {
       all [] |
         seq:equivalence-classes |
-        put [(all)] |
-        should-be []
+        should-emit []
     }
 
     >> 'with distinct items' {
       all [90 92 95 98] |
         seq:equivalence-classes |
         order &key={ |equivalence-class| put $equivalence-class[0] } |
-        put [(all)] |
-        should-be [
+        should-emit [
           [90]
           [92]
           [95]
@@ -609,8 +569,7 @@ use ./seq
       all [90 92 90 92 95 98 95 90 95] |
         seq:equivalence-classes |
         order &key={ |equivalence-class| put $equivalence-class[0] } |
-        put [(all)] |
-        should-be [
+        should-emit [
           [90 90 90]
           [92 92]
           [95 95 95]
@@ -630,8 +589,7 @@ use ./seq
       ] |
         seq:equivalence-classes &equality={ |left right| eq (count $left) (count $right) } |
         order &key={ |equivalence-class| put $equivalence-class[0] } |
-        put [(all)] |
-        should-be [
+        should-emit [
           [Alpha Sigma]
           [Beta Dodo Ciop Yogi]
           [Testing]
@@ -642,82 +600,71 @@ use ./seq
   >> 'associating only substantial values' {
     var test-source = [&x=90]
 
-    >> 'when associating $nil' {
-      seq:assoc-substantial $test-source k $nil |
+    fn should-have-no-effect-with { |key value|
+      seq:assoc-substantial $test-source $key $value |
         should-be $test-source
     }
 
-    >> 'when associating a number' {
-      seq:assoc-substantial $test-source k (num 98) |
+    fn should-associate { |key value|
+      seq:assoc-substantial $test-source $key $value |
         should-be &strict [
           &x=90
-          &k=(num 98)
+          &$key=$value
         ]
     }
 
+    >> 'when associating $nil' {
+      should-have-no-effect-with k $nil
+    }
+
+    >> 'when associating a number' {
+      should-associate k (num 98)
+    }
+
     >> 'when associating a string' {
-      >> 'when non-empty' {
-        seq:assoc-substantial $test-source k Hello |
-          should-be [
-            &x=90
-            &k=Hello
-          ]
+      >> 'when empty' {
+        should-have-no-effect-with k ''
       }
 
-      >> 'when empty' {
-        seq:assoc-substantial $test-source k '' |
-          should-be $test-source
+      >> 'when non-empty' {
+        should-associate k Hello
       }
     }
 
     >> 'when associating a list' {
-      >> 'when non-empty' {
-        seq:assoc-substantial $test-source k [92] |
-          should-be [
-            &x=90
-            &k=[92]
-          ]
+      >> 'when empty' {
+        should-have-no-effect-with k []
       }
 
-      >> 'when empty' {
-        seq:assoc-substantial $test-source k [] |
-          should-be [
-            &x=90
-          ]
+      >> 'when non-empty' {
+        should-associate k [92]
       }
     }
 
     >> 'when associating a map' {
-      >> 'when non-empty' {
-        seq:assoc-substantial $test-source k [&sub-key=95] |
-          should-be [
-            &x=90
-            &k=[&sub-key=95]
-          ]
+      >> 'when empty' {
+        should-have-no-effect-with k [&]
       }
 
-      >> 'when empty' {
-        seq:assoc-substantial $test-source k [&] |
-          should-be [
-            &x=90
-          ]
+      >> 'when non-empty' {
+        should-associate k [&sub-key=95]
       }
     }
   }
 
-  >> 'grouping items via selector' {
+  >> 'converting to map' {
     >> 'with empty list' {
-      seq:group-by [] { } |
+      seq:to-map [] { fail 'THIS SHOULD NOT RUN' } |
         should-be [&]
     }
 
     >> 'with empty string' {
-      seq:group-by '' { } |
+      seq:to-map '' { fail 'THIS SHOULD NOT RUN' } |
         should-be [&]
     }
 
     >> 'with non-empty list' {
-      seq:group-by [3 5 7] { |item| put 'X'(* $item 10) } |
+      seq:to-map [3 5 7] { |item| put 'X'(* $item 10) } |
         should-be [
           &X30=3
           &X50=5
@@ -726,7 +673,7 @@ use ./seq
     }
 
     >> 'with non-empty string' {
-      seq:group-by 'ABC' { |letter| put $letter$letter } |
+      seq:to-map 'ABC' { |letter| put $letter$letter } |
         should-be [
           &AA=A
           &BB=B
@@ -734,26 +681,26 @@ use ./seq
         ]
     }
 
-    >> 'with duplicated item' {
-      seq:group-by [R S R X R X Y Z] { |letter| put $letter'-'$letter } |
+    >> 'with duplicated items' {
+      seq:to-map [R S R X R X Y Z] { |letter| put $letter'-once-only' } |
         should-be [
-          &R-R=R
-          &S-S=S
-          &X-X=X
-          &Y-Y=Y
-          &Z-Z=Z
+          &R-once-only=R
+          &S-once-only=S
+          &X-once-only=X
+          &Y-once-only=Y
+          &Z-once-only=Z
         ]
     }
 
     >> 'passing no items via pipe' {
       all [] |
-        seq:group-by { } |
+        seq:to-map { fail 'THIS SHOULD NOT RUN' } |
         should-be [&]
     }
 
     >> 'passing items via pipe' {
       all [90 92 98] |
-        seq:group-by { |item| * $item 10 } |
+        seq:to-map { |item| * $item 10 } |
         should-be [
           &900=90
           &920=92
@@ -791,6 +738,15 @@ use ./seq
         (seq:make-getter alpha beta gamma) $test-map |
           should-be $test-map[alpha][beta][gamma]
       }
+
+      >> 'when a missing key is passed at any level' {
+        throws {
+         (seq:make-getter alpha MISSING gamma) $test-map
+        } |
+          exception:get-reason |
+          to-string (all) |
+          should-contain MISSING
+      }
     }
 
     >> 'when applied to a list' {
@@ -803,22 +759,22 @@ use ./seq
         ]
       ]
 
-      >> 'when no keys are passed' {
+      >> 'when no indexes are passed' {
         (seq:make-getter) $test-list |
           should-be $test-list
       }
 
-      >> 'when 1 key is passed' {
+      >> 'when 1 index is passed' {
         (seq:make-getter 1) $test-list |
           should-be $test-list[1]
       }
 
-      >> 'when 2 keys are passed' {
+      >> 'when 2 indexes are passed' {
         (seq:make-getter 1 2) $test-list |
           should-be $test-list[1][2]
       }
 
-      >> 'when 3 keys are passed' {
+      >> 'when 3 indexes are passed' {
         (seq:make-getter 1 2 0) $test-list |
           should-be $test-list[1][2][0]
       }

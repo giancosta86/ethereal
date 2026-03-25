@@ -16,7 +16,7 @@ var err = { |block| $block > &2 }
 # Creates a writer that takes a block and appends its out to the given file (object or path).
 #
 fn to-file { |@arguments|
-  var path = (lang:get-single-input $arguments)
+  var file = (lang:get-single-input $arguments)
 
-  put { |block| $block >> $path }
+  put { |block| $block >> $file }
 }

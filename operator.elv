@@ -1,6 +1,8 @@
 use ./lang
 use ./seq
 
+pragma unknown-command = disallow
+
 #
 # Higher-order function emitting a multi-operand operator based on:
 #

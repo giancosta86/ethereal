@@ -7,9 +7,7 @@ use ./set
       >> 'via pipe' {
         all [] |
           set:of |
-          should-be [
-            &-set-items=[&]
-          ]
+          should-be $set:empty
       }
     }
 
@@ -56,6 +54,31 @@ use ./set
           ]
       }
     }
+
+    >> 'when passing duplicates' {
+      all [
+        90
+        90
+        90
+        90
+        92
+        92
+        95
+        95
+        90
+        90
+        98
+      ] |
+        set:of |
+        should-be [
+          &-set-items=[
+            &90=$true
+            &92=$true
+            &95=$true
+            &98=$true
+          ]
+        ]
+    }
   }
 
   >> 'iterating over the items' {
@@ -85,8 +108,7 @@ use ./set
     }
 
     >> 'when the set contains a single item' {
-      set:of 90 |
-        set:to-list |
+      set:to-list (set:of 90) |
         should-be [90]
     }
 
@@ -125,16 +147,28 @@ use ./set
     }
 
     >> 'if the source is a set' {
-      set:of 90 92 95 98 |
+      var source-set = (set:of 90 92 95 98)
+
+      put $source-set |
         set:from |
-        should-be [
-          &-set-items=[
-            &90=$true
-            &92=$true
-            &95=$true
-            &98=$true
-          ]
-        ]
+        should-be $source-set
+    }
+
+    >> 'when passing duplicates' {
+      put [
+        90
+        90
+        92
+        92
+        92
+        95
+        95
+        98
+        98
+        98
+      ] |
+        set:from |
+        should-be (set:of 90 92 95 98)
     }
   }
 
@@ -301,7 +335,8 @@ use ./set
 
     >> 'difference' {
       >> 'with no operands' {
-        set:difference |
+        all [] |
+          set:difference |
           should-be $set:empty
       }
 
@@ -349,7 +384,8 @@ use ./set
       }
 
       >> 'with empty and non-empty set' {
-        set:symmetric-difference $set:empty $right |
+        put $set:empty |
+          set:symmetric-difference $right |
           should-be $right
       }
 

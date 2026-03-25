@@ -1,5 +1,7 @@
 use ./seq
 
+pragma unknown-command = disallow
+
 var DEFAULT-NUM-WORKERS = 8
 
 #
@@ -11,12 +13,11 @@ var DEFAULT-NUM-WORKERS = 8
 # 2. Calls `joiner`, passing it the computed *chunk results* as *varargs*:
 #    this function must return the **overall result** of arbitrary type.
 #
-# As usual, both `chunk-mapper` and `joiner` should be both *commutative* and *associative* with respect
+# As usual in such pattern, both `chunk-mapper` and `joiner` should be both *commutative* and *associative* with respect
 # to the items and the chunk results.
 #
 fn fork-join { |&num-workers=$DEFAULT-NUM-WORKERS chunk-mapper joiner|
-  all |
-    seq:split-by-chunk-count &fast $num-workers |
+  seq:split-by-chunk-count &fast $num-workers |
     peach &num-workers=$num-workers { |chunk|
       $chunk-mapper $@chunk
     } |

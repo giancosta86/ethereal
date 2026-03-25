@@ -5,13 +5,13 @@ use ./set
 pragma unknown-command = disallow
 
 #
-# Emits every single line it receives via pipe, prepending the given `prefix` string;
+# Emits every single line received via pipe, prepending the given `prefix` string;
 # by default, empty lines are emitted unaltered - unless the `empty-too` option is set.
 #
 fn prefix-lines { |&empty-too=$false prefix|
   to-lines |
     each { |line|
-      if (and (not $empty-too) (eq $line '')) {
+      if (and (eq $line '') (not $empty-too)) {
         echo
       } else {
         echo $prefix''$line
@@ -28,19 +28,6 @@ fn unstyled { |@arguments|
     re:replace '\x1b\[[0-9;]*m' '' (all)
 }
 
-var -pretty-formatters-by-kind = [
-  &string=$echo~
-  &map={ |map|
-    if (set:is-set $map) {
-      set:to-list $map |
-        pprint (all)
-    } else {
-      pprint $map
-    }
-  }
-  &exception=$show~
-]
-
 #
 # Converts the input value - of any kind - to a pretty string; more precisely:
 #
@@ -52,20 +39,35 @@ var -pretty-formatters-by-kind = [
 #
 # * otherwise, outputs the call to `pprint`.
 #
-fn pretty { |@arguments|
-  var value = (lang:get-single-input $arguments)
-
-  var kind = (kind-of $value)
-
-  var formatter = (
-    if (has-key $-pretty-formatters-by-kind $kind) {
-      put $-pretty-formatters-by-kind[$kind]
-    } else {
-      put $pprint~
+var pretty~ = (
+  var formatters-by-kind = [
+    &string=$echo~
+    &map={ |map|
+      if (set:is-set $map) {
+        set:to-list $map |
+          pprint (all)
+      } else {
+        pprint $map
+      }
     }
-  )
+    &exception=$show~
+  ]
 
-  $formatter $value |
-    slurp |
-    put (all)[..-1]
-}
+  put { |@arguments|
+    var value = (lang:get-single-input $arguments)
+
+    var kind = (kind-of $value)
+
+    var formatter = (
+      if (has-key $formatters-by-kind $kind) {
+        put $formatters-by-kind[$kind]
+      } else {
+        put $pprint~
+      }
+    )
+
+    $formatter $value |
+      slurp |
+      put (all)[..-1]
+  }
+)

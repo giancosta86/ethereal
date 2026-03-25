@@ -6,7 +6,7 @@ use ./from-env-var
   var tracer = (from-env-var:create $test-var)
 
   var tracer-test-block = {
-    $tracer[section] &emoji=🐿 Description 'Test content'
+    $tracer[section] &emoji=🐿 Description 'Test content' 2>&1
   }
 
   >> 'when the variable is enabled' {
@@ -14,8 +14,7 @@ use ./from-env-var
       set-env $test-var 1
 
       $tracer-test-block |
-        put [(all)] |
-        should-be [
+        should-emit [
           '🐿 Description:'
           'Test content'
           🐿🐿🐿
@@ -23,13 +22,12 @@ use ./from-env-var
     }
   }
 
-  >> 'when the variable is disabled' {
+  >> 'when the variable has an unrecognized value' {
     >> 'should remain silent' {
       set-env $test-var '<SOME UNRECOGNIZED VALUE>'
 
       $tracer-test-block |
-        put [(all)] |
-        should-be []
+        should-emit []
     }
   }
 
@@ -38,8 +36,7 @@ use ./from-env-var
       unset-env $test-var
 
       $tracer-test-block |
-        put [(all)] |
-        should-be []
+        should-emit []
     }
   }
 }
