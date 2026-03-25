@@ -15,7 +15,8 @@ fn ternary { |condition when-true when-false|
 }
 
 #
-# Reads a number of inputs - from pipe and/or arguments - according to the following logic:
+# This function is designed to be called from within a function whose argument list ends with @arguments;
+# it reads a number of inputs - from pipe and/or arguments - according to the following logic:
 #
 # 1. Detect the number of arguments in `argument-list`, ensuring it is no less than &min-args.
 #
@@ -30,6 +31,8 @@ fn ternary { |condition when-true when-false|
 # 4. Ensure that the overall number of values is in the [&min-values; &max-values] range.
 #
 # In the end, the resulting values are emitted one by one.
+#
+# To use this function, you'll need to pass at least the `$arguments` list.
 #
 fn get-mixed-inputs { |&min-values=0 &max-values=$nil &min-args=0 argument-list|
   if $max-values {
@@ -90,7 +93,7 @@ fn get-mixed-inputs { |&min-values=0 &max-values=$nil &min-args=0 argument-list|
 # to the `if` construct.
 #
 fn switch { |&default=$nil @arguments|
-  var value cases = (get-mixed-inputs &min-values=2 &max-values=2 $arguments)
+  var value cases = (get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
 
   if (has-key $cases $value) {
     $cases[$value]

@@ -1,11 +1,6 @@
 use str
 use ./lang
 
-var test-piped = [RO SIGMA]
-var test-args = [ALPHA BETA GAMMA]
-var test-mixed = [$@test-piped $@test-args]
-
-
 >> 'In lang module' {
   >> 'ternary selector' {
     >> 'when the condition is true' {
@@ -38,6 +33,10 @@ var test-mixed = [$@test-piped $@test-args]
   }
 
   >> 'getting mixed input' {
+    var test-piped = [RO SIGMA]
+    var test-args = [ALPHA BETA GAMMA]
+    var test-mixed = [$@test-piped $@test-args]
+
     >> 'when passing no options' {
       >> 'when there are arguments' {
         all $test-piped |
@@ -193,7 +192,7 @@ var test-mixed = [$@test-piped $@test-args]
           should-be 'It must be &min-args <= &max-values'
       }
 
-      >> 'when there are not enough arguments and not enough values' {
+      >> 'when there are not enough arguments and also not enough values' {
         fails {
           all $test-piped |
             lang:get-mixed-inputs &min-values=7 &max-values=9 &min-args=4 $test-args
