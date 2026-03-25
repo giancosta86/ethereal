@@ -131,7 +131,7 @@ fn get-single-input { |argument-list|
 # To use this function, simply call it passing the `$arguments` list.
 #
 fn get-inputs { |argument-list|
-  get-mixed-inputs &min-values=0 $argument-list
+  get-mixed-inputs $argument-list
 }
 
 #
