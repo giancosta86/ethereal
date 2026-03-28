@@ -145,20 +145,24 @@ fn is-function { |@arguments|
 
 #
 # Minimalist filter forwarding every single pipe input it receives;
-# however, if there are no such inputs, it emits a customizable default value.
+# however, if the number of emitted values is less than &min-values, the quota is reached by emitting instances of &default in the end.
 #
-fn ensure-put { |&default=$nil|
-  var emitted = $false
+fn ensure-put { |&default=$nil &min-values=1|
+  if (< $min-values 1) {
+    fail '&min-values must be >=1'
+  }
+
+  var emitted-count = 0
 
   each { |value-sent-to-put|
-    set emitted = $true
+    set emitted-count = (+ $emitted-count 1)
 
     put $value-sent-to-put
   }
 
-  if (not $emitted) {
-    put $default
-  }
+  var default-count = (- $min-values $emitted-count)
+
+  repeat $default-count $default
 }
 
 #
