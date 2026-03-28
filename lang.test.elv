@@ -1,4 +1,3 @@
-use str
 use ./lang
 
 >> 'In lang module' {
@@ -364,25 +363,81 @@ use ./lang
     }
   }
 
-  >> 'ensuring that a put is performed' {
-    >> 'when a put is performed' {
-      put Hello |
-        lang:ensure-put &default=World |
-        should-be Hello
+  >> 'ensuring that put is performed' {
+    >> 'when defaulting to 1 required put' {
+      >> 'when one value is sent via pipe' {
+        put Hello |
+          lang:ensure-put &default=World |
+          should-be Hello
+      }
+
+      >> 'when multiple values are sent via pipe' {
+        all [
+          Alpha
+          Beta
+        ] |
+          lang:ensure-put &default=World |
+          should-emit [
+            Alpha
+            Beta
+          ]
+      }
+
+      >> 'when no value is received via pipe' {
+        >> 'when the default value is not declared' {
+          all [] |
+            lang:ensure-put |
+            should-be $nil
+        }
+
+        >> 'when the default value is declared' {
+          all [] |
+            lang:ensure-put &default=World |
+            should-be World
+        }
+      }
     }
 
-    >> 'when no value is received via pipe' {
-      >> 'when the default value is not declared' {
-        { } |
-          lang:ensure-put |
-          should-be $nil
+    >> 'when requiring multiple values' {
+      >> 'when more values are emitted' {
+        all [A B C D] |
+          lang:ensure-put &default=X &min-values=3 |
+          should-emit [A B C D]
       }
 
-      >> 'when the default value is declared' {
-        { } |
-          lang:ensure-put &default=World |
-          should-be World
+      >> 'when the exact number of values is emitted' {
+        all [A B C] |
+          lang:ensure-put &default=X &min-values=3 |
+          should-emit [A B C]
       }
+
+      >> 'when fewer values are emitted' {
+        all [A] |
+          lang:ensure-put &default=X &min-values=3 |
+          should-emit [A X X]
+      }
+
+      >> 'when no values are emitted' {
+        all [] |
+          lang:ensure-put &default=X &min-values=3 |
+          should-emit [X X X]
+      }
+    }
+
+    >> 'when enforcing 0 values' {
+      fails {
+        all [] |
+          lang:ensure-put &min-values=0
+      } |
+        should-be '&min-values must be >=1'
+    }
+
+    >> 'when enforcing a negative number of values' {
+      fails {
+        all [] |
+          lang:ensure-put &min-values=-7
+      } |
+        should-be '&min-values must be >=1'
     }
   }
 
