@@ -103,7 +103,7 @@ use ./string
 
     >> 'with styled string' {
       echo (styled 'Hello' bold italic green), (styled 'this' italic) is just a (styled 'basic test' bold red) |
-        string:unstyled (all) |
+        string:unstyled |
         should-be 'Hello, this is just a basic test'
     }
   }
@@ -137,7 +137,7 @@ use ./string
       var exception = ?(fail DODO)
 
       string:pretty $exception |
-        string:unstyled (all) |
+        string:unstyled |
         str:has-prefix (all) "Exception: DODO\n" |
         should-be $true
     }
