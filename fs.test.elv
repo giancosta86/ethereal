@@ -730,4 +730,22 @@ fn create-temp-tree { |temp-root|
       }
     }
   }
+
+  >> 'getting script subject' {
+    >> 'when the path ends with .elv' {
+      fs:get-script-subject 'hello.elv' |
+        should-be hello
+    }
+
+    >> 'when the path ends with .test.elv' {
+      put 'hello.test.elv' |
+        fs:get-script-subject |
+        should-be hello
+    }
+
+    >> 'when the script has yet another extension' {
+      fs:get-script-subject 'hello.txt' |
+        should-be 'hello.txt'
+    }
+  }
 }
