@@ -327,3 +327,14 @@ fn find-scripts { |&include-tests=$false|
     }
   }
 }
+
+#
+# Given a script path, emits its basename without the '.elv' or '.test.elv' extension; other extensions are not removed.
+#
+fn get-script-subject { |@arguments|
+  var script-path = (lang:get-single-input $arguments)
+
+  path:base $script-path |
+    str:trim-suffix (all) '.elv' |
+    str:trim-suffix (all) '.test'
+}

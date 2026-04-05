@@ -26,7 +26,7 @@ fn get-reason { |@arguments|
 fn is-fail { |@arguments|
   var reason = (
     lang:get-single-input $arguments |
-      get-reason (all)
+      get-reason
   )
 
   and $reason (has-key $reason type) (eq $reason[type] fail) |
