@@ -63,6 +63,8 @@ As an interesting consequence, during an interactive session, when calling with 
 
 ### Modules
 
+- [collection](collection.elv): unifying functions for sequences, maps and sets.
+
 - [command](command.elv): data and exception capturing for commands and blocks, plus inspection functions.
 
 - [curl](curl.elv): utilities for the `curl` command-line client.
