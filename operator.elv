@@ -19,3 +19,10 @@ fn multi-value { |initial-result binary-operator|
       seq:reduce $initial-result $binary-operator
   }
 }
+
+#
+# Given an input value, emits it.
+#
+fn identity { |@arguments|
+  lang:get-single-input $arguments
+}
