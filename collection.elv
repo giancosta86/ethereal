@@ -95,7 +95,7 @@ fn is-empty { |@arguments|
 fn is-non-empty { |@arguments|
   is-empty $@arguments |
     not (all)
- }
+}
 
 #
 # Given a collection and a value as input, emits $true if the value belongs to the collection,
