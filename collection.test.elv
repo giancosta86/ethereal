@@ -18,7 +18,7 @@ use ./collection
         should-be map
     }
 
-    >> 'for Ethereal set' {
+    >> 'for set' {
       set:of 90 92 95 98 |
         collection:detect-kind |
         should-be ethereal-set
@@ -48,7 +48,7 @@ use ./collection
         should-be key
     }
 
-    >> 'for Ethereal set' {
+    >> 'for set' {
         put $set:empty |
           collection:get-value-description |
           should-be item
@@ -102,7 +102,7 @@ use ./collection
       }
     }
 
-    >> 'for Ethereal set' {
+    >> 'for set' {
       >> 'when empty' {
         collection:is-empty $set:empty |
           should-be $true
@@ -156,7 +156,7 @@ use ./collection
       }
     }
 
-    >> 'for Ethereal set' {
+    >> 'for set' {
       >> 'when empty' {
         collection:is-non-empty $set:empty |
           should-be $false
@@ -209,7 +209,7 @@ use ./collection
       }
     }
 
-    >> 'for Ethereal set' {
+    >> 'for set' {
       >> 'when the item is contained' {
         set:of 90 92 95 98 |
           collection:contains 92 |
@@ -226,6 +226,62 @@ use ./collection
     >> 'for number' {
       fails {
         collection:contains (num 90) 90
+      } |
+        should-be 'Data type not supported as a collection: number'
+    }
+  }
+
+  >> 'Converting to list' {
+    >> 'for string' {
+      put Magic |
+        collection:to-list |
+        should-be [
+          M
+          a
+          g
+          i
+          c
+        ]
+    }
+
+    >> 'for list' {
+      collection:to-list [90 92 95 98] |
+        should-be [90 92 95 98]
+    }
+
+    >> 'for map' {
+      put [
+        &a=90
+        &b=92
+        &c=95
+        &d=98
+      ] |
+        collection:to-list |
+        all (all) |
+        should-emit &any-order [
+          a
+          b
+          c
+          d
+        ]
+    }
+
+    >> 'for set' {
+      set:of a b c d |
+        collection:to-list |
+        all (all) |
+        order &key=$to-string~ |
+        should-emit [
+          a
+          b
+          c
+          d
+        ]
+    }
+
+    >> 'for number' {
+      fails {
+        collection:to-list (num 90)
       } |
         should-be 'Data type not supported as a collection: number'
     }

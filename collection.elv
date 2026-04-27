@@ -1,5 +1,6 @@
 use str
 use ./lang
+use ./operator
 use ./seq
 use ./set
 
@@ -9,24 +10,28 @@ var detect-kind~ -with-collection~ = (
       &value-description=substring
       &is-empty=$seq:is-empty~
       &contains=$str:contains~
+      &to-list={ |source| put [(str:split '' $source)] }
     ]
 
     &list=[
       &value-description=item
       &is-empty=$seq:is-empty~
       &contains=$has-value~
+      &to-list=$operator:identity~
     ]
 
     &map=[
       &value-description=key
       &is-empty=$seq:is-empty~
       &contains=$has-key~
+      &to-list={ |source| put [(keys $source)] }
     ]
 
     &ethereal-set=[
       &value-description=item
       &is-empty=$set:is-empty~
       &contains=$set:has-value~
+      &to-list=$set:to-list~
     ]
   ]
 
@@ -108,5 +113,24 @@ fn contains { |@arguments|
 
   -with-collection $collection { |descriptor|
     $descriptor[contains] $collection $value
+  }
+}
+
+#
+# Converts the given collection to a list:
+#
+# * for **string**: a list of characters
+#
+# * for **list**: the list itself
+#
+# * for **map**: a list of keys, with unspecified order
+#
+# * for **set**: a list of items, with unspecified order
+#
+fn to-list { |@arguments|
+  var source = (lang:get-single-input $arguments)
+
+  -with-collection $source { |descriptor|
+    $descriptor[to-list] $source
   }
 }
