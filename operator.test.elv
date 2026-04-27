@@ -53,4 +53,17 @@ fn custom-binary-add { |left right|
       }
     }
   }
+
+  >> 'identity' {
+    >> 'passing via pipe' {
+      put Dodo |
+        operator:identity |
+        should-be Dodo
+    }
+
+    >> 'passing via argument' {
+      operator:identity (num 90) |
+        should-be &strict (num 90)
+    }
+  }
 }
