@@ -231,7 +231,62 @@ use ./collection
     }
   }
 
-  >> 'Converting to list' {
+  >> 'iterating' {
+    >> 'for string' {
+      collection:iterate ABC { |character|
+        put $character''$character
+      } |
+        should-emit [
+          AA
+          BB
+          CC
+        ]
+    }
+
+    >> 'for list' {
+      put [90 92 95 98] |
+        collection:iterate { |value|
+          * $value 10
+        } |
+        should-emit [
+          900
+          920
+          950
+          980
+        ]
+    }
+
+    >> 'for map' {
+      put [&a=90 &b=92] |
+        collection:iterate { |key|
+          put $key''$key
+        } |
+          should-emit &any-order [
+            'aa'
+            'bb'
+          ]
+    }
+
+    >> 'for set' {
+      set:of 90 92 |
+        collection:iterate { |value|
+          * $value 10
+        } |
+          should-emit &any-order [
+            900
+            920
+          ]
+    }
+
+    >> 'for number' {
+      fails {
+        collection:iterate (num 90) { }
+      } |
+        should-be 'Data type not supported as a collection: number'
+    }
+  }
+
+  >> 'converting to list' {
     >> 'for string' {
       put Magic |
         collection:to-list |
@@ -270,8 +325,7 @@ use ./collection
       set:of a b c d |
         collection:to-list |
         all (all) |
-        order &key=$to-string~ |
-        should-emit [
+        should-emit &any-order [
           a
           b
           c
