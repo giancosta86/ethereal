@@ -30,13 +30,14 @@ fn of { |@arguments|
 }
 
 #
-# Iterates over the given set with a function taking the item as its only argument.
+# Iterates over the given set with a function taking the current item as its only argument.
 #
 fn iterate { |@arguments|
   var source consumer = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
 
   keys $source[-set-items] | each $consumer
 }
+
 #
 # Emits a list containing the items of the given input set, in unspecified order.
 #

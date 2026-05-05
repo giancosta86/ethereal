@@ -1,6 +1,5 @@
 use str
 use ./lang
-use ./operator
 use ./seq
 use ./set
 
@@ -10,28 +9,37 @@ var detect-kind~ -with-collection~ = (
       &value-description=substring
       &is-empty=$seq:is-empty~
       &contains=$str:contains~
-      &to-list={ |source| put [(str:split '' $source)] }
+      &iterate={ |source consumer|
+        all $source |
+          each $consumer
+      }
     ]
 
     &list=[
       &value-description=item
       &is-empty=$seq:is-empty~
       &contains=$has-value~
-      &to-list=$operator:identity~
+      &iterate={ |source consumer|
+        all $source |
+          each $consumer
+      }
     ]
 
     &map=[
       &value-description=key
       &is-empty=$seq:is-empty~
       &contains=$has-key~
-      &to-list={ |source| put [(keys $source)] }
+      &iterate={ |source consumer|
+        keys $source |
+          each $consumer
+      }
     ]
 
     &ethereal-set=[
       &value-description=item
       &is-empty=$set:is-empty~
       &contains=$set:has-value~
-      &to-list=$set:to-list~
+      &iterate=$set:iterate~
     ]
   ]
 
@@ -117,20 +125,49 @@ fn contains { |@arguments|
 }
 
 #
+# Iterates over the given collection with a function taking the current value as its only argument.
+#
+fn iterate { |@arguments|
+  var collection consumer = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
+
+  -with-collection $collection { |descriptor|
+    $descriptor[iterate] $collection $consumer
+  }
+}
+
+#
 # Converts the given collection to a list:
 #
-# * for **string**: a list of characters
+# * for **string**: the list of its characters
 #
 # * for **list**: the list itself
 #
-# * for **map**: a list of keys, with unspecified order
+# * for **map**: the list of its keys, in unspecified order
 #
-# * for **set**: a list of items, with unspecified order
+# * for **set**: the list of its items, in unspecified order
 #
 fn to-list { |@arguments|
   var source = (lang:get-single-input $arguments)
 
-  -with-collection $source { |descriptor|
-    $descriptor[to-list] $source
-  }
+  put [(
+    iterate $source $put~
+  )]
+}
+
+#
+# Converts the given collection to a set:
+#
+# * for **string**: the set of its characters
+#
+# * for **list**: the set of its items
+#
+# * for **map**: the set of its keys
+#
+# * for **set**: the set itself
+#
+fn to-set { |@arguments|
+  var source = (lang:get-single-input $arguments)
+
+  iterate $source $put~ |
+    set:of
 }

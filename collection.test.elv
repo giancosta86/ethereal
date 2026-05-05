@@ -231,7 +231,62 @@ use ./collection
     }
   }
 
-  >> 'Converting to list' {
+  >> 'iterating' {
+    >> 'for string' {
+      collection:iterate ABC { |character|
+        put $character''$character
+      } |
+        should-emit [
+          AA
+          BB
+          CC
+        ]
+    }
+
+    >> 'for list' {
+      put [90 92 95 98] |
+        collection:iterate { |value|
+          * $value 10
+        } |
+        should-emit [
+          900
+          920
+          950
+          980
+        ]
+    }
+
+    >> 'for map' {
+      put [&a=90 &b=92] |
+        collection:iterate { |key|
+          put $key''$key
+        } |
+          should-emit &any-order [
+            'aa'
+            'bb'
+          ]
+    }
+
+    >> 'for set' {
+      set:of 90 92 |
+        collection:iterate { |value|
+          * $value 10
+        } |
+          should-emit &any-order [
+            900
+            920
+          ]
+    }
+
+    >> 'for number' {
+      fails {
+        collection:iterate (num 90) { }
+      } |
+        should-be 'Data type not supported as a collection: number'
+    }
+  }
+
+  >> 'converting to list' {
     >> 'for string' {
       put Magic |
         collection:to-list |
@@ -270,8 +325,7 @@ use ./collection
       set:of a b c d |
         collection:to-list |
         all (all) |
-        order &key=$to-string~ |
-        should-emit [
+        should-emit &any-order [
           a
           b
           c
@@ -282,6 +336,60 @@ use ./collection
     >> 'for number' {
       fails {
         collection:to-list (num 90)
+      } |
+        should-be 'Data type not supported as a collection: number'
+    }
+  }
+
+  >> 'converting to set' {
+    >> 'for string' {
+      put Magic |
+        collection:to-set |
+        should-be (
+          set:from [
+            M
+            a
+            g
+            i
+            c
+          ]
+        )
+    }
+
+    >> 'for list' {
+      collection:to-set [90 92 95 98] |
+        should-be (set:of 90 92 95 98)
+    }
+
+    >> 'for map' {
+      put [
+        &a=90
+        &b=92
+        &c=95
+        &d=98
+      ] |
+        collection:to-set |
+        should-be (
+          set:from [
+            a
+            b
+            c
+            d
+          ]
+        )
+    }
+
+    >> 'for set' {
+      var source = (set:of a b c d)
+
+      put $source |
+        collection:to-set |
+        should-be $source
+    }
+
+    >> 'for number' {
+      fails {
+        collection:to-set (num 90)
       } |
         should-be 'Data type not supported as a collection: number'
     }
