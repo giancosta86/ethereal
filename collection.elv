@@ -153,3 +153,21 @@ fn to-list { |@arguments|
     iterate $source $put~
   )]
 }
+
+#
+# Converts the given collection to a set:
+#
+# * for **string**: the set of its characters
+#
+# * for **list**: the set of its items
+#
+# * for **map**: the set of its keys
+#
+# * for **set**: the set itself
+#
+fn to-set { |@arguments|
+  var source = (lang:get-single-input $arguments)
+
+  iterate $source $put~ |
+    set:of
+}

@@ -340,4 +340,58 @@ use ./collection
         should-be 'Data type not supported as a collection: number'
     }
   }
+
+  >> 'converting to set' {
+    >> 'for string' {
+      put Magic |
+        collection:to-set |
+        should-be (
+          set:from [
+            M
+            a
+            g
+            i
+            c
+          ]
+        )
+    }
+
+    >> 'for list' {
+      collection:to-set [90 92 95 98] |
+        should-be (set:of 90 92 95 98)
+    }
+
+    >> 'for map' {
+      put [
+        &a=90
+        &b=92
+        &c=95
+        &d=98
+      ] |
+        collection:to-set |
+        should-be (
+          set:from [
+            a
+            b
+            c
+            d
+          ]
+        )
+    }
+
+    >> 'for set' {
+      var source = (set:of a b c d)
+
+      put $source |
+        collection:to-set |
+        should-be $source
+    }
+
+    >> 'for number' {
+      fails {
+        collection:to-set (num 90)
+      } |
+        should-be 'Data type not supported as a collection: number'
+    }
+  }
 }
