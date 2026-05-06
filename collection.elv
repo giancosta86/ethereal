@@ -1,3 +1,4 @@
+use builtin
 use str
 use ./lang
 use ./seq
@@ -10,7 +11,7 @@ var detect-kind~ -with-collection~ = (
       &is-empty=$seq:is-empty~
       &contains=$str:contains~
       &iterate={ |source consumer|
-        all $source |
+        builtin:all $source |
           each $consumer
       }
     ]
@@ -20,7 +21,7 @@ var detect-kind~ -with-collection~ = (
       &is-empty=$seq:is-empty~
       &contains=$has-value~
       &iterate={ |source consumer|
-        all $source |
+        builtin:all $source |
           each $consumer
       }
     ]
@@ -73,7 +74,7 @@ var detect-kind~ -with-collection~ = (
     $descriptor-consumer $collection-descriptor
   }
 
-  all [
+  builtin:all [
     $detect-kind~
     $-with-collection~
   ]
@@ -133,6 +134,15 @@ fn iterate { |@arguments|
   -with-collection $collection { |descriptor|
     $descriptor[iterate] $collection $consumer
   }
+}
+
+#
+# Just like the builtin `all` function, but applicable to any collection.
+#
+fn all { |@arguments|
+  var source = (lang:get-single-input $arguments)
+
+  iterate $source $put~
 }
 
 #

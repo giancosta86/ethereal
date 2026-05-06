@@ -286,6 +286,52 @@ use ./collection
     }
   }
 
+  >> 'universal all function' {
+    >> 'for string' {
+      collection:all ABC |
+        should-emit [
+          A
+          B
+          C
+        ]
+    }
+
+    >> 'for list' {
+      put [90 92 95 98] |
+        collection:all |
+        should-emit [
+          90
+          92
+          95
+          98
+        ]
+    }
+
+    >> 'for map' {
+      collection:all [&a=90 &b=92] |
+        should-emit &any-order [
+          'a'
+          'b'
+        ]
+    }
+
+    >> 'for set' {
+      set:of 90 92 |
+        collection:all |
+        should-emit &any-order [
+          90
+          92
+        ]
+    }
+
+    >> 'for number' {
+      fails {
+        collection:all (num 90)
+      } |
+        should-be 'Data type not supported as a collection: number'
+    }
+  }
+
   >> 'converting to list' {
     >> 'for string' {
       put Magic |
