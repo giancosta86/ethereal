@@ -3,6 +3,10 @@ use path
 use str
 use ./fs
 
+var this-script-path = (src)[name]
+
+var this-script-dir = (path:dir $this-script-path)
+
 fn create-temp-tree { |temp-root|
   if (not (os:is-dir $temp-root)) {
     fail 'Not an existing directory: '$temp-root
@@ -680,7 +684,7 @@ fn create-temp-tree { |temp-root|
   }
 
   >> 'finding script files' {
-    cd (path:dir (src)[name])
+    cd $this-script-dir
 
     >> 'by default' {
       var actual-scripts = [(fs:find-scripts)]
@@ -727,6 +731,54 @@ fn create-temp-tree { |temp-root|
           fs:find-scripts &include-tests |
             should-emit []
         }
+      }
+    }
+  }
+
+  >> 'finding test scripts' {
+    >> 'in directory with no tests' {
+      fs:with-temp-dir { |temp-dir|
+        cd $temp-dir
+
+        fs:find-test-scripts |
+          should-emit []
+      }
+    }
+
+    >> 'in directory with tests' {
+      fs:with-temp-dir { |temp-dir|
+        cd $temp-dir
+
+        echo alpha > alpha.test.elv
+        echo beta > beta.test.elv
+
+        echo omega > omega.elv
+
+        fs:find-test-scripts |
+          should-emit &any-order [
+            alpha.test.elv
+            beta.test.elv
+          ]
+      }
+    }
+
+    >> 'in directory with nested tests' {
+      fs:with-temp-dir { |temp-dir|
+        cd $temp-dir
+
+        echo alpha > alpha.test.elv
+
+        mkdir beta
+
+        echo gamma > (path:join beta gamma.test.elv)
+
+        echo omega > omega.elv
+
+        fs:find-test-scripts |
+          should-emit &any-order [
+            alpha.test.elv
+            (path:join beta gamma.test.elv)
+          ]
       }
     }
   }
