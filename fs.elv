@@ -329,6 +329,13 @@ fn find-scripts { |&include-tests=$false|
 }
 
 #
+# Emits all the **.test.elv** Velvet test scripts in the current directory tree.
+#
+fn find-test-scripts {
+  put **[nomatch-ok].test.elv
+}
+
+#
 # Given a script path, emits its basename without the '.elv' or '.test.elv' extension; other extensions are not removed.
 #
 fn get-script-subject { |@arguments|
