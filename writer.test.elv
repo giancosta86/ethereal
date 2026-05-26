@@ -1,29 +1,22 @@
-use ./command
 use ./fs
 use ./writer
 
 >> 'In writer module' {
   >> 'the out writer' {
     >> 'should write to stdout' {
-      command:capture &stream=out {
+      capture &stream=out {
         $writer:out { echo Dodo }
       } |
-        put (all)[data] |
-        should-be [
-          Dodo
-        ]
+        should-be Dodo
     }
   }
 
   >> 'the err writer' {
     >> 'should write to stderr' {
-      command:capture &stream=err {
+      capture &stream=err {
         $writer:err { echo Dodo }
       } |
-        put (all)[data] |
-        should-be [
-          Dodo
-        ]
+        should-be Dodo
     }
   }
 

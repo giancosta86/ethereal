@@ -137,7 +137,6 @@ var full-source = $major'.'$minor'.'$patch'-'$pre-release'+'$build
             &pre-release=$nil
             &build=$nil
           ]
-
           [
             &major=3
             &minor=9
@@ -159,7 +158,6 @@ var full-source = $major'.'$minor'.'$patch'-'$pre-release'+'$build
             &pre-release=$nil
             &build=$nil
           ]
-
           [
             &major=3
             &minor=9
@@ -167,7 +165,6 @@ var full-source = $major'.'$minor'.'$patch'-'$pre-release'+'$build
             &pre-release=beta.2
             &build=sigma
           ]
-
           [
             &major=8
             &minor=19

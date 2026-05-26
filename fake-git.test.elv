@@ -89,7 +89,9 @@ var test-git~ = (
         fails {
           test-git checkout secondary
         } |
-          should-be (printf 'The directory "%s" was not cloned via this command instance!' $temp-dir)
+          should-be (
+            printf 'The directory "%s" was not cloned via this command instance!' $temp-dir
+          )
       }
     }
 

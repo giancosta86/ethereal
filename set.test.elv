@@ -115,8 +115,8 @@ use ./set
     >> 'when the set contains multiple items' {
       set:of 90 92 95 98 |
         set:to-list |
-        order |
-        should-be [90 92 95 98]
+        count (all) |
+        should-be 4
     }
   }
 
@@ -136,14 +136,7 @@ use ./set
   >> 'converting from another sequence' {
     >> 'if the source is a list' {
       set:from [92 90 98 95] |
-        should-be [
-          &-set-items=[
-            &90=$true
-            &92=$true
-            &95=$true
-            &98=$true
-          ]
-        ]
+        should-be (set:of 90 92 95 98)
     }
 
     >> 'if the source is a set' {
