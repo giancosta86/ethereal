@@ -1,5 +1,4 @@
 use os
-use str
 use ./curl
 use ./fs
 

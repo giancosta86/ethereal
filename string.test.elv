@@ -1,4 +1,3 @@
-use str
 use ./set
 use ./string
 

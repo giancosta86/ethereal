@@ -1,6 +1,5 @@
 use os
 use path
-use str
 use ./fs
 
 var this-script-path = (src)[name]
