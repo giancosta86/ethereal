@@ -138,8 +138,7 @@ use ./string
 
       string:pretty $exception |
         string:unstyled |
-        str:has-prefix (all) "Exception: DODO\n" |
-        should-be $true
+        should-have-prefix "Exception: DODO\n"
     }
 
     >> 'applied to set' {

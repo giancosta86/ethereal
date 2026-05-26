@@ -148,8 +148,7 @@ fn create-temp-tree { |temp-root|
         defer { os:remove-all $temp-path }
 
         path:base $temp-path |
-          str:has-prefix (all) elvish- |
-          should-be $true
+          should-have-prefix elvish-
     }
 
     >> 'when passing a custom pattern' {
@@ -161,14 +160,12 @@ fn create-temp-tree { |temp-root|
 
       >> 'should have the requested prefix' {
         path:base $temp-path |
-          str:has-prefix (all) $custom-prefix |
-          should-be $true
+          should-have-prefix $custom-prefix
       }
 
       >> 'should have the requested suffix' {
         path:base $temp-path |
-          str:has-suffix (all) $custom-suffix |
-          should-be $true
+          should-have-suffix $custom-suffix
       }
     }
   }
@@ -195,11 +192,11 @@ fn create-temp-tree { |temp-root|
       fs:with-temp-file &pattern=$custom-prefix'*'$custom-suffix { |temp-path|
         var temp-base = (path:base $temp-path)
 
-        str:has-prefix $temp-base $custom-prefix |
-          should-be $true
+        put $temp-base |
+          should-have-prefix $custom-prefix
 
-        str:has-suffix $temp-base $custom-suffix |
-          should-be $true
+        put $temp-base |
+          should-have-suffix $custom-suffix
       }
     }
   }
@@ -226,11 +223,11 @@ fn create-temp-tree { |temp-root|
       fs:with-temp-dir &pattern=$custom-prefix'*'$custom-suffix { |temp-dir|
         var temp-base = (path:base $temp-dir)
 
-        str:has-prefix $temp-base $custom-prefix |
-          should-be $true
+        put $temp-base |
+          should-have-prefix $custom-prefix
 
-        str:has-suffix $temp-base $custom-suffix |
-          should-be $true
+        put $temp-base |
+          should-have-suffix $custom-suffix
       }
     }
 

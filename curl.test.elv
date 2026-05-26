@@ -1,6 +1,5 @@
 use os
 use str
-use ./command
 use ./curl
 use ./fs
 
@@ -19,10 +18,9 @@ fn with-factory-reset-curl { |block|
 >> 'In curl module' {
   >> 'when not altering the output settings' {
     with-factory-reset-curl {
-      command:capture &stream=err {
+      capture &stream=err {
         curl $test-website
       } |
-        str:join "\n" (all)[data] |
         should-contain %
     }
   }
@@ -31,10 +29,9 @@ fn with-factory-reset-curl { |block|
     with-factory-reset-curl {
       curl:display-errors-only
 
-      command:capture &stream=err {
+      capture &stream=err {
         curl $test-website
       } |
-        str:join "\n" (all)[data] |
         should-not-contain %
     }
   }

@@ -120,7 +120,8 @@ use ./seq
   >> 'spreading each sub-sequence as a function arguments' {
     >> 'when the sequence is empty' {
       all [] |
-        seq:spread { |a b| fail 'THIS SHOULD NOT RUN' }
+        seq:spread { |a b| fail 'THIS SHOULD NOT RUN' } |
+        should-emit []
     }
 
     >> 'when there are sub-sequences' {
@@ -417,7 +418,7 @@ use ./seq
         all [Alpha Beta] |
           seq:split-by-chunk-count -1
       } |
-        should-contain 'The chunk count must be > 0'
+        should-contain 'The chunk count must be > 0!'
     }
 
     >> 'when chunk count is 0' {
