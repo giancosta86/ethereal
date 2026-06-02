@@ -286,3 +286,18 @@ fn is-exception { |@arguments|
     kind-of (all) |
     eq (all) exception
 }
+
+#
+# If the value - passed via pipe or as first argument - if $nil, just returns it; otherwise, the consumer function passed as the (last) argument is called with such value as its only argument.
+#
+fn map { |@arguments|
+  var value consumer = (
+    get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments
+  )
+
+  if (not-eq $value $nil) {
+    $consumer $value
+  } else {
+    put $nil
+  }
+}
