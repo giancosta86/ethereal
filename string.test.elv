@@ -149,4 +149,10 @@ use ./string
         should-be (string:pretty $source-list)
     }
   }
+
+  >> 'escaping single quotes' {
+    put "A'B'C'D" |
+      string:escape-single-quotes |
+      should-be "A''B''C''D"
+  }
 }

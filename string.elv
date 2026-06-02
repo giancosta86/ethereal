@@ -1,4 +1,5 @@
 use re
+use str
 use ./lang
 use ./set
 
@@ -71,3 +72,12 @@ var pretty~ = (
       put (all)[..-1]
   }
 )
+
+#
+# Escapes every occurrence of the single quote (') by doubling it, as required by Elvish.
+#
+fn escape-single-quotes { |@arguments|
+  var source = (lang:get-single-input $arguments)
+
+  str:replace "'" "''" $source
+}
