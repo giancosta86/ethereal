@@ -1,3 +1,4 @@
+use ./exception
 use ./lang
 
 >> 'In lang module' {
@@ -748,6 +749,28 @@ use ./lang
     >> 'applied to return' {
       lang:is-exception ?(return) |
         should-be $true
+    }
+  }
+
+  >> 'mapping a value' {
+    >> 'when the value is not $nil' {
+      put 90 |
+        lang:map { |value| + $value 2 } |
+        should-be 92
+    }
+
+    >> 'when the value is an exception' {
+      lang:map ?(fail DODO) { |failure|
+        exception:get-fail-content $failure
+      } |
+        should-be DODO
+    }
+
+    >> 'when the value is $nil' {
+      lang:map $nil {
+        fail 'This should NOT be called'
+      } |
+        should-be $nil
     }
   }
 }
