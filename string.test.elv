@@ -155,4 +155,9 @@ use ./string
       string:escape-single-quotes |
       should-be "A''B''C''D"
   }
+
+  >> 'escaping double quotes' {
+    string:escape-double-quotes 'A"B"C"D' |
+      should-be 'A\"B\"C\"D'
+  }
 }

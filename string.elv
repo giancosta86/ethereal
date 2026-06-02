@@ -81,3 +81,12 @@ fn escape-single-quotes { |@arguments|
 
   str:replace "'" "''" $source
 }
+
+#
+# Escapes every occurrence of the double quotes (") by prepending \ escapes, as required by Elvish.
+#
+fn escape-double-quotes { |@arguments|
+  var source = (lang:get-single-input $arguments)
+
+  str:replace '"' '\"' $source
+}
