@@ -234,6 +234,64 @@ var test-block-crashing = {
     }
   }
 
+  >> 'silencing a block unless error' {
+    var passing-block = {
+      echo Hello
+      echo World >&2
+    }
+
+    >> 'when the block runs with no error' {
+      command:silence-unless-error $passing-block |
+        should-emit []
+    }
+
+    >> 'when the block throws a failure' {
+      var failing-block = {
+        command:silence-unless-error {
+          $passing-block
+          fail DODO
+        }
+      }
+
+      >> 'should emit its output' {
+        capture &throws &lines $failing-block |
+          should-emit &any-order [
+            Hello
+            World
+          ]
+      }
+
+      >> 'should rethrow the fail' {
+        fails $failing-block |
+          should-be DODO
+      }
+    }
+
+    >> 'when the block throws another exception' {
+      var failing-block = {
+        command:silence-unless-error {
+          $passing-block
+          / 90 0
+        }
+      }
+
+      >> 'should emit its output' {
+        capture &throws &lines $failing-block |
+          should-emit &any-order [
+            Hello
+            World
+          ]
+      }
+
+      >> 'should rethrow the exception' {
+        throws $failing-block |
+          exception:get-reason |
+          to-string (all) |
+          should-contain divisor
+      }
+    }
+  }
+
   >> 'testing whether a command exists in Bash' {
     >> 'if the command is a program in the path' {
       command:exists-in-bash cat |
