@@ -345,3 +345,14 @@ fn get-script-subject { |@arguments|
     str:trim-suffix (all) '.elv' |
     str:trim-suffix (all) '.test'
 }
+
+#
+# If the given path does not exist, creates an empty file; otherwise, nothing happens.
+#
+fn touch { |@arguments|
+  var path = (lang:get-single-input $arguments)
+
+  if (not (os:exists $path)) {
+    echo '' > $path
+  }
+}

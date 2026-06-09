@@ -796,4 +796,43 @@ fn create-temp-tree { |temp-root|
         should-be 'hello.txt'
     }
   }
+
+  >> 'touch command' {
+    >> 'when applied to an inexistent path' {
+      fs:with-temp-dir { |temp-dir|
+        cd $temp-dir
+
+        touch dodo
+
+        put dodo |
+          should-be-regular
+      }
+    }
+
+    >> 'when applied to an existent file' {
+      fs:with-temp-dir { |temp-dir|
+        cd $temp-dir
+
+        echo Hello > dodo
+
+        fs:touch dodo
+
+        to-lines < dodo |
+          should-be Hello
+      }
+    }
+
+    >> 'when applied to an existent dir' {
+      fs:with-temp-dir { |temp-dir|
+        cd $temp-dir
+
+        mkdir dodo
+
+        fs:touch dodo
+
+        put dodo |
+          should-be-dir
+      }
+    }
+  }
 }
