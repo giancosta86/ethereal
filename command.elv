@@ -167,6 +167,8 @@ var silence~ = (
 # 2. the exception is thrown
 #
 fn silence-unless-error { |@arguments|
+  deprecate 'Use just `silence` instead'
+
   var block = (lang:get-single-input $arguments)
 
   var capture-result = (capture $block)
