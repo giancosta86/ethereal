@@ -345,3 +345,14 @@ fn get-script-subject { |@arguments|
     str:trim-suffix (all) '.elv' |
     str:trim-suffix (all) '.test'
 }
+
+#
+# For each of the given paths: if the path does not exist, creates an empty file, supporting the creation of intermediate directories; otherwise, nothing happens.
+#
+fn touch { |@arguments|
+  lang:get-inputs $arguments | each { |path|
+    if (not (os:exists $path)) {
+      save-anywhere $path ''
+    }
+  }
+}
