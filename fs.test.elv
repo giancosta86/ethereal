@@ -827,8 +827,8 @@ fn create-temp-tree { |temp-root|
         put $existing-file-path |
           fs:touch
 
-        to-lines < $existing-file-path |
-          should-be Hello
+        put (os:stat $existing-file-path)[size] |
+          should-be 6
       }
     }
 

@@ -353,6 +353,13 @@ fn touch { |@arguments|
   lang:get-inputs $arguments | each { |path|
     if (not (os:exists $path)) {
       save-anywhere $path ''
+    } elif (os:is-regular $path) {
+      var content = (
+        to-lines < $path |
+          str:join "\n"
+      )
+
+      echo $content > $path
     }
   }
 }
