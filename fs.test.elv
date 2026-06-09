@@ -798,40 +798,90 @@ fn create-temp-tree { |temp-root|
   }
 
   >> 'touch command' {
+    var brand-new-path = (path:join alpha beta gamma brand-new)
+
+    var existing-file-path = existing-file
+
+    var existing-dir-path = existing-dir
+
     >> 'when applied to an inexistent path' {
       fs:with-temp-dir { |temp-dir|
         cd $temp-dir
 
-        touch dodo
+        fs:touch $brand-new-path
 
-        put dodo |
+        put $brand-new-path |
           should-be-regular
+
+        put (os:stat $brand-new-path)[size] |
+          should-be 0
       }
     }
 
-    >> 'when applied to an existent file' {
+    >> 'when applied to an existing file' {
       fs:with-temp-dir { |temp-dir|
         cd $temp-dir
 
-        echo Hello > dodo
+        echo Hello > $existing-file-path
 
-        fs:touch dodo
+        put $existing-file-path |
+          fs:touch
 
-        to-lines < dodo |
+        to-lines < $existing-file-path |
           should-be Hello
       }
     }
 
-    >> 'when applied to an existent dir' {
+    >> 'when applied to an existing dir' {
       fs:with-temp-dir { |temp-dir|
         cd $temp-dir
 
-        mkdir dodo
+        mkdir $existing-dir-path
 
-        fs:touch dodo
+        fs:touch $existing-dir-path
 
-        put dodo |
+        put $existing-dir-path |
           should-be-dir
+      }
+    }
+
+    >> 'when passing multiple paths' {
+      fn scenario { |touch-execution-block|
+        fs:with-temp-dir { |temp-dir|
+          cd $temp-dir
+
+          echo Hello > $existing-file-path
+
+          mkdir $existing-dir-path
+
+          $touch-execution-block
+
+          put $brand-new-path |
+            should-be-regular
+
+          to-lines < $existing-file-path |
+            should-be Hello
+
+          put $existing-dir-path |
+            should-be-dir
+        }
+      }
+
+      >> 'as arguments' {
+        scenario {
+          fs:touch $brand-new-path $existing-file-path $existing-dir-path
+        }
+      }
+
+      >> 'via pipe' {
+        scenario {
+          all [
+            $brand-new-path
+            $existing-file-path
+            $existing-dir-path
+          ] |
+            fs:touch
+        }
       }
     }
   }

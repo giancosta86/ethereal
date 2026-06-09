@@ -347,12 +347,12 @@ fn get-script-subject { |@arguments|
 }
 
 #
-# If the given path does not exist, creates an empty file; otherwise, nothing happens.
+# For each of the given paths: if the path does not exist, creates an empty file, supporting the creation of intermediate directories; otherwise, nothing happens.
 #
 fn touch { |@arguments|
-  var path = (lang:get-single-input $arguments)
-
-  if (not (os:exists $path)) {
-    echo '' > $path
+  lang:get-inputs $arguments | each { |path|
+    if (not (os:exists $path)) {
+      save-anywhere $path ''
+    }
   }
 }
