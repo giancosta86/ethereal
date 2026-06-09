@@ -160,6 +160,26 @@ var silence~ = (
 )
 
 #
+# Runs the given block of code, hiding its stdout and stderr by default; however, if an error occurs:
+#
+# 1. the collected stdout and stderr are emitted to stderr
+#
+# 2. the exception is thrown
+#
+fn silence-unless-error { |@arguments|
+  var block = (lang:get-single-input $arguments)
+
+  var capture-result = (capture $block)
+
+  if (not-eq $capture-result[exception] $nil) {
+    all $capture-result[data] |
+      each $echo~ >&2
+
+    fail $capture-result[exception]
+  }
+}
+
+#
 # Emits $true if the given command is available in Bash - even as an alias - by invoking `type`;
 # otherwise, emits $false.
 #
