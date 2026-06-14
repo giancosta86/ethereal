@@ -773,4 +773,73 @@ use ./lang
         should-be $nil
     }
   }
+
+  >> 'the otherwise function' {
+    var fallback-values = [
+      90
+      92
+    ]
+
+    var crashing-block = {
+      fail 'THIS SHOULD NOT BE REACHED'
+    }
+
+    >> 'when receiving no inputs' {
+      all [] |
+        lang:otherwise {
+          all $fallback-values
+        } |
+        should-emit $fallback-values
+    }
+
+    >> 'when receiving a single $nil input' {
+      put $nil |
+        lang:otherwise {
+          all $fallback-values
+        } |
+          should-emit $fallback-values
+    }
+
+    >> 'when receiving a single non-$nil input' {
+      put Hello |
+        lang:otherwise $crashing-block |
+        should-be Hello
+    }
+
+    >> 'when receiving two $nil inputs' {
+      all [
+        $nil
+        $nil
+      ] |
+        lang:otherwise $crashing-block |
+        should-emit [
+          $nil
+          $nil
+        ]
+    }
+
+    >> 'when receiving a $nil and a non-$nil input' {
+      all [
+        $nil
+        Hello
+      ] |
+        lang:otherwise $crashing-block |
+        should-emit [
+          $nil
+          Hello
+        ]
+    }
+
+    >> 'when receiving two non-$nil inputs' {
+      all [
+        Hello
+        90
+      ] |
+        lang:otherwise $crashing-block |
+        should-emit [
+          Hello
+          90
+        ]
+    }
+  }
 }
