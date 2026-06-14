@@ -48,7 +48,7 @@ fn enumerate { |&start-index=0 @arguments|
 # For each item received via pipe, which must be a sequence,
 # calls the given `consumer` - passing each sub-item as an argument, in order.
 #
-fn spread { |consumer|
+var spread~ = { |consumer|
   each { |sub-sequence|
     call $consumer $sub-sequence [&]
   }
