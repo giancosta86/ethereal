@@ -9,7 +9,7 @@ pragma unknown-command = disallow
 # consumer - a binary function passed as the last argument and
 # taking the key and the value, respectively, as arguments.
 #
-fn iterate { |@arguments|
+var iterate~ = { |@arguments|
   var map consumer = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
 
   keys $map | each { |key|
