@@ -128,7 +128,7 @@ fn contains { |@arguments|
 #
 # Iterates over the given collection with a function taking the current value as its only argument.
 #
-fn iterate { |@arguments|
+var iterate~ = { |@arguments|
   var collection consumer = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
 
   -with-collection $collection { |descriptor|
