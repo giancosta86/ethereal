@@ -301,3 +301,17 @@ fn map { |@arguments|
     put $nil
   }
 }
+
+#
+# When receiving via pipe a non-$nil value or at least 2 values (even $nil's), just emits such inputs as outputs;
+# otherwise, invokes the given `block`, whose outputs will become the overall outputs.
+#
+fn otherwise { |block|
+  var inputs = [(all)]
+
+  if (and (not-eq $inputs []) (not-eq $inputs [$nil])) {
+    all $inputs
+  } else {
+    $block
+  }
+}

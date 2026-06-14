@@ -41,6 +41,40 @@ use ./map
           [b 92]
         ]
     }
+
+    >> 'when breaking' {
+      var counter = 0
+
+      put [
+        &a=90
+        &b=92
+        &c=95
+      ] | map:iterate { |_ _|
+        set counter = (+ $counter 1)
+        break
+      }
+
+      put $counter |
+        should-be 1
+    }
+
+    >> 'when returning from a function' {
+      fn test-function {
+        put [
+          &a=90
+          &b=92
+        ] |
+          map:iterate { |lockfile package-manager|
+            put 'Just one iteration'
+            return
+          }
+
+        fail 'THIS SHOULD NOT BE REACHED'
+      }
+
+      test-function |
+        should-be 'Just one iteration'
+    }
   }
 
   >> 'getting the values of a map' {

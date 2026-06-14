@@ -134,6 +134,24 @@ use ./seq
           x+y=92
         ]
     }
+
+    >> 'when returning from a function' {
+      fn test-function {
+        all [
+          [A 90]
+          [B 92]
+        ] |
+          seq:spread { |letter number|
+            put $letter'--'$number
+            return
+          }
+
+        fail 'THIS SHOULD NOT RUN'
+      }
+
+      test-function |
+        should-be A--90
+    }
   }
 
   >> 'reduction' {
