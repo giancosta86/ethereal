@@ -1,3 +1,4 @@
+use str
 use ./exception
 use ./lang
 
@@ -839,6 +840,53 @@ use ./lang
         should-emit [
           Hello
           90
+        ]
+    }
+  }
+
+  >> 'converting to JSON' {
+    tmp lang:-jq~ = {
+      each { |line|
+        str:replace '{' "{\n" $line |
+          str:replace '[' "[\n" (all) |
+          str:replace ',' ",\n" (all) |
+          str:replace '}' "\n}" (all) |
+          str:replace ']' "\n]" (all)
+      }
+    }
+
+    >> 'when pretty is enabled' {
+      put [&a=90 &b=92] |
+        lang:to-json |
+        should-emit [
+          '{'
+          '"a":"90",'
+          '"b":"92"'
+          '}'
+        ]
+    }
+
+    >> 'when pretty is disabled' {
+      put [&a=90 &b=92] |
+        lang:to-json &pretty=$false |
+        should-be '{"a":"90","b":"92"}'
+    }
+
+    >> 'when passing multiple values'  {
+      all [
+        [90 92]
+        [95 98]
+      ] |
+        lang:to-json |
+        should-emit [
+          '['
+          '"90",'
+          '"92"'
+          ']'
+          '['
+          '"95",'
+          '"98"'
+          ']'
         ]
     }
   }

@@ -1,4 +1,14 @@
+use builtin
+
 pragma unknown-command = disallow
+
+var -jq~ = (
+  if (has-external jq) {
+    external jq
+  } else {
+    put $nil
+  }
+)
 
 #
 # If `condition` is trueish, `when-true` is emitted - emitting `when-false` otherwise.
@@ -314,4 +324,19 @@ fn otherwise { |block|
   } else {
     $block
   }
+}
+
+#
+# Converts all the values received via pipe to JSON - using the built-in `to-json` command;
+# however, if the `jq` command is available and the `pretty` flag is enabled (the default),
+# `jq` will be invoked to prettify the output.
+#
+fn to-json { |&pretty=$true|
+  builtin:to-json |
+    if (and $pretty $-jq~) {
+      -jq |
+        to-lines
+    } else  {
+      to-lines
+    }
 }
