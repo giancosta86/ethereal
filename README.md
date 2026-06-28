@@ -79,6 +79,8 @@ As an interesting consequence, during an interactive session, when calling with 
 
 - [fs](fs.elv): advanced file system management.
 
+- [git](git.elv): common utilities for Git.
+
 - [image](image.elv): image transforms, mainly based on the `gm` command.
 
 - [lang](lang.elv): core, almost language-related utilities.
