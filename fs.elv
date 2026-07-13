@@ -363,3 +363,18 @@ fn touch { |@arguments|
     }
   }
 }
+
+#
+# If the given external command is available,
+# returns a callable handle to it, via `external`;
+# otherwise, returns $nil.
+#
+fn get-external { |@arguments|
+  var command = (lang:get-single-input $arguments)
+
+  if (has-external $command) {
+    external $command
+  } else {
+    put $nil
+  }
+}
