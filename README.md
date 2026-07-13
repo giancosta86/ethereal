@@ -83,6 +83,8 @@ As an interesting consequence, during an interactive session, when calling with 
 
 - [git](git.elv): common utilities for Git.
 
+- [highlight](highlight.elv): source code syntax highlighting.
+
 - [image](image.elv): image transforms, mainly based on the `gm` command.
 
 - [lang](lang.elv): core, almost language-related utilities.
