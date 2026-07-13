@@ -885,4 +885,22 @@ fn create-temp-tree { |temp-root|
       }
     }
   }
+
+  >> 'getting an external command' {
+    >> 'when the external command exists' {
+      var command = (
+        put cat |
+          fs:get-external
+      )
+
+      echo Hello |
+        $command |
+        should-be Hello
+    }
+
+    >> 'when the external command does not exist' {
+      fs:get-external SOME_INEXISTING_DODO_COMMAND |
+        should-be $nil
+    }
+  }
 }
