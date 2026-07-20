@@ -7,8 +7,8 @@ var test-website = https://jsonplaceholder.typicode.com/todos/1
 var curl = (external curl)
 
 fn with-factory-reset-curl { |block|
-  fs:with-path-sandbox $curl:-configuration-path {
-    os:remove-all $curl:-configuration-path
+  fs:with-path-sandbox $curl:configuration-path {
+    os:remove-all $curl:configuration-path
 
     $block
   }
