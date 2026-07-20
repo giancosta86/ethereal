@@ -26,7 +26,7 @@ fn get-sdk-directory { |candidate version|
 }
 
 #
-# Runs SDKMAN's Bash script, forwarding the arguments.
+# Runs SDKMAN's Bash script - installing it if it's not already available - forwarding the arguments.
 #
 fn sdkman { |@arguments|
   -ensure-installed
