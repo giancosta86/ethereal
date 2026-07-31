@@ -1,3 +1,4 @@
+use os
 use ./lang
 
 pragma unknown-command = disallow
@@ -20,7 +21,7 @@ fn ensure-in-branch { |@arguments|
   var branch = (lang:get-single-input $arguments)
 
   try {
-    git switch $branch
+    git switch $branch 2> $os:dev-null
   } catch {
     git switch -c $branch
   }
