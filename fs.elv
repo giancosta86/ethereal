@@ -354,12 +354,9 @@ fn touch { |@arguments|
     if (not (os:exists $path)) {
       save-anywhere $path ''
     } elif (os:is-regular $path) {
-      var content = (
-        to-lines < $path |
-          str:join "\n"
-      )
+      var content = (slurp < $path)
 
-      echo $content > $path
+      print $content > $path
     }
   }
 }
