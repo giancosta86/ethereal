@@ -48,13 +48,13 @@ use ./fs
         ] |
           to-json > $temp-path
 
-        slurp < $temp-path |
-          should-contain beta
-
         edit:json $temp-path 'del(.beta)'
 
-        slurp < $temp-path |
-          should-not-contain beta
+        from-json < $temp-path |
+          should-be [
+            &alpha=90
+            &gamma=5
+          ]
       }
     }
   }
