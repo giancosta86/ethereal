@@ -25,7 +25,7 @@ fn file { |path transformer|
 # the operation is performed without creating an auxiliary temp file.
 #
 fn json { |path @jq-arguments|
-  -jq $@jq-arguments $path |
-    slurp |
-    to-lines > $path
+  var content = (-jq $@jq-arguments $path | slurp)
+
+  print $content > $path
 }
