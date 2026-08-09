@@ -246,3 +246,33 @@ fn less-than { |@arguments|
   #
   <s $left[pre-release] $right[pre-release]
 }
+
+#
+# Emits $true if the string passed via pipe contains the given version (object or string),
+# possibly preceded by "v"; otherwise - including if `version` is $nil - emits $false.
+#
+fn contains { |version|
+  if (eq $version $nil) {
+    put $false
+    return
+  }
+
+  var source = (one)
+
+  var version-string = (
+    kind-of $version |
+      lang:switch [
+        &string={
+          put $version
+        }
+        &map={
+          to-string $version
+        }
+      ]
+  )
+
+  str:trim-left $version-string v |
+    re:quote (all) |
+    put '(?:^|\s)v?'(all)'(?:\s|$)' |
+    re:match (all) $source
+}

@@ -281,4 +281,56 @@ var full-source = $major'.'$minor'.'$patch'-'$pre-release'+'$build
         (semver:parse 4.5.2)
       ]
   }
+
+  >> 'checking if contained in string' {
+    >> 'when the version is $nil' {
+      put ANYTHING |
+        semver:contains $nil |
+        should-be $false
+    }
+
+    >> 'when a version string is passed' {
+      >> 'when the version coincides with the source' {
+        >> 'when the version has no leading v' {
+          put 1.2.3 |
+            semver:contains 1.2.3 |
+            should-be $true
+        }
+
+        >> 'when the version has a leading v' {
+          put 1.2.3 |
+            semver:contains v1.2.3 |
+            should-be $true
+        }
+      }
+
+      >> 'when the version is part of the source' {
+        >> 'when the version has no leading v' {
+          put 'This is v4.5.6 and ready' |
+            semver:contains 4.5.6 |
+            should-be $true
+        }
+
+        >> 'when the version has a leading v' {
+          put 'This is v4.5.6 and ready' |
+            semver:contains v4.5.6 |
+            should-be $true
+        }
+      }
+
+      >> 'when the version is not within the string' {
+        put 1.2.3 |
+          semver:contains 4.5.6 |
+          should-be $false
+      }
+    }
+
+    >> 'when a matching version object is passed' {
+      var version = (semver:parse 1.2.3)
+
+      put 1.2.3 |
+        semver:contains $version |
+        should-be $true
+    }
+  }
 }
