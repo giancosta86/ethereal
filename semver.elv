@@ -171,6 +171,23 @@ fn to-string { |@arguments|
 }
 
 #
+# Given a version passed as input:
+#
+# * if '<major>' is zero, emit '0.<minor>'; for example: `0.2.3`->`0.2`
+#
+# * otherwise, just emit <major> as a string; for example: `1.2.3`->`1`
+#
+fn to-major-string { |@arguments|
+  var version = (lang:get-single-input $arguments)
+
+  if (> $version[major] 0) {
+    put $version[major]
+  } else {
+    put '0.'$version[minor]
+  }
+}
+
+#
 # Emits $true if the version passed as input has both its `pre-release` and `build` components set to $nil.
 #
 fn is-stable { |@arguments|

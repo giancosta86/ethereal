@@ -220,6 +220,36 @@ var full-source = $major'.'$minor'.'$patch'-'$pre-release'+'$build
     }
   }
 
+  >> 'converting to major string' {
+    >> 'when the major component is 0' {
+      >> 'when the minor component is 0' {
+        semver:parse 0.0.3 |
+          semver:to-major-string |
+          should-be 0.0
+      }
+
+      >> 'when the minor component is not 0' {
+        semver:parse 0.7.8 |
+          semver:to-major-string |
+          should-be 0.7
+      }
+    }
+
+    >> 'when the major component is not 0' {
+      >> 'when the minor component is 0' {
+        semver:parse 1.0.9 |
+          semver:to-major-string |
+          should-be 1
+      }
+
+      >> 'when the minor component is not 0' {
+        semver:parse 1.2.3 |
+          semver:to-major-string |
+          should-be 1
+      }
+    }
+  }
+
   >> 'detecting stability' {
     >> 'for stable version' {
       semver:parse $major'.'$minor'.'$patch |
