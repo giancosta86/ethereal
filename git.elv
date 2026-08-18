@@ -9,9 +9,7 @@ var git~ = (external git)
 # Emits the current branch.
 #
 fn get-branch {
-  git status |
-    take 1 |
-    put (all)[10..]
+  git branch --show-current
 }
 
 #
