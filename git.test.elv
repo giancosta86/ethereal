@@ -87,4 +87,46 @@ fn within-temp-repo { |repo-consumer|
       }
     }
   }
+
+  >> 'getting the latest version' {
+    fn assert-latest-version { |branches latest-version-source|
+      var latest-version = (
+        lang:map $latest-version-source $semver:parse~
+      )
+
+      within-temp-repo { |temp-repo|
+        all $branches | each { |branch|
+          git switch -c $branch
+        }
+
+        git switch main
+
+        git:get-latest-version |
+          should-be $latest-version
+      }
+    }
+
+    >> 'when the repository only has the main branch' {
+      assert-latest-version [] $nil
+    }
+
+    >> 'when the repository has no parsable branches' {
+      assert-latest-version [alpha beta gamma] $nil
+    }
+
+    >> 'when the repository has one parsable branch' {
+      assert-latest-version [alpha v1.7 dodo] v1.7
+    }
+
+    >> 'when the repository has multiple parsable branches' {
+      assert-latest-version [
+        v1.7
+        v1.7.1
+        v2.5
+        v3.6.5
+        v0.4
+        v2.9.11
+      ] v3.6.5
+    }
+  }
 }
