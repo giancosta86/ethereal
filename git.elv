@@ -60,3 +60,46 @@ fn get-latest-version {
     lang:ensure-put |
     take 1
 }
+
+#
+# Takes in input a semantic version component ("major"|"minor"|"patch"),
+# then performs the following steps to create a new version-based branch:
+#
+# 1. Switch to main
+#
+# 2. Try to pull the latest commits for main
+#
+# 3. Detect the version-based branch associated with the latest version:
+#
+#    * if no version-based branch exists, just create a 'v0.1.0' branch
+#
+#    * otherwise, apply `semver:bump`, also passing the requested component, then create a `v<new-version>` branch
+#
+# 4. Finally, switch to the newly-created branch.
+#
+fn bump-latest-version { |@arguments|
+  var component = (lang:get-single-input $arguments)
+
+  git checkout main
+
+  try {
+    git pull
+  } catch {
+    echo 💭 Could not pull the main branch... >&2
+  }
+
+  var latest-version = (get-latest-version)
+
+  var new-version = (
+    if $latest-version {
+      semver:bump $latest-version $component
+    } else {
+      echo 💭 No existing version branches... >&2
+      semver:parse 0.1
+    }
+  )
+
+  var new-branch = 'v'(semver:to-string $new-version)
+
+  git switch -c $new-branch
+}

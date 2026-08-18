@@ -129,4 +129,61 @@ fn within-temp-repo { |repo-consumer|
       ] v3.6.5
     }
   }
+
+  >> 'bumping the latest version' {
+    fn assert-bumping-branch { |branches component new-branch|
+      within-temp-repo { |temp-repo|
+        all $branches | each { |branch|
+          git switch -c $branch
+        }
+
+        git:bump-latest-version $component
+
+        git:get-branch |
+          should-be $new-branch
+      }
+    }
+
+    >> 'when the repository only has the main branch' {
+      assert-bumping-branch [] major v0.1.0
+    }
+
+    >> 'when the repository has multiple versions' {
+      >> 'when bumping the major component' {
+        assert-bumping-branch [
+          v2.3
+          dodo
+          v5.6.2
+          v1.7.4
+          v3.2
+          v7.8.9
+          v5.6.0
+        ] major v8.0.0
+      }
+
+      >> 'when bumping the minor component' {
+        assert-bumping-branch [
+          v2.3
+          dodo
+          v5.6.2
+          v1.7.4
+          v3.2
+          v7.8.9
+          v5.6.0
+        ] minor v7.9.0
+      }
+
+      >> 'when bumping the patch component' {
+        assert-bumping-branch [
+          v2.3
+          dodo
+          v5.6.2
+          v1.7.4
+          v3.2
+          v7.8.9
+          v5.6.0
+        ] patch v7.8.10
+      }
+    }
+  }
 }
