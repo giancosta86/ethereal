@@ -363,4 +363,55 @@ var full-source = $major'.'$minor'.'$patch'-'$pre-release'+'$build
         should-be $true
     }
   }
+
+  >> 'bumping' {
+    var version = (semver:parse 5.7.9)
+
+    >> 'major component' {
+      put $version |
+        semver:bump major |
+        should-be (semver:parse 6.0.0)
+    }
+
+    >> 'minor component' {
+      semver:bump $version minor |
+        should-be (semver:parse 5.8.0)
+    }
+
+    >> 'patch component' {
+      put $version |
+        semver:bump patch |
+        should-be (semver:parse 5.7.10)
+    }
+
+    >> 'when there are pre-release and build components' {
+      semver:parse $full-source |
+        semver:bump major |
+        should-be (semver:parse 10.0.0)
+    }
+
+    >> 'when trying to bump pre-release' {
+      fails {
+        semver:parse $full-source |
+          semver:bump pre-release
+      } |
+        should-be 'Unsupported version component to bump: pre-release'
+    }
+
+    >> 'when trying to bump build' {
+      fails {
+        semver:parse $full-source |
+          semver:bump build
+      } |
+        should-be 'Unsupported version component to bump: build'
+    }
+
+    >> 'when trying to bump an absurd component' {
+      fails {
+        semver:parse $full-source |
+          semver:bump dodo
+      } |
+        should-be 'Unsupported version component to bump: dodo'
+    }
+  }
 }

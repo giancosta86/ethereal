@@ -293,3 +293,34 @@ fn contains { |version|
     put '(?:^|\s)v?'(all)'(?:\s|$)' |
     re:match (all) $source
 }
+
+#
+# Given a version passed via pipe or as the first argument:
+#
+# 1. increase by 1 the component ("major"|"minor"|"patch") passed as the last argument
+#
+# 2. reset to 0 the following components
+#
+# The `pre-release` and `build` components are always reset to $nil.
+#
+fn bump { |@arguments|
+  var version component = (
+    lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments
+  )
+
+  if (not (has-value [major minor patch] $component)) {
+    fail 'Unsupported version component to bump: '$component
+  }
+
+  assoc $version $component (+ $version[$component] 1) |
+    if (eq $component major) {
+      assoc (all) minor 0 |
+      assoc (all) patch 0
+    } elif (eq $component minor) {
+      assoc (all) patch 0
+    } else {
+      all
+    } |
+    assoc (all) pre-release $nil |
+    assoc (all) build $nil
+}
