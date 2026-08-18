@@ -1,5 +1,6 @@
 use os
 use ./lang
+use ./semver
 
 pragma unknown-command = disallow
 
@@ -22,5 +23,20 @@ fn ensure-in-branch { |@arguments|
     git switch $branch 2> $os:dev-null
   } catch {
     git switch -c $branch
+  }
+}
+
+#
+# Emits a semantic version object if the current branch name can be parsed - or $nil otherwise.
+#
+# Both an optional leading "v", as well as shortened versions (like «1.4»), are supported.
+#
+fn get-version {
+  var branch = (get-branch)
+
+  try {
+    semver:parse $branch
+  } catch {
+    put $nil
   }
 }

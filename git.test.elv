@@ -1,4 +1,5 @@
 use ./git
+use ./semver
 
 fn within-temp-repo { |repo-consumer|
   fs:with-temp-dir { |temp-dir|
@@ -49,6 +50,40 @@ fn within-temp-repo { |repo-consumer|
 
         git:get-branch |
           should-be dodo
+      }
+    }
+  }
+
+  >> 'getting the branch version' {
+    >> 'when not convertible' {
+      within-temp-repo { |temp-repo|
+        git switch -c dodo
+
+        git:get-version |
+          should-be $nil
+      }
+    }
+
+    >> 'when convertible' {
+      fn assert-branch-version { |version-string|
+        within-temp-repo { |temp-repo|
+          git switch -c $version-string
+
+          git:get-version |
+            should-be (semver:parse $version-string)
+        }
+      }
+
+      >> 'with leading v' {
+        assert-branch-version v1.2.3-my-test-pre+my-test-build
+      }
+
+      >> 'without leading v' {
+        assert-branch-version 4.5.6
+      }
+
+      >> 'when shortened' {
+        assert-branch-version v7.8
       }
     }
   }
