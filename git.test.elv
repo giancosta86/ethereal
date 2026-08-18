@@ -29,6 +29,32 @@ fn within-temp-repo { |repo-consumer|
     }
   }
 
+  >> 'getting the head' {
+    >> 'when on a branch' {
+      within-temp-repo { |temp-repo|
+        var initial-commit = (git rev-parse main)
+
+        git:get-head |
+          should-be $initial-commit
+      }
+    }
+
+    >> 'when at a specific commit' {
+      within-temp-repo { |temp-repo|
+        var initial-commit = (git rev-parse main)
+
+        echo World > beta.txt
+        git add .
+        git commit -m 'Second commit'
+
+        git checkout $initial-commit
+
+        git:get-head |
+          should-be $initial-commit
+      }
+    }
+  }
+
   >> 'ensuring to be in a branch' {
     >> 'when the branch does not exist' {
       within-temp-repo { |temp-repo|

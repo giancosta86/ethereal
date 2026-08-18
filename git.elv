@@ -15,6 +15,13 @@ fn get-branch {
 }
 
 #
+# Emits the commit SHA referenced by HEAD.
+#
+fn get-head {
+  git rev-parse HEAD
+}
+
+#
 # Switches to the requested branch, creating it if needed
 #
 fn ensure-in-branch { |@arguments|
