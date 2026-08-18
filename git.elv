@@ -1,11 +1,41 @@
 use os
 use str
+use ./fs
 use ./lang
 use ./semver
 
 pragma unknown-command = disallow
 
 var git~ = (external git)
+
+#
+# Moves into a temporary directory, then:
+#
+# 1. Initializes Git, also setting a local username with e-mail
+#
+# 2. Creates a "main" branch, with an initial file and a first commit
+#
+# 3. Invokes the given code block
+#
+# In the end, the temporary directory is deleted.
+#
+fn within-temp-repo { |block|
+  fs:with-temp-dir { |temp-dir|
+    cd $temp-dir
+
+    git init --initial-branch=main
+
+    git config --local user.name "Test User"
+    git config --local user.email "test@example.com"
+
+    git switch -c main
+    echo Hello > test.txt
+    git add .
+    git commit -m "First commit"
+
+    $block
+  }
+}
 
 #
 # Emits the current branch.

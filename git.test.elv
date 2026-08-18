@@ -1,27 +1,34 @@
 use ./git
 use ./semver
 
-fn within-temp-repo { |repo-consumer|
-  fs:with-temp-dir { |temp-dir|
-    cd $temp-dir
-
-    git init --initial-branch=main
-
-    git config --local user.name "Test User"
-    git config --local user.email "test@gianlucacosta.info"
-
-    git switch -c main
-    echo Hello > test.txt
-    git add .
-    git commit -m "First commit"
-
-    $repo-consumer $temp-dir
-  }
-}
-
 >> 'In git module' {
+  >> 'creating a temp repo' {
+    >> 'should create a single main branch' {
+      git:within-temp-repo {
+        git branch |
+          should-be '* main'
+      }
+    }
+
+    >> 'should provide an initial commit' {
+      git:within-temp-repo {
+        git log --oneline |
+          count |
+          should-be 1
+      }
+    }
+
+    >> 'should provide an initial file' {
+      git:within-temp-repo {
+        ls |
+          count |
+          should-be 1
+      }
+    }
+  }
+
   >> 'getting the current branch' {
-    within-temp-repo { |temp-repo|
+    git:within-temp-repo {
       git switch -c dodo
 
       git:get-branch |
@@ -31,7 +38,7 @@ fn within-temp-repo { |repo-consumer|
 
   >> 'getting the head' {
     >> 'when on a branch' {
-      within-temp-repo { |temp-repo|
+      git:within-temp-repo {
         var initial-commit = (git rev-parse main)
 
         git:get-head |
@@ -40,7 +47,7 @@ fn within-temp-repo { |repo-consumer|
     }
 
     >> 'when at a specific commit' {
-      within-temp-repo { |temp-repo|
+      git:within-temp-repo {
         var initial-commit = (git rev-parse main)
 
         echo World > beta.txt
@@ -57,7 +64,7 @@ fn within-temp-repo { |repo-consumer|
 
   >> 'ensuring to be in a branch' {
     >> 'when the branch does not exist' {
-      within-temp-repo { |temp-repo|
+      git:within-temp-repo {
         git:ensure-in-branch dodo
 
         git:get-branch |
@@ -66,7 +73,7 @@ fn within-temp-repo { |repo-consumer|
     }
 
     >> 'when the branch exists' {
-      within-temp-repo { |temp-repo|
+      git:within-temp-repo {
         git switch -c dodo
 
         git switch main
@@ -82,7 +89,7 @@ fn within-temp-repo { |repo-consumer|
 
   >> 'getting the branch version' {
     >> 'when not convertible' {
-      within-temp-repo { |temp-repo|
+      git:within-temp-repo {
         git switch -c dodo
 
         git:get-version |
@@ -92,7 +99,7 @@ fn within-temp-repo { |repo-consumer|
 
     >> 'when convertible' {
       fn assert-branch-version { |version-string|
-        within-temp-repo { |temp-repo|
+        git:within-temp-repo {
           git switch -c $version-string
 
           git:get-version |
@@ -120,7 +127,7 @@ fn within-temp-repo { |repo-consumer|
         lang:map $latest-version-source $semver:parse~
       )
 
-      within-temp-repo { |temp-repo|
+      git:within-temp-repo {
         all $branches | each { |branch|
           git switch -c $branch
         }
@@ -158,7 +165,7 @@ fn within-temp-repo { |repo-consumer|
 
   >> 'bumping the latest version' {
     fn assert-bumping-branch { |branches component new-branch|
-      within-temp-repo { |temp-repo|
+      git:within-temp-repo {
         all $branches | each { |branch|
           git switch -c $branch
         }
