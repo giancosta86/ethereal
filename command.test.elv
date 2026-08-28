@@ -1,3 +1,4 @@
+use path
 use ./command
 use ./fs
 
@@ -325,6 +326,98 @@ var test-block-crashing = {
       >> 'the block should be executed' {
         put $output |
           should-be 3
+      }
+    }
+  }
+
+  >> 'running Bash and updating PATH' {
+    fn with-temp-paths { |temp-paths block|
+      tmp paths = $temp-paths
+
+      $block
+    }
+
+    >> 'when Bash does not update PATH' {
+      >> 'on successful exit' {
+        var bash-path = (which bash | path:dir (all))
+
+        var initial-paths = [Alpha Beta $bash-path]
+
+        with-temp-paths $initial-paths {
+          command:run-bash-and-update-path 'echo "Hello"' |
+            should-be Hello
+
+          put $paths |
+            should-be $initial-paths
+        }
+      }
+
+      >> 'on crash' {
+        var bash-path = (which bash | path:dir (all))
+
+        var initial-paths = [Alpha Beta $bash-path]
+
+        with-temp-paths $initial-paths {
+          var output-lines = [(
+            capture &lines &throws {
+              command:run-bash-and-update-path 'echo Hello && echo World && SOME_INEXISTENT_COMMAND && echo Dodo'
+            }
+          )]
+
+          put $output-lines |
+            should-contain Hello
+
+          put $output-lines |
+            should-contain World
+
+          put $output-lines |
+            should-not-contain Dodo
+
+          put $paths |
+            should-be $initial-paths
+        }
+      }
+    }
+
+    >> 'when Bash updates PATH' {
+      >> 'on successful exit' {
+        var bash-path = (which bash | path:dir (all))
+
+        var initial-paths = [Alpha Beta $bash-path]
+
+        with-temp-paths $initial-paths {
+          command:run-bash-and-update-path 'echo "Hello"; PATH=Gamma' |
+            should-be Hello
+
+          put $paths |
+            should-be [Gamma]
+        }
+      }
+
+      >> 'on crash' {
+        var bash-path = (which bash | path:dir (all))
+
+        var initial-paths = [Alpha Beta $bash-path]
+
+        with-temp-paths $initial-paths {
+          var output-lines = [(
+            capture &lines &throws {
+              command:run-bash-and-update-path 'echo Hello && echo World && PATH=Delta && SOME_INEXISTENT_COMMAND && echo Dodo'
+            }
+          )]
+
+          put $output-lines |
+            should-contain Hello
+
+          put $output-lines |
+            should-contain World
+
+          put $output-lines |
+            should-not-contain Dodo
+
+          put $paths |
+            should-be $initial-paths
+        }
       }
     }
   }

@@ -218,3 +218,50 @@ fn spy { |@arguments|
     }
   ]
 }
+
+#
+# Given a Bash command line as a string, executes it, then:
+#
+# * if the execution was successful:
+#
+#   * emits the output of the Bash process
+#
+#   * sets the PATH variable in Elvish to the value it had within Bash right after the command
+#
+# * on failure:
+#
+#   * emits as much output as possible from the Bash process
+#
+#   * rethrows the exception
+#
+fn run-bash-and-update-path { |@arguments|
+  var command-line = (lang:get-single-input $arguments)
+
+  var exception = $nil
+
+  var extended-command-line = $command-line' && echo $PATH'
+
+  var bash-output = [(
+    try {
+      -bash -c $extended-command-line
+    } catch e {
+      set exception = $e
+    }
+  )]
+
+  if (not-eq $exception $nil) {
+    all $bash-output |
+      each $echo~
+
+    fail $exception
+  }
+
+  var command-output = $bash-output[..-1]
+
+  var updated-path = $bash-output[-1]
+
+  set-env PATH $updated-path
+
+  all $command-output |
+    each $echo~
+}
