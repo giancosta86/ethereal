@@ -69,4 +69,13 @@ fn get-pip-arguments { |block|
       }
     }
   }
+
+  >> 'enabling memory allocation tracing' {
+    tmp E:PYTHONTRACEMALLOC = 0
+
+    python:trace-malloc
+
+    get-env PYTHONTRACEMALLOC |
+      should-be 1
+  }
 }
