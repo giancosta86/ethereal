@@ -337,30 +337,36 @@ var test-block-crashing = {
       $block
     }
 
+    fn expect-unaltered-paths { |block|
+      var bash-path = (which bash | path:dir (all))
+
+      var initial-paths = [$bash-path Alpha Beta]
+
+      with-temp-paths $initial-paths {
+        $block
+
+        put $paths |
+          should-be $initial-paths
+      }
+    }
+
     >> 'when Bash does not update PATH' {
       >> 'on successful exit' {
-        var bash-path = (which bash | path:dir (all))
-
-        var initial-paths = [Alpha Beta $bash-path]
-
-        with-temp-paths $initial-paths {
-          command:run-bash-and-update-path 'echo "Hello"' |
-            should-be Hello
-
-          put $paths |
-            should-be $initial-paths
+        expect-unaltered-paths {
+          command:run-bash-and-update-path 'echo "Hello"; echo "World"' |
+            should-emit [
+              Hello
+              World
+            ]
         }
       }
 
       >> 'on crash' {
-        var bash-path = (which bash | path:dir (all))
-
-        var initial-paths = [Alpha Beta $bash-path]
-
-        with-temp-paths $initial-paths {
+        expect-unaltered-paths {
           var output-lines = [(
             capture &lines &throws {
-              command:run-bash-and-update-path 'echo Hello && echo World && SOME_INEXISTENT_COMMAND && echo Dodo'
+              put 'echo Hello && echo World && SOME_INEXISTENT_COMMAND && echo Dodo' |
+                command:run-bash-and-update-path
             }
           )]
 
@@ -372,9 +378,6 @@ var test-block-crashing = {
 
           put $output-lines |
             should-not-contain Dodo
-
-          put $paths |
-            should-be $initial-paths
         }
       }
     }
@@ -383,11 +386,14 @@ var test-block-crashing = {
       >> 'on successful exit' {
         var bash-path = (which bash | path:dir (all))
 
-        var initial-paths = [Alpha Beta $bash-path]
+        var initial-paths = [$bash-path Alpha Beta]
 
         with-temp-paths $initial-paths {
-          command:run-bash-and-update-path 'echo "Hello"; PATH=Gamma' |
-            should-be Hello
+          command:run-bash-and-update-path 'echo "Hello"; PATH=Gamma; echo "World"' |
+            should-emit [
+              Hello
+              World
+            ]
 
           put $paths |
             should-be [Gamma]
@@ -395,14 +401,11 @@ var test-block-crashing = {
       }
 
       >> 'on crash' {
-        var bash-path = (which bash | path:dir (all))
-
-        var initial-paths = [Alpha Beta $bash-path]
-
-        with-temp-paths $initial-paths {
+        expect-unaltered-paths {
           var output-lines = [(
             capture &lines &throws {
-              command:run-bash-and-update-path 'echo Hello && echo World && PATH=Delta && SOME_INEXISTENT_COMMAND && echo Dodo'
+              put 'echo Hello && echo World && PATH=Delta && SOME_INEXISTENT_COMMAND && echo Dodo' |
+                command:run-bash-and-update-path
             }
           )]
 
@@ -414,9 +417,6 @@ var test-block-crashing = {
 
           put $output-lines |
             should-not-contain Dodo
-
-          put $paths |
-            should-be $initial-paths
         }
       }
     }
