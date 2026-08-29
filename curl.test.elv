@@ -30,7 +30,7 @@ fn with-factory-reset-curl { |block|
         $assertion %
   }
 
-  >> 'when not altering the output settings' {
+  >> 'with factory settings' {
     with-factory-reset-curl {
       expect-progress $true
     }
