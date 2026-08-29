@@ -239,8 +239,7 @@ fn spy { |@arguments|
 fn run-bash-and-update-path { |@arguments|
   var command-line = (lang:get-single-input $arguments)
 
-  var extended-command-line = $command-line' && echo $PATH'
-
+  var extended-command-line = $command-line' && echo ${PATH:-}'
 
   var bash-exception = $nil
 
