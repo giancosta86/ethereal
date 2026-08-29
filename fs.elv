@@ -120,6 +120,21 @@ fn with-temp-dir { |&dir='' &pattern=$nil @arguments|
 }
 
 #
+# Calls `with-temp-dir`, forwarding all flags, then moves into the new directory.
+#
+# Takes in input a no-args block: the directory can be retrieved via $pwd.
+#
+fn within-temp-dir { |&dir='' &pattern=$nil @arguments|
+  var block = (lang:get-single-input $arguments)
+
+  with-temp-dir &dir=$dir &pattern=$pattern { |temp-dir|
+    tmp pwd = $temp-dir
+
+    $block
+  }
+}
+
+#
 # Given a `path`, passed as argument, and its `content` - passed as argument or via pipe -
 # creates all the intermediate directories so as to be able to save `content` into `path`.
 #

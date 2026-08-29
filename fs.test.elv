@@ -201,7 +201,7 @@ fn create-temp-tree { |temp-root|
   }
 
   >> 'consuming a temp directory path' {
-    >> 'should delete the temp path after the consumer runs' {
+    >> 'should delete the temp directory after the consumer runs' {
       var actual-path
 
       fs:with-temp-dir { |temp-dir|
@@ -257,6 +257,53 @@ fn create-temp-tree { |temp-root|
 
       put $pwd |
         should-be $temp-parent
+    }
+  }
+
+
+  >> 'moving to a temp directory path' {
+    >> 'should delete the temp directory after the consumer runs' {
+      var temp-dir
+
+      fs:within-temp-dir {
+        set temp-dir = $pwd
+      }
+
+      put $temp-dir |
+        should-not-exist
+    }
+
+    >> 'should support a custom pattern' {
+      var custom-prefix = alpha-
+      var custom-suffix = -omega
+
+      fs:within-temp-dir &pattern=$custom-prefix'*'$custom-suffix {
+        var temp-base = (path:base $pwd)
+
+        put $temp-base |
+          should-have-prefix $custom-prefix
+
+        put $temp-base |
+          should-have-suffix $custom-suffix
+      }
+    }
+
+    >> 'should automatically move pwd to the created temp directory' {
+      var previous-path = $pwd
+
+      fs:within-temp-dir {
+        put $pwd |
+          should-not-be $previous-path
+      }
+    }
+
+    >> 'should ensure that pwd returns to the original location' {
+      var previous-path = $pwd
+
+      fs:within-temp-dir { }
+
+      put $pwd |
+        should-be $previous-path
     }
   }
 
