@@ -15,12 +15,24 @@ fn with-factory-reset-curl { |block|
 }
 
 >> 'In curl module' {
-  >> 'when not altering the output settings' {
-    with-factory-reset-curl {
-      capture &stream=err {
+  fn expect-progress { |progress-visible|
+    var assertion = (
+      if $progress-visible {
+        put $should-contain~
+      } else {
+        put $should-not-contain~
+      }
+    )
+
+    capture {
         curl $test-website
       } |
-        should-contain %
+        $assertion %
+  }
+
+  >> 'when not altering the output settings' {
+    with-factory-reset-curl {
+      expect-progress $true
     }
   }
 
@@ -28,19 +40,13 @@ fn with-factory-reset-curl { |block|
     with-factory-reset-curl {
       curl:display-errors-only
 
-      capture {
-        curl $test-website
-      } |
-        should-not-contain %
+      expect-progress $false
     }
   }
 
   >> 'when using a block handler to display errors only' {
     curl:with-silence {
-      capture {
-        curl $test-website
-      } |
-        should-not-contain %
+      expect-progress $false
     }
   }
 }
