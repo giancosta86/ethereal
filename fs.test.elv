@@ -300,7 +300,13 @@ fn create-temp-tree { |temp-root|
     >> 'should ensure that pwd returns to the original location' {
       var previous-path = $pwd
 
-      fs:within-temp-dir { }
+      try {
+        fs:within-temp-dir {
+          fail 'This error won''t interfere with directory restoration'
+        }
+      } catch {
+        # Just do nothing
+      }
 
       put $pwd |
         should-be $previous-path
