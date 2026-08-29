@@ -1,5 +1,7 @@
 use path
 
+pragma unknown-command = disallow
+
 var sdkman-home = (path:join ~ .sdkman)
 
 var sdkman-script = (path:join $sdkman-home bin sdkman-init.sh)

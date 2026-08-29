@@ -1,6 +1,7 @@
 use os
 use str
 use ../command
+use ../curl
 use ./paths
 
 pragma unknown-command = disallow
@@ -8,7 +9,6 @@ pragma unknown-command = disallow
 var -bash~ = (external bash)
 
 var -curl~ = (external curl)
-
 
 fn -ensure-installed {
   if (os:is-dir $paths:sdkman-home) {
@@ -34,5 +34,7 @@ fn -run-sdkman { |@arguments|
 # Runs SDKMAN's Bash script - installing it if it's not already available - forwarding the arguments.
 #
 fn sdkman { |@arguments|
-  -run-sdkman $@arguments
+  curl:with-silence {
+    -run-sdkman $@arguments
+  }
 }

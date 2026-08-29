@@ -3,6 +3,8 @@ use path
 use ./paths
 use ./wrapper
 
+pragma unknown-command = disallow
+
 fn -before-chdir-hook { |next-dir|
   var current-dir-has-sdk-file = (
     path:join $pwd $paths:sdk-file |
