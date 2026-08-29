@@ -491,9 +491,7 @@ fn create-temp-tree { |temp-root|
 
     >> 'when the target directory already exists' {
       >> 'should just move to that directory' {
-        fs:with-temp-dir { |temp-dir|
-          cd $temp-dir
-
+        fs:within-temp-dir {
           var components = [ro sigma tau]
 
           os:mkdir-all (path:join $@components)
@@ -561,9 +559,7 @@ fn create-temp-tree { |temp-root|
 
       >> 'if the path did not exist' {
         >> 'should remove the file in the end' {
-          fs:with-temp-dir { |temp-dir|
-            cd $temp-dir
-
+          fs:within-temp-dir {
             var test-file = SOME-MISSING-FILE
 
             fs:with-path-sandbox $test-file {
@@ -583,8 +579,8 @@ fn create-temp-tree { |temp-root|
     >> 'when operating on a directory' {
       >> 'if the path existed' {
         >> 'should restore the tree as it was, without altering the pwd' {
-          fs:with-temp-dir { |temp-dir|
-            cd $temp-dir
+          fs:within-temp-dir {
+            var temp-dir = $pwd
 
             var sigma = sigma.txt
             print Sigma > $sigma
@@ -625,9 +621,7 @@ fn create-temp-tree { |temp-root|
 
       >> 'if the path did not exist' {
         >> 'should remove the entire tree' {
-          fs:with-temp-dir { |temp-dir|
-            cd $temp-dir
-
+          fs:within-temp-dir {
             var a = A
 
             var b = (path:join $a B)
@@ -681,9 +675,7 @@ fn create-temp-tree { |temp-root|
   }
 
   >> 'finding duplicates' {
-    fs:with-temp-dir { |temp-dir|
-      cd $temp-dir
-
+    fs:within-temp-dir {
       print A > A1
       print A > A2
       print A > A3
@@ -762,9 +754,7 @@ fn create-temp-tree { |temp-root|
     }
 
     >> 'when there are no scripts' {
-      fs:with-temp-dir { |temp-dir|
-        cd $temp-dir
-
+      fs:within-temp-dir {
         >> 'when not requesting tests' {
           fs:find-scripts |
             should-emit []
@@ -780,18 +770,14 @@ fn create-temp-tree { |temp-root|
 
   >> 'finding test scripts' {
     >> 'in directory with no tests' {
-      fs:with-temp-dir { |temp-dir|
-        cd $temp-dir
-
+      fs:within-temp-dir {
         fs:find-test-scripts |
           should-emit []
       }
     }
 
     >> 'in directory with tests' {
-      fs:with-temp-dir { |temp-dir|
-        cd $temp-dir
-
+      fs:within-temp-dir {
         echo alpha > alpha.test.elv
         echo beta > beta.test.elv
 
@@ -806,9 +792,7 @@ fn create-temp-tree { |temp-root|
     }
 
     >> 'in directory with nested tests' {
-      fs:with-temp-dir { |temp-dir|
-        cd $temp-dir
-
+      fs:within-temp-dir {
         echo alpha > alpha.test.elv
 
         mkdir beta
@@ -852,9 +836,7 @@ fn create-temp-tree { |temp-root|
     var existing-dir-path = existing-dir
 
     >> 'when applied to an inexistent path' {
-      fs:with-temp-dir { |temp-dir|
-        cd $temp-dir
-
+      fs:within-temp-dir {
         fs:touch $brand-new-path
 
         put $brand-new-path |
@@ -866,9 +848,7 @@ fn create-temp-tree { |temp-root|
     }
 
     >> 'when applied to an existing file' {
-      fs:with-temp-dir { |temp-dir|
-        cd $temp-dir
-
+      fs:within-temp-dir {
         echo Hello > $existing-file-path
 
         put $existing-file-path |
@@ -880,9 +860,7 @@ fn create-temp-tree { |temp-root|
     }
 
     >> 'when applied to an existing dir' {
-      fs:with-temp-dir { |temp-dir|
-        cd $temp-dir
-
+      fs:within-temp-dir {
         mkdir $existing-dir-path
 
         fs:touch $existing-dir-path
@@ -894,9 +872,7 @@ fn create-temp-tree { |temp-root|
 
     >> 'when passing multiple paths' {
       fn scenario { |touch-execution-block|
-        fs:with-temp-dir { |temp-dir|
-          cd $temp-dir
-
+        fs:within-temp-dir {
           echo Hello > $existing-file-path
 
           mkdir $existing-dir-path
