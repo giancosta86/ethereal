@@ -28,7 +28,16 @@ fn with-factory-reset-curl { |block|
     with-factory-reset-curl {
       curl:display-errors-only
 
-      capture &stream=err {
+      capture {
+        curl $test-website
+      } |
+        should-not-contain %
+    }
+  }
+
+  >> 'when using a block handler to display errors only' {
+    curl:with-silence {
+      capture {
         curl $test-website
       } |
         should-not-contain %
