@@ -125,11 +125,11 @@ The `sdkman` module provides hooks to run [sdkman env](https://sdkman.io/usage/#
 
 In particular:
 
-- if the target directory contains a **.sdkmanrc** file, it will run `sdkman env install`
+- if the target directory contains a **.sdkmanrc** file, it will run `sdkman env install`.
 
-- if the target directory does NOT contain **.sdkmanrc**, but the previous directory did, run `sdkman env clear`.
+- if the target directory does NOT contain **.sdkmanrc**, but the previous directory did, executes `sdkman env clear`.
 
-To enable them, you could run - for example, in you **rc.elv** file:
+To enable them, you could run - for example, in your **rc.elv** file:
 
 ```elvish
 use github.com/giancosta86/ethereal/v1/sdkman
