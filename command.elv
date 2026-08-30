@@ -231,7 +231,7 @@ fn spy { |@arguments|
 #
 #   * emits the output of the Bash process
 #
-#   * sets the environment variables in Elvish to the values within Bash right after the command,
+#   * sets the requested environment variables in Elvish to the values within Bash right after the command,
 #     defaulting to empty values
 #
 # * on failure:

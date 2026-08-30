@@ -431,38 +431,74 @@ var test-block-crashing = {
     }
 
     >> 'when updating multiple variables' {
-      tmp E:Alpha = A
+      >> 'on success' {
+        tmp E:Alpha = A
 
-      tmp E:Beta = B
+        tmp E:Beta = B
 
-      if (has-env Gamma) {
-        fail 'The "Gamma" environment variable should not be defined!'
+        unset-env Gamma
+
+        unset-env Delta
+
+        capture &lines {
+          put 'Alpha="${Alpha}90" && Beta="${Beta}92" && echo Hello && Gamma=skipped && echo World && Delta=Magic' |
+            command:update-env-via-bash [Alpha Beta Delta]
+        } |
+          should-emit [
+            Hello
+            World
+          ]
+
+        get-env Alpha |
+          should-be A90
+
+        get-env Beta |
+          should-be B92
+
+        has-env Gamma |
+          should-be $false
+
+        get-env Delta |
+          should-be Magic
       }
 
-      if (has-env Delta) {
-        fail 'The "Delta" environment variable should not be defined!'
+      >> 'on failure' {
+        tmp E:Alpha = A
+
+        tmp E:Beta = B
+
+        unset-env Gamma
+
+        unset-env Delta
+
+        var output-lines = [(
+          capture &lines &throws {
+            put 'Alpha="${Alpha}90" && Beta="${Beta}92" && echo Hello && Gamma=skipped && echo World && INEXISTENT_COMMAND && echo Missing && Delta=Magic' |
+              command:update-env-via-bash [Alpha Beta Delta]
+          }
+        )]
+
+        put $output-lines |
+          should-contain Hello
+
+        put $output-lines |
+          should-contain World
+
+        put $output-lines |
+          should-not-contain Missing
+
+        get-env Alpha |
+          should-be A
+
+        get-env Beta |
+          should-be B
+
+        has-env Gamma |
+          should-be $false
+
+        has-env Delta |
+          should-be $false
       }
-
-      capture &lines {
-        put 'Alpha="${Alpha}90" && Beta="${Beta}92" && echo Hello && Gamma=skipped && echo World && Delta=Magic' |
-          command:update-env-via-bash [Alpha Beta Delta]
-      } |
-        should-emit [
-          Hello
-          World
-        ]
-
-      get-env Alpha |
-        should-be A90
-
-      get-env Beta |
-        should-be B92
-
-      has-env Gamma |
-        should-be $false
-
-      get-env Delta |
-        should-be Magic
     }
   }
 }
