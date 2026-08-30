@@ -1,4 +1,4 @@
-use github.com/giancosta86/ethereal/v1/lang
+use ./lang
 
 pragma unknown-command = disallow
 

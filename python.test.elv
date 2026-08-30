@@ -1,4 +1,3 @@
-use github.com/giancosta86/ethereal/v1/command
 use ./python
 
 fn get-pip-arguments { |block|
