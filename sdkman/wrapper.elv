@@ -17,7 +17,8 @@ fn -ensure-installed {
 
   echo 📥 Installing SDKMAN...
 
-  -curl -s 'https://get.sdkman.io' | -bash
+  -curl -s 'https://get.sdkman.io' |
+    -bash
 
   echo ✅ SDKMAN installed!
 }
@@ -31,7 +32,9 @@ fn -run-sdkman { |@arguments|
 }
 
 #
-# Runs SDKMAN's Bash script - installing it if it's not already available - forwarding the arguments.
+# Runs SDKMAN's Bash script, forwarding the arguments.
+#
+# If SDKMAN is not already on the system, it will be automatically installed.
 #
 fn sdkman { |@arguments|
   curl:with-silence {
