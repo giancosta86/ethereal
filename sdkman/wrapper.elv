@@ -27,7 +27,7 @@ fn -run-sdkman { |@arguments|
 
   str:join ' ' $arguments |
     put "source '"$paths:sdkman-script"' && sdk "(all) |
-    command:run-bash-and-update-path
+    command:update-env-via-bash [PATH SDKMAN_ENV]
 }
 
 #

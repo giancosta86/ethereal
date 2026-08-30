@@ -330,95 +330,139 @@ var test-block-crashing = {
     }
   }
 
-  >> 'running Bash and updating PATH' {
-    fn with-temp-paths { |temp-paths block|
-      tmp paths = $temp-paths
+  >> 'running Bash to update environment variables' {
+    >> 'when altering just PATH' {
+      fn with-temp-paths { |temp-paths block|
+        tmp paths = $temp-paths
 
-      $block
-    }
-
-    fn expect-unaltered-paths { |block|
-      var bash-path = (which bash | path:dir (all))
-
-      var initial-paths = [$bash-path Alpha Beta]
-
-      with-temp-paths $initial-paths {
         $block
-
-        put $paths |
-          should-be $initial-paths
-      }
-    }
-
-    >> 'when Bash does not update PATH' {
-      >> 'on successful exit' {
-        expect-unaltered-paths {
-          command:run-bash-and-update-path 'echo "Hello"; echo "World"' |
-            should-emit [
-              Hello
-              World
-            ]
-        }
       }
 
-      >> 'on crash' {
-        expect-unaltered-paths {
-          var output-lines = [(
-            capture &lines &throws {
-              put 'echo Hello && echo World && SOME_INEXISTENT_COMMAND && echo Dodo' |
-                command:run-bash-and-update-path
-            }
-          )]
+      fn expect-unaltered-paths { |block|
+        var bash-path = (
+          which bash |
+            path:dir (all)
+        )
 
-          put $output-lines |
-            should-contain Hello
-
-          put $output-lines |
-            should-contain World
-
-          put $output-lines |
-            should-not-contain Dodo
-        }
-      }
-    }
-
-    >> 'when Bash updates PATH' {
-      >> 'on successful exit' {
-        var bash-path = (which bash | path:dir (all))
-
-        var initial-paths = [$bash-path Alpha Beta]
+        var initial-paths = [
+          $bash-path
+          Alpha
+          Beta
+        ]
 
         with-temp-paths $initial-paths {
-          command:run-bash-and-update-path 'echo "Hello"; PATH=Gamma; echo "World"' |
-            should-emit [
-              Hello
-              World
-            ]
+          $block
 
           put $paths |
-            should-be [Gamma]
+            should-be $initial-paths
         }
       }
 
-      >> 'on crash' {
-        expect-unaltered-paths {
-          var output-lines = [(
-            capture &lines &throws {
-              put 'echo Hello && echo World && PATH=Delta && SOME_INEXISTENT_COMMAND && echo Dodo' |
-                command:run-bash-and-update-path
-            }
-          )]
+      >> 'when Bash does not update PATH' {
+        >> 'on successful exit' {
+          expect-unaltered-paths {
+            command:update-env-via-bash [PATH] 'echo "Hello"; echo "World"' |
+              should-emit [
+                Hello
+                World
+              ]
+          }
+        }
 
-          put $output-lines |
-            should-contain Hello
+        >> 'on crash' {
+          expect-unaltered-paths {
+            var output-lines = [(
+              capture &lines &throws {
+                put 'echo Hello && echo World && SOME_INEXISTENT_COMMAND && echo Dodo' |
+                  command:update-env-via-bash [PATH]
+              }
+            )]
 
-          put $output-lines |
-            should-contain World
+            put $output-lines |
+              should-contain Hello
 
-          put $output-lines |
-            should-not-contain Dodo
+            put $output-lines |
+              should-contain World
+
+            put $output-lines |
+              should-not-contain Dodo
+          }
         }
       }
+
+      >> 'when Bash updates PATH' {
+        >> 'on successful exit' {
+          var bash-path = (which bash | path:dir (all))
+
+          var initial-paths = [$bash-path Alpha Beta]
+
+          with-temp-paths $initial-paths {
+            command:update-env-via-bash [PATH] 'echo "Hello"; PATH=Gamma; echo "World"' |
+              should-emit [
+                Hello
+                World
+              ]
+
+            put $paths |
+              should-be [Gamma]
+          }
+        }
+
+        >> 'on crash' {
+          expect-unaltered-paths {
+            var output-lines = [(
+              capture &lines &throws {
+                put 'echo Hello && echo World && PATH=Delta && SOME_INEXISTENT_COMMAND && echo Dodo' |
+                  command:update-env-via-bash [PATH]
+              }
+            )]
+
+            put $output-lines |
+              should-contain Hello
+
+            put $output-lines |
+              should-contain World
+
+            put $output-lines |
+              should-not-contain Dodo
+          }
+        }
+      }
+    }
+
+    >> 'when updating multiple variables' {
+      tmp E:Alpha = A
+
+      tmp E:Beta = B
+
+      if (has-env Gamma) {
+        fail 'The "Gamma" environment variable should not be defined!'
+      }
+
+      if (has-env Delta) {
+        fail 'The "Delta" environment variable should not be defined!'
+      }
+
+      capture &lines {
+        put 'Alpha="${Alpha}90" && Beta="${Beta}92" && echo Hello && Gamma=skipped && echo World && Delta=Magic' |
+          command:update-env-via-bash [Alpha Beta Delta]
+      } |
+        should-emit [
+          Hello
+          World
+        ]
+
+      get-env Alpha |
+        should-be A90
+
+      get-env Beta |
+        should-be B92
+
+      has-env Gamma |
+        should-be $false
+
+      get-env Delta |
+        should-be Magic
     }
   }
 }

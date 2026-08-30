@@ -1,5 +1,8 @@
 use os
+use ./fs
 use ./lang
+use ./map
+use ./seq
 
 pragma unknown-command = disallow
 
@@ -220,50 +223,53 @@ fn spy { |@arguments|
 }
 
 #
-# Given a Bash command line as a string, executes it, then:
+# Given a list of environment variable names as argument
+# and a Bash command line as a string passed via pipe or as argument,
+# executes the command line, then:
 #
 # * if the execution was successful:
 #
-#   * sets the PATH variable in Elvish to the value it had within Bash right after the command
-#
 #   * emits the output of the Bash process
+#
+#   * sets the environment variables in Elvish to the values within Bash right after the command,
+#     defaulting to empty values
 #
 # * on failure:
 #
 #   * emits as much output as possible from the Bash process
 #
-#   * rethrows the exception
+#   * lets the exception propagate
 #
-#   * leaves PATH unaltered
+#   * leaves the environment variables unaltered
 #
-fn run-bash-and-update-path { |@arguments|
+fn update-env-via-bash { |env-vars @arguments|
   var command-line = (lang:get-single-input $arguments)
 
-  var extended-command-line = $command-line' && echo ${PATH:-}'
+  var temp-files-by-env-var = (
+    all $env-vars | each { |env-var|
+      put [$env-var (fs:temp-file-path)]
+    } |
+      make-map
+  )
 
-  var bash-exception = $nil
-
-  var bash-output = [(
-    try {
-      -bash -c $extended-command-line
-    } catch e {
-      set bash-exception = $e
-    }
-  )]
-
-  if (not-eq $bash-exception $nil) {
-    all $bash-output |
-      each $echo~
-
-    fail $bash-exception
+  defer {
+    map:values $temp-files-by-env-var |
+      each $os:remove-all~
   }
 
-  var command-output = $bash-output[..-1]
+  var extended-command-line = (
+    map:keys $temp-files-by-env-var |
+      seq:reduce $command-line { |cumulated env-var|
+        var temp-file = $temp-files-by-env-var[$env-var]
 
-  var updated-path = $bash-output[-1]
+        put $cumulated' && echo -n ${'$env-var':-} > '$temp-file
+      }
+  )
 
-  set-env PATH $updated-path
+  -bash -c $extended-command-line
 
-  all $command-output |
-    each $echo~
+  map:iterate $temp-files-by-env-var { |env-var temp-file|
+    slurp < $temp-file |
+      set-env $env-var (all)
+  }
 }
