@@ -77,6 +77,19 @@ use ./map
     }
   }
 
+  >> 'getting the keys of a map' {
+    >> 'when the map is empty' {
+      map:keys [&] |
+        should-emit []
+    }
+
+    >> 'when the map has entries' {
+      put [&A=90 &B=92] |
+        map:keys |
+        should-emit &any-order [A B]
+    }
+  }
+
   >> 'getting the values of a map' {
     >> 'when the map is empty' {
       map:values [&] |
@@ -85,8 +98,7 @@ use ./map
 
     >> 'when the map has entries' {
       map:values [&X90=B &X92=T &X95=A &X98=S] |
-        order |
-        should-emit [A B S T]
+        should-emit &any-order [A B S T]
     }
   }
 

@@ -1,5 +1,8 @@
 use os
+use ./fs
 use ./lang
+use ./map
+use ./seq
 
 pragma unknown-command = disallow
 
@@ -217,4 +220,56 @@ fn spy { |@arguments|
       }
     }
   ]
+}
+
+#
+# Given a list of environment variable names as argument
+# and a Bash command line as a string passed via pipe or as argument,
+# executes the command line, then:
+#
+# * if the execution was successful:
+#
+#   * emits the output of the Bash process
+#
+#   * sets the requested environment variables in Elvish to the values within Bash right after the command,
+#     defaulting to empty values
+#
+# * on failure:
+#
+#   * emits as much output as possible from the Bash process
+#
+#   * lets the exception propagate
+#
+#   * leaves the environment variables unaltered
+#
+fn update-env-via-bash { |env-vars @arguments|
+  var command-line = (lang:get-single-input $arguments)
+
+  var temp-files-by-env-var = (
+    all $env-vars | each { |env-var|
+      put [$env-var (fs:temp-file-path)]
+    } |
+      make-map
+  )
+
+  defer {
+    map:values $temp-files-by-env-var |
+      each $os:remove-all~
+  }
+
+  var extended-command-line = (
+    map:keys $temp-files-by-env-var |
+      seq:reduce $command-line { |cumulated env-var|
+        var temp-file = $temp-files-by-env-var[$env-var]
+
+        put $cumulated' && echo -n ${'$env-var':-} > '$temp-file
+      }
+  )
+
+  -bash -c $extended-command-line
+
+  map:iterate $temp-files-by-env-var { |env-var temp-file|
+    slurp < $temp-file |
+      set-env $env-var (all)
+  }
 }

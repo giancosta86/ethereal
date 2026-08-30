@@ -1,4 +1,4 @@
-use github.com/giancosta86/ethereal/v1/lang
+use ./lang
 
 pragma unknown-command = disallow
 
@@ -34,4 +34,12 @@ fn download-package { |&sources=$false &version=$nil @arguments|
   )
 
   -pip download --no-deps $@sources-args $package-reference
+}
+
+#
+# Enables memory allocation tracing - which is especially useful
+# when running tests with leaking objects and unreleased resources.
+#
+fn trace-malloc {
+  set-env PYTHONTRACEMALLOC 1
 }

@@ -83,14 +83,12 @@ var test-git~ = (
 
   >> 'checkout' {
     >> 'when the target directory is not a cloned repository' {
-      fs:with-temp-dir { |temp-dir|
-        cd $temp-dir
-
+      fs:within-temp-dir {
         fails {
           test-git checkout secondary
         } |
           should-be (
-            printf 'The directory "%s" was not cloned via this command instance!' $temp-dir
+            printf 'The directory "%s" was not cloned via this command instance!' $pwd
           )
       }
     }

@@ -1,3 +1,4 @@
+use builtin
 use ./lang
 use ./seq
 
@@ -26,6 +27,14 @@ fn entries { |@arguments|
   iterate $source { |key value|
     put [$key $value]
   }
+}
+
+#
+# Emits the keys of the given map, according to the internal map order.
+#
+fn keys { |@arguments|
+  lang:get-single-input $arguments |
+    builtin:keys (all)
 }
 
 #

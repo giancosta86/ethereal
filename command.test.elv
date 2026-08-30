@@ -1,3 +1,4 @@
+use path
 use ./command
 use ./fs
 
@@ -325,6 +326,178 @@ var test-block-crashing = {
       >> 'the block should be executed' {
         put $output |
           should-be 3
+      }
+    }
+  }
+
+  >> 'running Bash to update environment variables' {
+    >> 'when altering just PATH' {
+      fn with-temp-paths { |temp-paths block|
+        tmp paths = $temp-paths
+
+        $block
+      }
+
+      fn expect-unaltered-paths { |block|
+        var bash-path = (
+          which bash |
+            path:dir (all)
+        )
+
+        var initial-paths = [
+          $bash-path
+          Alpha
+          Beta
+        ]
+
+        with-temp-paths $initial-paths {
+          $block
+
+          put $paths |
+            should-be $initial-paths
+        }
+      }
+
+      >> 'when Bash does not update PATH' {
+        >> 'on successful exit' {
+          expect-unaltered-paths {
+            command:update-env-via-bash [PATH] 'echo "Hello"; echo "World"' |
+              should-emit [
+                Hello
+                World
+              ]
+          }
+        }
+
+        >> 'on crash' {
+          expect-unaltered-paths {
+            var output-lines = [(
+              capture &lines &throws {
+                put 'echo Hello && echo World && SOME_INEXISTENT_COMMAND && echo Dodo' |
+                  command:update-env-via-bash [PATH]
+              }
+            )]
+
+            put $output-lines |
+              should-contain Hello
+
+            put $output-lines |
+              should-contain World
+
+            put $output-lines |
+              should-not-contain Dodo
+          }
+        }
+      }
+
+      >> 'when Bash updates PATH' {
+        >> 'on successful exit' {
+          var bash-path = (which bash | path:dir (all))
+
+          var initial-paths = [$bash-path Alpha Beta]
+
+          with-temp-paths $initial-paths {
+            command:update-env-via-bash [PATH] 'echo "Hello"; PATH=Gamma; echo "World"' |
+              should-emit [
+                Hello
+                World
+              ]
+
+            put $paths |
+              should-be [Gamma]
+          }
+        }
+
+        >> 'on crash' {
+          expect-unaltered-paths {
+            var output-lines = [(
+              capture &lines &throws {
+                put 'echo Hello && echo World && PATH=Delta && SOME_INEXISTENT_COMMAND && echo Dodo' |
+                  command:update-env-via-bash [PATH]
+              }
+            )]
+
+            put $output-lines |
+              should-contain Hello
+
+            put $output-lines |
+              should-contain World
+
+            put $output-lines |
+              should-not-contain Dodo
+          }
+        }
+      }
+    }
+
+    >> 'when updating multiple variables' {
+      >> 'on successful exit' {
+        tmp E:Alpha = A
+
+        tmp E:Beta = B
+
+        unset-env Gamma
+
+        unset-env Delta
+
+        capture &lines {
+          put 'Alpha="${Alpha}90" && Beta="${Beta}92" && echo Hello && Gamma=skipped && echo World && Delta=Magic' |
+            command:update-env-via-bash [Alpha Beta Delta]
+        } |
+          should-emit [
+            Hello
+            World
+          ]
+
+        get-env Alpha |
+          should-be A90
+
+        get-env Beta |
+          should-be B92
+
+        has-env Gamma |
+          should-be $false
+
+        get-env Delta |
+          should-be Magic
+      }
+
+      >> 'on failure' {
+        tmp E:Alpha = A
+
+        tmp E:Beta = B
+
+        unset-env Gamma
+
+        unset-env Delta
+
+        var output-lines = [(
+          capture &lines &throws {
+            put 'Alpha="${Alpha}90" && Beta="${Beta}92" && echo Hello && Gamma=skipped && echo World && INEXISTENT_COMMAND && echo Missing && Delta=Magic' |
+              command:update-env-via-bash [Alpha Beta Delta]
+          }
+        )]
+
+        put $output-lines |
+          should-contain Hello
+
+        put $output-lines |
+          should-contain World
+
+        put $output-lines |
+          should-not-contain Missing
+
+        get-env Alpha |
+          should-be A
+
+        get-env Beta |
+          should-be B
+
+        has-env Gamma |
+          should-be $false
+
+        has-env Delta |
+          should-be $false
       }
     }
   }

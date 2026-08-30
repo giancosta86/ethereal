@@ -20,9 +20,7 @@ var git~ = (external git)
 # In the end, the temporary directory is deleted.
 #
 fn within-temp-repo { |block|
-  fs:with-temp-dir { |temp-dir|
-    cd $temp-dir
-
+  fs:within-temp-dir {
     git init --initial-branch=main
 
     git config --local user.name "Test User"
