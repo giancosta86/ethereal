@@ -431,7 +431,7 @@ var test-block-crashing = {
     }
 
     >> 'when updating multiple variables' {
-      >> 'on success' {
+      >> 'on successful exit' {
         tmp E:Alpha = A
 
         tmp E:Beta = B
