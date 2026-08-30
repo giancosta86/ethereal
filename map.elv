@@ -1,3 +1,4 @@
+use builtin
 use ./lang
 use ./seq
 
@@ -27,6 +28,11 @@ fn entries { |@arguments|
     put [$key $value]
   }
 }
+
+#
+# Emits the keys of the given map, according to the internal map order.
+#
+var keys~ = $builtin:keys~
 
 #
 # Emits the values of the given map, according to the internal map order.
