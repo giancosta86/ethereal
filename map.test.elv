@@ -84,7 +84,8 @@ use ./map
     }
 
     >> 'when the map has entries' {
-      map:keys [&A=90 &B=92] |
+      put [&A=90 &B=92] |
+        map:keys |
         should-emit &any-order [A B]
     }
   }

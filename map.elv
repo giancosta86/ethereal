@@ -32,7 +32,10 @@ fn entries { |@arguments|
 #
 # Emits the keys of the given map, according to the internal map order.
 #
-var keys~ = $builtin:keys~
+fn keys { |@arguments|
+  lang:get-single-input $arguments |
+    builtin:keys (all)
+}
 
 #
 # Emits the values of the given map, according to the internal map order.
