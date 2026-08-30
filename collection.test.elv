@@ -1,4 +1,3 @@
-use github.com/giancosta86/ethereal/v1/set
 use ./collection
 
 >> 'Collections' {
