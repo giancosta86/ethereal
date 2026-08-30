@@ -5,7 +5,13 @@ use ./wrapper
 
 pragma unknown-command = disallow
 
+var -latest-dir = $nil
+
 fn -before-chdir-hook { |next-dir|
+  if (eq $next-dir $-latest-dir) {
+    return
+  }
+
   var current-dir-has-sdk-file = (
     path:join $pwd $paths:sdk-file |
       os:is-regular (all)
@@ -28,6 +34,12 @@ fn -before-chdir-hook { |next-dir|
 }
 
 fn -after-chdir-hook { |_|
+  if (eq $pwd $-latest-dir) {
+    return
+  }
+
+  set -latest-dir = $pwd
+
   var current-dir-has-sdk-file = (
     path:join $pwd $paths:sdk-file |
       os:is-regular (all)
