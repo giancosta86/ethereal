@@ -2,7 +2,13 @@ use ./-sdkman/hooks
 use ./-sdkman/paths
 use ./-sdkman/wrapper
 
-var sdkman~ = $wrapper:sdkman~
+var sdk~ = $wrapper:sdk~
+
+fn sdkman { |@arguments|
+  deprecate 'Please, use `sdk` instead'
+
+  sdk $@arguments
+}
 
 var register-chdir-hooks~ = $hooks:register-chdir-hooks~
 

@@ -36,7 +36,7 @@ fn -run-sdkman { |@arguments|
 #
 # If SDKMAN is not already on the system, it will be automatically installed.
 #
-fn sdkman { |@arguments|
+fn sdk { |@arguments|
   curl:with-silence {
     -run-sdkman $@arguments
   }

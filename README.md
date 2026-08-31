@@ -121,13 +121,13 @@ As an interesting consequence, during an interactive session, when calling with 
 
 #### SDKMAN
 
-The `sdkman` module provides hooks to run [sdkman env](https://sdkman.io/usage/#env-command) whenever you `cd` into a directory.
+The `sdkman` module provides hooks to run [sdk env](https://sdkman.io/usage/#env-command) whenever you `cd` into a directory.
 
 In particular:
 
-- if the target directory contains a **.sdkmanrc** file, it will run `sdkman env install`.
+- if the target directory contains a **.sdkmanrc** file, it will run `sdk env install`.
 
-- if the target directory does NOT contain **.sdkmanrc**, but the previous directory did, executes `sdkman env clear`.
+- if the target directory does NOT contain **.sdkmanrc**, but the previous directory did, executes `sdk env clear`.
 
 To enable them, you could run - for example, in your **rc.elv** file:
 

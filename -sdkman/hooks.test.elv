@@ -6,7 +6,7 @@ use ./wrapper
 fn get-sdkman-runs { |block|
   var spy = (command:spy)
 
-  tmp wrapper:sdkman~ = $spy[command]
+  tmp wrapper:sdk~ = $spy[command]
 
   $block
 
