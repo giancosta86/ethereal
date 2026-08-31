@@ -1,12 +1,12 @@
 use ./wrapper
 
-var sdkman~ = $wrapper:sdkman~
+var sdk~ = $wrapper:sdk~
 
 >> 'SDKMAN' {
   >> 'wrapper' {
     >> 'requesting the version' {
       capture {
-        sdkman version
+        sdk version
       } |
         should-contain SDKMAN
     }

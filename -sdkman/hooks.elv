@@ -26,7 +26,7 @@ fn -before-chdir-hook { |next-dir|
     and $current-dir-has-sdk-file (not $next-dir-has-sdk-file)
   ) {
     try {
-      wrapper:sdkman env clear
+      wrapper:sdk env clear
     } catch {
       # Just do nothing
     }
@@ -47,7 +47,7 @@ fn -after-chdir-hook { |_|
 
   if $current-dir-has-sdk-file {
     try {
-      wrapper:sdkman env install
+      wrapper:sdk env install
     } catch {
       # Just do nothing
     }
