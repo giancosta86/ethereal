@@ -1,6 +1,6 @@
-use ./sdkman/hooks
-use ./sdkman/paths
-use ./sdkman/wrapper
+use ./-sdkman/hooks
+use ./-sdkman/paths
+use ./-sdkman/wrapper
 
 var sdkman~ = $wrapper:sdkman~
 
