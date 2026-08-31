@@ -2,9 +2,10 @@ use ./command
 use ./pdf
 
 var pdfjam-spy = (command:spy)
-set pdf:-pdfjam~ = $pdfjam-spy[command]
 
 >> 'In pdf module' {
+  tmp pdf:-pdfjam~ = $pdfjam-spy[command]
+
   >> 'converting to A5' {
     >> 'should invoke the expected command for each file' {
       pdf:to-a5 Alpha.pdf Beta.pdf &scale=1.5

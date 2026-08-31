@@ -52,6 +52,8 @@ fn -after-chdir-hook { |_|
       # Just do nothing
     }
   }
+
+  paths:setup-jvm-homes
 }
 
 fn register-chdir-hooks {
