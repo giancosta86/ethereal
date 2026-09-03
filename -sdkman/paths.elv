@@ -1,4 +1,6 @@
+use os
 use path
+use str
 use ../seq
 
 pragma unknown-command = disallow
@@ -19,27 +21,23 @@ fn get-sdk-directory { |candidate version|
 }
 
 #
-# Sets up the *_HOME variables for the most frequent binaries in the Java
-# ecosystem (Java, Maven, Gradle, sbt); in particular:
-#
-# * if a binary exists in PATH, the related *_HOME variable is set to its home directory
-#
-# * otherwise, the environment variable is unset.
+# Defines a *_HOME variable for each candidate having a "current" version set.
 #
 fn setup-jvm-homes {
-  all [
-    [java JAVA_HOME]
-    [mvn MAVEN_HOME]
-    [gradle GRADLE_HOME]
-    [sbt SBT_HOME]
-  ] | seq:spread { |command home-env-var|
-    try {
-      -which $command |
-        path:dir (all) |
-        path:dir (all) |
-        set-env $home-env-var (all)
-    } catch {
-      unset-env $home-env-var
+  put $sdkman-home/candidates/*[type:dir][nomatch-ok] | each { |candidate-dir|
+    var current-link = (path:join $candidate-dir current)
+
+    if (os:exists $current-link) {
+      var candidate = (path:base $candidate-dir)
+
+      var home-var = (
+        str:to-upper $candidate |
+          put (all)'_HOME'
+      )
+
+      set-env $home-var $current-link
+
+      echo 🏠 $home-var': ' $current-link >&2
     }
   }
 }
