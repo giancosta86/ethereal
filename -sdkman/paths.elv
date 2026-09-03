@@ -36,8 +36,6 @@ fn setup-jvm-homes {
       )
 
       set-env $home-var $current-link
-
-      echo 🏠 $home-var': ' $current-link >&2
     }
   }
 }
