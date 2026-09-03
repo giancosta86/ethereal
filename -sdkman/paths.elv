@@ -1,7 +1,6 @@
 use os
 use path
 use str
-use ../seq
 
 pragma unknown-command = disallow
 
