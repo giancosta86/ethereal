@@ -12,6 +12,8 @@ var get-sdk-directory~ = $paths:get-sdk-directory~
 
 var setup-jvm-homes~ = $paths:setup-jvm-homes~
 
+var setup-env~ = $hooks:setup-env~
+
 fn sdkman { |@arguments|
   deprecate 'Please, call `sdk` instead'
 

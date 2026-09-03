@@ -1,3 +1,4 @@
+use os
 use path
 use ./hooks
 use ./paths
@@ -107,6 +108,44 @@ fn get-sdkman-runs { |block|
         should-be [
           [env install]
         ]
+    }
+
+    >> 'setting up the environment' {
+      >> 'should update PATH' {
+        tmp paths = []
+
+        tmp wrapper:sdk~ = { |@arguments|
+          set paths = [DODO]
+        }
+
+        hooks:setup-env
+
+        put $paths |
+          should-be [DODO]
+      }
+
+      >> 'should update *_HOME vars' {
+        tmp E:JAVA_HOME = ''
+
+        fs:within-temp-dir {
+          tmp paths:sdkman-home = $pwd
+
+          var java-candidate-dir = (path:join candidates java)
+
+          var some-java-version-dir = (path:join $java-candidate-dir 23-open)
+
+          os:mkdir-all $some-java-version-dir
+
+          var current-link-path = (path:join $pwd $java-candidate-dir current)
+
+          os:symlink $some-java-version-dir $current-link-path
+
+          hooks:setup-env
+
+          get-env JAVA_HOME |
+            should-be $current-link-path
+        }
+      }
     }
   }
 }
