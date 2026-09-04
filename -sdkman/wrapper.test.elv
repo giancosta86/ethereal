@@ -14,8 +14,17 @@ var sdk~ = $wrapper:sdk~
     }
 
     >> 'installing and using from an SDK file' {
+      var test-dependencies = [
+        bash # Required to run SDKMAN
+        cp # Used by file-system utilities
+      ]
+
       tmp paths = [
-        (which cp | path:dir (all))
+        (
+          all $test-dependencies |
+            each (external which) |
+            each $path:dir~
+        )
       ]
 
       fs:within-temp-dir {
