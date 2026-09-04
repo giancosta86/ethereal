@@ -57,7 +57,7 @@ fn -after-chdir-hook { |_|
     }
   }
 
-  paths:setup-jvm-homes
+  paths:setup-sdk-homes
 }
 
 #

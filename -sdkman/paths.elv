@@ -21,50 +21,20 @@ fn get-sdk-directory { |candidate version|
 }
 
 #
-# Emits a map of [<candidate name> <current home path>] for the installed SDKs.
+# Defines a *_HOME variable for each SDK candidate found in the PATH.
 #
-fn get-installed-homes {
-  put $sdkman-home/candidates/*[nomatch-ok]/current |
-    each { |current-home-path|
-      var candidate-name = (
-        path:dir $current-home-path |
-          path:base (all)
-      )
+fn setup-sdk-homes {
+  put $sdkman-home/candidates/*[nomatch-ok][type:dir] | each { |candidate-root|
+    all $paths | each { |current-path|
+      if (str:has-prefix $current-path $candidate-root) {
+        var home-path = (path:dir $current-path)
 
-      put [$candidate-name $current-home-path]
-    } |
-      make-map
-}
+        var candidate = (path:base $candidate-root)
 
-#
-# Emits the names of the installed candidates - the ones having a "current" version.
-#
-fn get-installed-candidates {
-  get-installed-homes |
-    map:keys
-}
+        var home-env-var = (str:to-upper $candidate)'_HOME'
 
-fn -get-home-var { |candidate|
-  str:to-upper $candidate |
-    put (all)'_HOME'
-}
-
-#
-# Defines a *_HOME variable for each candidate having a "current" version set.
-#
-fn setup-jvm-homes {
-  get-installed-homes |
-    map:iterate { |candidate home-path|
-      -get-home-var $candidate |
-        set-env (all) $home-path
+        set-env $home-env-var $home-path
+      }
     }
-}
-
-#
-# Emits a *_HOME environment variable for each candidate having a "current" version set.
-#
-fn get-jvm-home {
-  get-installed-homes |
-    map:keys |
-    each $-get-home-var~
+  }
 }

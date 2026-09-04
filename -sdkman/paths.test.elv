@@ -11,58 +11,44 @@ use ./paths
     }
 
     >> 'setting up the *_HOME environment variables' {
-      >> 'when a candidate has a current version set' {
-        tmp E:JAVA_HOME = ''
-
+      fn with-temp-candidate { |candidate block|
         fs:within-temp-dir {
           tmp paths:sdkman-home = $pwd
 
-          var java-candidate-dir = (path:join $pwd candidates java)
+          var candidate-root = (path:join $pwd candidates $candidate)
 
-          var some-version-dir = (path:join $java-candidate-dir 23-open)
+          os:mkdir-all $candidate-root
 
-          os:mkdir-all $some-version-dir
-
-          var current-link-path = (path:join $java-candidate-dir current)
-
-          os:symlink $some-version-dir $current-link-path
-
-          paths:setup-jvm-homes
-
-          get-env JAVA_HOME |
-            should-be $current-link-path
+          $block $candidate-root
         }
       }
 
-      >> 'when a candidate has no current version' {
+      >> 'when the binaries are in PATH' {
         tmp E:JAVA_HOME = ''
 
-        fs:within-temp-dir {
-          tmp paths:sdkman-home = $pwd
+        with-temp-candidate java { |candidate-root|
+          var expected-home = (path:join $candidate-root 23-open)
 
-          var java-candidate-dir = (path:join $pwd candidates java)
+          tmp paths = [
+            (path:join $expected-home bin)
+          ]
 
-          var some-version-dir = (path:join $java-candidate-dir 23-open)
-
-          os:mkdir-all $some-version-dir
-
-          paths:setup-jvm-homes
+          paths:setup-sdk-homes
 
           get-env JAVA_HOME |
-            should-be-empty
+            should-be $expected-home
         }
       }
 
-      >> 'when a candidate is not installed' {
+      >> 'when the binaries are not in PATH' {
         tmp E:JAVA_HOME = ''
+        tmp paths = []
 
-        fs:within-temp-dir {
-          tmp paths:sdkman-home = $pwd
-
-          paths:setup-jvm-homes
+        with-temp-candidate java { |candidate-root|
+          paths:setup-sdk-homes
 
           get-env JAVA_HOME |
-            should-be-empty
+            should-be ''
         }
       }
     }
