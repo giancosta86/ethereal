@@ -10,6 +10,8 @@ var register-chdir-hooks~ = $hooks:register-chdir-hooks~
 
 var get-sdk-directory~ = $paths:get-sdk-directory~
 
+var get-candidate-home-var~ = $paths:get-candidate-home-var~
+
 var setup-sdk-homes~ = $paths:setup-sdk-homes~
 
 fn setup-jvm-homes {
@@ -24,3 +26,5 @@ fn sdkman { |@arguments|
 
   sdk $@arguments
 }
+
+var get-sdkfile-candidates~ = $paths:get-sdkfile-candidates~
