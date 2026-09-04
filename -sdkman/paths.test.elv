@@ -9,6 +9,11 @@ use ./test-shared
         should-be (path:join $paths:sdkman-home candidates java 25.0.4-tem)
     }
 
+    >> 'getting a *_HOME environment variable name' {
+      paths:get-candidate-home-var java |
+        should-be JAVA_HOME
+    }
+
     >> 'setting up the *_HOME environment variables' {
       >> 'when the binaries are in PATH' {
         tmp E:JAVA_HOME = ''

@@ -19,6 +19,13 @@ fn get-sdk-directory { |candidate version|
 }
 
 #
+# Given a candidate, returns the name of the related *_HOME environment variable.
+#
+fn get-candidate-home-var { |candidate|
+  put (str:to-upper $candidate)'_HOME'
+}
+
+#
 # Defines a *_HOME variable for each SDK candidate found in the PATH.
 #
 fn setup-sdk-homes {
@@ -29,9 +36,8 @@ fn setup-sdk-homes {
 
         var candidate = (path:base $candidate-root)
 
-        var home-env-var = (str:to-upper $candidate)'_HOME'
-
-        set-env $home-env-var $home-path
+        get-candidate-home-var $candidate |
+          set-env (all) $home-path
       }
     }
   }
