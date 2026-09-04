@@ -52,6 +52,7 @@ fn -after-chdir-hook { |_|
   if $current-dir-has-sdk-file {
     try {
       wrapper:sdk env install
+      wrapper:sdk env use
     } catch {
       # Just do nothing
     }
