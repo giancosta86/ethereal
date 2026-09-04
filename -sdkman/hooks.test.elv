@@ -128,7 +128,7 @@ fn get-sdkman-runs { |block|
       >> 'should update *_HOME vars' {
         tmp E:JAVA_HOME = ''
 
-        tmp paths = $paths
+        tmp paths = []
 
         test-shared:with-temp-candidate java { |candidate-root|
           var installed-version-path = (path:join $candidate-root 23-open)
