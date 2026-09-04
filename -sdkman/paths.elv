@@ -1,4 +1,6 @@
+use os
 use path
+use re
 use str
 
 pragma unknown-command = disallow
@@ -41,4 +43,30 @@ fn setup-sdk-homes {
       }
     }
   }
+}
+
+#
+# Reads the SDK file from the current directory and outputs
+# a map whose keys are the requested candidates and the values are their related versions.
+#
+# If there is no SDK file, just emits an empty map.
+#
+fn get-sdkfile-candidates {
+  if (not (os:is-regular $sdk-file)) {
+    put [&]
+    return
+  }
+
+  from-lines < $sdk-file |
+    each { |line|
+      var sdk-line-regex = '\s*(\S+)\s*=\s*(\S+)\s*'
+
+      re:find $sdk-line-regex $line | each { |matcher|
+        var candidate = $matcher[groups][1][text]
+        var version = $matcher[groups][2][text]
+
+        put [$candidate $version]
+      }
+    } |
+        make-map
 }
