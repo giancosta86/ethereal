@@ -132,9 +132,9 @@ fn get-sdkman-runs { |block|
 
         test-shared:with-temp-candidate java { |candidate-root|
           var installed-version-path = (path:join $candidate-root 23-open)
-          os:mkdir-all (path:join $installed-version-path bin)
 
           var current-link-path = (path:join $candidate-root current)
+
           os:symlink $installed-version-path $current-link-path
 
           tmp wrapper:sdk~ = { |@arguments|
@@ -143,7 +143,9 @@ fn get-sdkman-runs { |block|
             ]
           }
 
-          hooks:setup-env
+          fs:within-temp-dir {
+            hooks:setup-env
+          }
 
           get-env JAVA_HOME |
             should-be $current-link-path

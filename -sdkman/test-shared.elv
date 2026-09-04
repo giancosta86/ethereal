@@ -4,10 +4,10 @@ use ../fs
 use ./paths
 
 fn with-temp-candidate { |candidate block|
-  fs:within-temp-dir {
-    tmp paths:sdkman-home = $pwd
+  fs:with-temp-dir { |temp-dir|
+    tmp paths:sdkman-home = $temp-dir
 
-    var candidate-root = (path:join $pwd candidates $candidate)
+    var candidate-root = (path:join $temp-dir candidates $candidate)
 
     os:mkdir-all $candidate-root
 
