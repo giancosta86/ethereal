@@ -1,7 +1,6 @@
-use os
 use path
-use ../lang
 use ./paths
+use ./test-shared
 
 >> 'SDKMAN' {
   >> 'paths' {
@@ -11,22 +10,10 @@ use ./paths
     }
 
     >> 'setting up the *_HOME environment variables' {
-      fn with-temp-candidate { |candidate block|
-        fs:within-temp-dir {
-          tmp paths:sdkman-home = $pwd
-
-          var candidate-root = (path:join $pwd candidates $candidate)
-
-          os:mkdir-all $candidate-root
-
-          $block $candidate-root
-        }
-      }
-
       >> 'when the binaries are in PATH' {
         tmp E:JAVA_HOME = ''
 
-        with-temp-candidate java { |candidate-root|
+        test-shared:with-temp-candidate java { |candidate-root|
           var expected-home = (path:join $candidate-root 23-open)
 
           tmp paths = [
@@ -44,7 +31,7 @@ use ./paths
         tmp E:JAVA_HOME = ''
         tmp paths = []
 
-        with-temp-candidate java { |candidate-root|
+        test-shared:with-temp-candidate java { |candidate-root|
           paths:setup-sdk-homes
 
           get-env JAVA_HOME |

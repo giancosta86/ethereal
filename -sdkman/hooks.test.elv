@@ -2,6 +2,7 @@ use os
 use path
 use ./hooks
 use ./paths
+use ./test-shared
 use ./wrapper
 
 fn get-sdkman-runs { |block|
@@ -127,18 +128,20 @@ fn get-sdkman-runs { |block|
       >> 'should update *_HOME vars' {
         tmp E:JAVA_HOME = ''
 
-        fs:within-temp-dir {
-          tmp paths:sdkman-home = $pwd
+        tmp paths = $paths
 
-          var java-candidate-dir = (path:join candidates java)
+        test-shared:with-temp-candidate java { |candidate-root|
+          var installed-version-path = (path:join $candidate-root 23-open)
+          os:mkdir-all (path:join $installed-version-path bin)
 
-          var some-java-version-dir = (path:join $java-candidate-dir 23-open)
+          var current-link-path = (path:join $candidate-root current)
+          os:symlink $installed-version-path $current-link-path
 
-          os:mkdir-all $some-java-version-dir
-
-          var current-link-path = (path:join $pwd $java-candidate-dir current)
-
-          os:symlink $some-java-version-dir $current-link-path
+          tmp hooks:-run-sdkman-to-update-path~ = {
+            set paths = [
+              (path:join $current-link-path bin)
+            ]
+          }
 
           hooks:setup-env
 
