@@ -33,6 +33,10 @@ fn -before-chdir-hook { |next-dir|
   }
 }
 
+fn -run-sdkman-to-update-path {
+  wrapper:sdk version > $os:dev-null 2>&1
+}
+
 fn -after-chdir-hook { |_|
   if (eq $pwd $-latest-dir) {
     return
@@ -53,7 +57,17 @@ fn -after-chdir-hook { |_|
     }
   }
 
-  paths:setup-jvm-homes
+  paths:setup-sdk-homes
+}
+
+#
+# Ensures that SDKMAN's paths are included into the PATH environment variable,
+# then runs the post-cd hook on the current directory.
+#
+fn setup-env {
+  -run-sdkman-to-update-path
+
+  -after-chdir-hook $pwd
 }
 
 fn register-chdir-hooks {
@@ -61,5 +75,5 @@ fn register-chdir-hooks {
 
   set after-chdir = (conj $after-chdir $-after-chdir-hook~)
 
-  -after-chdir-hook $pwd
+  setup-env
 }
