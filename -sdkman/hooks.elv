@@ -61,7 +61,7 @@ fn -after-chdir-hook { |_|
 }
 
 #
-# Adds SDKMAN's paths to the PATH environment variable,
+# Ensures that SDKMAN's paths are included into the PATH environment variable,
 # then runs the post-cd hook on the current directory.
 #
 fn setup-env {
