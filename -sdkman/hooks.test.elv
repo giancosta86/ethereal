@@ -137,7 +137,7 @@ fn get-sdkman-runs { |block|
           var current-link-path = (path:join $candidate-root current)
           os:symlink $installed-version-path $current-link-path
 
-          tmp hooks:-run-sdkman-to-update-path~ = {
+          tmp wrapper:sdk~ = { |@arguments|
             set paths = [
               (path:join $current-link-path bin)
             ]
