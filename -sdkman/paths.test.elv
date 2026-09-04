@@ -9,6 +9,11 @@ use ./test-shared
         should-be (path:join $paths:sdkman-home candidates java 25.0.4-tem)
     }
 
+    >> 'getting a *_HOME environment variable name' {
+      paths:get-candidate-home-var java |
+        should-be JAVA_HOME
+    }
+
     >> 'setting up the *_HOME environment variables' {
       >> 'when the binaries are in PATH' {
         tmp E:JAVA_HOME = ''
@@ -36,6 +41,44 @@ use ./test-shared
 
           get-env JAVA_HOME |
             should-be ''
+        }
+      }
+    }
+
+    >> 'getting candidates from SDK file' {
+      >> 'when no SDK file exists' {
+        fs:within-temp-dir {
+          paths:get-sdkfile-candidates |
+            should-be [&]
+        }
+      }
+
+      >> 'when the SDK file is empty' {
+        fs:within-temp-dir {
+          fs:touch $paths:sdk-file
+
+          paths:get-sdkfile-candidates |
+            should-be [&]
+        }
+      }
+
+      >> 'when the SDK file contains SDKs as well as comments' {
+        fs:within-temp-dir {
+          {
+            echo '# This is a temp SDK file'
+            echo
+            echo 'java=ALPHA'
+            echo '    maven =  BETA  '
+            echo
+            echo "gradle\t=\tGAMMA"
+          } > $paths:sdk-file
+
+          paths:get-sdkfile-candidates |
+            should-be [
+              &java=ALPHA
+              &maven=BETA
+              &gradle=GAMMA
+            ]
         }
       }
     }

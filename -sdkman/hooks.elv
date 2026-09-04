@@ -33,7 +33,7 @@ fn -before-chdir-hook { |next-dir|
   }
 }
 
-fn -run-sdkman-to-update-path {
+fn -run-sdkman-to-update-env-vars {
   wrapper:sdk version > $os:dev-null 2>&1
 }
 
@@ -52,6 +52,7 @@ fn -after-chdir-hook { |_|
   if $current-dir-has-sdk-file {
     try {
       wrapper:sdk env install
+      wrapper:sdk env use
     } catch {
       # Just do nothing
     }
@@ -61,11 +62,11 @@ fn -after-chdir-hook { |_|
 }
 
 #
-# Ensures that SDKMAN's paths are included into the PATH environment variable,
+# Ensures that SDKMAN's environment variables are set in the current shell,
 # then runs the post-cd hook on the current directory.
 #
 fn setup-env {
-  -run-sdkman-to-update-path
+  -run-sdkman-to-update-env-vars
 
   -after-chdir-hook $pwd
 }

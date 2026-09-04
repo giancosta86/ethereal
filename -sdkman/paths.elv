@@ -1,4 +1,6 @@
+use os
 use path
+use re
 use str
 
 pragma unknown-command = disallow
@@ -19,6 +21,13 @@ fn get-sdk-directory { |candidate version|
 }
 
 #
+# Given a candidate, returns the name of the related *_HOME environment variable.
+#
+fn get-candidate-home-var { |candidate|
+  put (str:to-upper $candidate)'_HOME'
+}
+
+#
 # Defines a *_HOME variable for each SDK candidate found in the PATH.
 #
 fn setup-sdk-homes {
@@ -29,10 +38,35 @@ fn setup-sdk-homes {
 
         var candidate = (path:base $candidate-root)
 
-        var home-env-var = (str:to-upper $candidate)'_HOME'
-
-        set-env $home-env-var $home-path
+        get-candidate-home-var $candidate |
+          set-env (all) $home-path
       }
     }
   }
+}
+
+#
+# Reads the SDK file from the current directory and outputs
+# a map whose keys are the requested candidates and the values are their related versions.
+#
+# If there is no SDK file, just emits an empty map.
+#
+fn get-sdkfile-candidates {
+  if (not (os:is-regular $sdk-file)) {
+    put [&]
+    return
+  }
+
+  from-lines < $sdk-file |
+    each { |line|
+      var sdk-line-regex = '\s*(\S+)\s*=\s*(\S+)\s*'
+
+      re:find $sdk-line-regex $line | each { |matcher|
+        var candidate = $matcher[groups][1][text]
+        var version = $matcher[groups][2][text]
+
+        put [$candidate $version]
+      }
+    } |
+        make-map
 }
