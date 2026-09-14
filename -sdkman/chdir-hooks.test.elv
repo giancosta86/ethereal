@@ -1,16 +1,24 @@
 use os
 use path
+use ../elvish/chdir-hooks elvish-hooks
 use ./chdir-hooks
 use ./paths
 use ./test-shared
 use ./wrapper
 
-fn get-sdkman-runs { |block|
+fn get-sdkman-runs { |init-block|
   var spy = (command:spy)
 
   tmp wrapper:sdk~ = $spy[command]
 
-  $block
+  put [
+    &debug-id=sdkman
+
+    &before=$chdir-hooks:-before-cd~
+
+    &after=$chdir-hooks:-after-cd~
+  ] |
+    elvish-hooks:test $init-block
 
   $spy[get-runs]
 }
@@ -45,94 +53,46 @@ fn get-sdkman-runs { |block|
     }
 
     >> 'execution' {
-      >> 'when source dir has no sdk file and dest dir has no sdk file' {
-        get-sdkman-runs {
-          fs:with-temp-dir { |source-dir|
-            cd $source-dir
-
-            fs:with-temp-dir { |dest-dir|
-              chdir-hooks:-before-cd $dest-dir
-
-              cd $dest-dir
-
-              chdir-hooks:-after-cd
-            }
-          }
-        } |
+      >> 'when source dir has no sdk file and target dir has no sdk file' {
+        get-sdkman-runs { |_ _| } |
           should-be []
       }
 
-      >> 'when source dir has its sdk file and dest dir has no sdk file' {
-        get-sdkman-runs {
-          fs:with-temp-dir { |source-dir|
-            cd $source-dir
-
-            {
-              echo java=8.0.502.fx-zulu
-              echo gradle=2.10
-            } > $paths:sdk-file
-
-            fs:with-temp-dir { |dest-dir|
-              chdir-hooks:-before-cd $dest-dir
-
-              cd $dest-dir
-
-              chdir-hooks:-after-cd
-            }
-          }
+      >> 'when source dir has its sdk file and target dir has no sdk file' {
+        get-sdkman-runs { |source-dir _|
+          {
+            echo java=8.0.502.fx-zulu
+            echo gradle=2.10
+          } > (path:join $source-dir $paths:sdk-file)
         } |
           should-be [
             [env clear]
           ]
       }
 
-      >> 'when source dir has no sdk file and dest dir has its sdk file' {
-        get-sdkman-runs {
-          fs:with-temp-dir { |source-dir|
-            cd $source-dir
-
-            fs:with-temp-dir { |dest-dir|
-              {
-                echo java=23-open
-                echo maven=3.9.9
-              } > (path:join $dest-dir $paths:sdk-file)
-
-              chdir-hooks:-before-cd $dest-dir
-
-              cd $dest-dir
-
-              chdir-hooks:-after-cd
-            }
-          }
+      >> 'when source dir has no sdk file and target dir has its sdk file' {
+        get-sdkman-runs { |_ target-dir|
+          {
+            echo java=23-open
+            echo maven=3.9.9
+          } > (path:join $target-dir $paths:sdk-file)
         } |
           should-be [
             [env install]
           ]
       }
 
-      >> 'when source dir has its sdk file and dest dir has another sdk file' {
-        get-sdkman-runs {
-          fs:with-temp-dir { |source-dir|
-            cd $source-dir
+      >> 'when source dir has its sdk file and target dir has another sdk file' {
+        get-sdkman-runs { |source-dir target-dir|
+          {
+            echo java=8.0.502.fx-zulu
+            echo gradle=2.10
+          } > (path:join $source-dir $paths:sdk-file)
 
-            {
-              echo java=8.0.502.fx-zulu
-              echo gradle=2.10
-            } > $paths:sdk-file
-
-            fs:with-temp-dir { |dest-dir|
-              {
-                echo java=23-open
-                echo maven=3.9.9
-              } > (path:join $dest-dir $paths:sdk-file)
-
-              chdir-hooks:-before-cd $dest-dir
-
-              cd $dest-dir
-
-              chdir-hooks:-after-cd
-            }
-          }
+          {
+            echo java=23-open
+            echo maven=3.9.9
+          } > (path:join $target-dir $paths:sdk-file)
         } |
           should-be [
             [env install]

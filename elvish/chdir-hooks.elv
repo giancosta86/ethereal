@@ -1,9 +1,8 @@
 use path
+use ../fs
 use ../lang
 
-fn register { |@arguments|
-  var params = (lang:get-single-input $arguments)
-
+fn -create-pair { |params|
   var log~ = (
     var debug-id = (lang:get-value $params debug-id)
 
@@ -17,8 +16,6 @@ fn register { |@arguments|
       }
     }
   )
-
-  var run-after = (lang:get-value &default=$true $params run-after)
 
   var before-block = (
     lang:get-value $params before |
@@ -55,11 +52,11 @@ fn register { |@arguments|
     set latest-dir = $next-dir
 
     try {
-      log &emoji=🚪 Running BEFORE block for $next-dir...
+      log &emoji=🚪 Running BEFORE block for $next-dir... >&2
 
       $before-block $next-dir
 
-      log &emoji=🚪 Done BEFORE block for $next-dir
+      log &emoji=🚪 Done BEFORE block for $next-dir >&2
     } catch e {
       show $e
     }
@@ -81,11 +78,11 @@ fn register { |@arguments|
     set in-after-hook = $true
 
     try {
-      log &emoji=🪟 Running AFTER block for $pwd...
+      log &emoji=🪟 Running AFTER block for $pwd... >&2
 
       $after-block
 
-      log &emoji=🪟 Done AFTER block for $pwd
+      log &emoji=🪟 Done AFTER block for $pwd >&2
     } catch e {
       show $e
     } finally {
@@ -94,11 +91,44 @@ fn register { |@arguments|
     }
   }
 
-  set before-chdir = (conj $before-chdir $before-hook~)
+  all [
+    $before-hook~
+    $after-hook~
+  ]
+}
 
-  set after-chdir = (conj $after-chdir $after-hook~)
+fn register { |@arguments|
+  var params = (lang:get-single-input $arguments)
+
+  var run-after = (lang:get-value &default=$true $params run-after)
+
+  var before-hook after-hook = (-create-pair $params)
+
+  set before-chdir = (conj $before-chdir $before-hook)
+
+  set after-chdir = (conj $after-chdir $after-hook)
 
   if $run-after {
-    $after-block
+    $after-hook $pwd
+  }
+}
+
+fn test { |@arguments|
+  var params init-block = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
+
+  var before-hook after-hook = (-create-pair $params)
+
+  fs:with-temp-dir { |source-dir|
+    cd $source-dir
+
+    fs:with-temp-dir { |target-dir|
+      $init-block $source-dir $target-dir
+
+      $before-hook $target-dir
+
+      cd $target-dir
+
+      $after-hook $target-dir
+    }
   }
 }
