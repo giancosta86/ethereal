@@ -12,8 +12,6 @@ fn get-sdkman-runs { |init-block|
   tmp wrapper:sdk~ = $spy[command]
 
   put [
-    &debug-id=sdkman
-
     &before=$chdir-hooks:-before-cd~
 
     &after=$chdir-hooks:-after-cd~

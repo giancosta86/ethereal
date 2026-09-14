@@ -2,6 +2,32 @@ use path
 use ../fs
 use ../lang
 
+#
+# Given a map of params - via pipe or as argument - creates and registers a pair of "cd" hooks.
+#
+# The parameters are the following:
+#
+# * `before`: function running in the source directory and taking in input the target directory;
+#             if omitted, an empty implementation will be provided
+#
+# * `after`: function running in the target directory and taking no inputs;
+#             if omitted, an empty implementation will be providedç
+#
+# * `run-after`: if set to $true (the default), runs the actual `after` implementation right at the
+#                end of the registration process
+#
+# * debug-id: when set to a value, shows debug information before and after running each hook
+#
+#
+# As for the hooks, the following properties are guaranteed:
+#
+# * non-rentrance - they won't be triggered by any "cd" called by their implementation blocks
+#
+# * exception safety - exception will be automatically caught and displayed
+#
+# * when moving to the current directory, they won't be triggered
+#
+#
 fn register { |@arguments|
   var params = (lang:get-single-input $arguments)
 
@@ -12,7 +38,7 @@ fn register { |@arguments|
 
     if $debug-id {
       put { |&emoji=⚡ @arguments|
-        echo $emoji $debug-id': ' $@arguments
+        echo $emoji $debug-id':' $@arguments
       }
     } else {
       put { |&emoji=$nil @arguments|
@@ -31,73 +57,69 @@ fn register { |@arguments|
       coalesce (all) { }
   )
 
-  var in-hooks = $false
+  {
+    var OUT-OF-HOOKS-PAIR = out-of-hooks-pair
 
-  var latest-dir = $nil
+    var IN-BEFORE-HOOK = in-before-hook
 
-  var in-after-hook = $false
+    var BETWEEN-HOOKS = between-hooks
 
-  fn before-hook { |next-dir|
-    if $in-hooks {
-      return
+    var IN-AFTER-HOOK = in-after-hook
+
+
+    var status = $OUT-OF-HOOKS-PAIR
+
+    fn before-hook { |next-dir|
+      if (not-eq $status $OUT-OF-HOOKS-PAIR) {
+        return
+      }
+
+      set next-dir = (path:abs $next-dir)
+
+      if (eq $next-dir $pwd) {
+        return
+      }
+
+      set status = $IN-BEFORE-HOOK
+
+      try {
+        log &emoji=🚪 Running BEFORE block from $pwd to $next-dir... >&2
+
+        $before-block $next-dir
+
+        log &emoji=🚪 Done BEFORE block from $pwd to $next-dir >&2
+      } catch e {
+        show $e
+        set status = $OUT-OF-HOOKS-PAIR
+      } else {
+        set status = $BETWEEN-HOOKS
+      }
     }
 
-    set next-dir = (path:abs $next-dir)
+    fn after-hook { |_|
+      if (not-eq $status $BETWEEN-HOOKS) {
+        return
+      }
 
-    if (eq $next-dir $latest-dir) {
-      return
+      set status = $IN-AFTER-HOOK
+
+      try {
+        log &emoji=🪟 Running AFTER block for $pwd... >&2
+
+        $after-block
+
+        log &emoji=🪟 Done AFTER block for $pwd >&2
+      } catch e {
+        show $e
+      } finally {
+        set status = $IN-AFTER-HOOK
+      }
     }
 
-    if (eq $next-dir $pwd) {
-      return
-    }
+    set before-chdir = (conj $before-chdir $before-hook~)
 
-    set in-hooks = $true
-    set latest-dir = $next-dir
-
-    try {
-      log &emoji=🚪 Running BEFORE block for $next-dir... >&2
-
-      $before-block $next-dir
-
-      log &emoji=🚪 Done BEFORE block for $next-dir >&2
-    } catch e {
-      show $e
-    }
+    set after-chdir = (conj $after-chdir $after-hook~)
   }
-
-  fn after-hook { |_|
-    if (not $in-hooks) {
-      return
-    }
-
-    if (not-eq $pwd $latest-dir) {
-      return
-    }
-
-    if $in-after-hook {
-      return
-    }
-
-    set in-after-hook = $true
-
-    try {
-      log &emoji=🪟 Running AFTER block for $pwd... >&2
-
-      $after-block
-
-      log &emoji=🪟 Done AFTER block for $pwd >&2
-    } catch e {
-      show $e
-    } finally {
-      set in-after-hook = $false
-      set in-hooks = $false
-    }
-  }
-
-  set before-chdir = (conj $before-chdir $before-hook~)
-
-  set after-chdir = (conj $after-chdir $after-hook~)
 
   if $run-after {
     $after-block
