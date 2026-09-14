@@ -2,7 +2,11 @@ use path
 use ../fs
 use ../lang
 
-fn -create-pair { |params|
+fn register { |@arguments|
+  var params = (lang:get-single-input $arguments)
+
+  var run-after = (lang:get-value &default=$true $params run-after)
+
   var log~ = (
     var debug-id = (lang:get-value $params debug-id)
 
@@ -91,44 +95,38 @@ fn -create-pair { |params|
     }
   }
 
-  all [
-    $before-hook~
-    $after-hook~
-  ]
-}
+  set before-chdir = (conj $before-chdir $before-hook~)
 
-fn register { |@arguments|
-  var params = (lang:get-single-input $arguments)
-
-  var run-after = (lang:get-value &default=$true $params run-after)
-
-  var before-hook after-hook = (-create-pair $params)
-
-  set before-chdir = (conj $before-chdir $before-hook)
-
-  set after-chdir = (conj $after-chdir $after-hook)
+  set after-chdir = (conj $after-chdir $after-hook~)
 
   if $run-after {
-    $after-hook $pwd
+    $after-block
   }
 }
 
+fn with-temp-reset { |block|
+  tmp before-chdir = []
+
+  tmp after-chdir = []
+
+  $block
+}
+
 fn test { |@arguments|
-  var params init-block = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
+  with-temp-reset {
+    var params init-block = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
 
-  var before-hook after-hook = (-create-pair $params)
+    fs:with-temp-dir { |source-dir|
+      cd $source-dir
 
-  fs:with-temp-dir { |source-dir|
-    cd $source-dir
+      fs:with-temp-dir { |target-dir|
+        $init-block $source-dir $target-dir
 
-    fs:with-temp-dir { |target-dir|
-      $init-block $source-dir $target-dir
+        assoc $params run-after $false |
+          register
 
-      $before-hook $target-dir
-
-      cd $target-dir
-
-      $after-hook $target-dir
+        cd $target-dir
+      }
     }
   }
 }
