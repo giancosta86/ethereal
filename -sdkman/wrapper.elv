@@ -76,6 +76,14 @@ var sdk~ = (
     }
   }
 
+  fn handle-install {
+    handle-path-altering-command { }
+  }
+
+  fn handle-uninstall {
+    handle-path-altering-command { }
+  }
+
   fn process-successful-run { |@arguments|
     var argument-count = (count $arguments)
 
@@ -99,6 +107,10 @@ var sdk~ = (
           handle-env-clear
         }
       }
+    } elif (has-value [install i] $command) {
+      handle-install
+    } elif (has-value [uninstall rm] $command) {
+      handle-uninstall
     }
   }
 
