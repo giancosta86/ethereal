@@ -7,11 +7,11 @@ use ../lang
 #
 # The parameters are the following:
 #
-# * `before`: function running in the source directory and taking in input the target directory;
+# * `before`: function running in the source directory and taking as argument the target directory;
 #             if omitted, an empty implementation will be provided
 #
 # * `after`: function running in the target directory and taking no inputs;
-#             if omitted, an empty implementation will be providedç
+#            if omitted, an empty implementation will be provided
 #
 # * `run-after`: if set to $true (the default), runs the actual `after` implementation right at the
 #                end of the registration process
@@ -21,17 +21,17 @@ use ../lang
 #
 # As for the hooks, the following properties are guaranteed:
 #
-# * non-rentrance - they won't be triggered by any "cd" called by their implementation blocks
+# * non-rentrance - they won't be triggered by any "cd" called by their implementation blocks;
 #
-# * exception safety - exception will be automatically caught and displayed
+# * exception safety - exceptions will be automatically caught and displayed;
 #
-# * when moving to the current directory, they won't be triggered
+# * the AFTER hook only runs if the BEFORE hook completed successfully;
+#
+# * when moving to the current directory, they won't be triggered again;
 #
 #
 fn register { |@arguments|
   var params = (lang:get-single-input $arguments)
-
-  var run-after = (lang:get-value &default=$true $params run-after)
 
   var log~ = (
     var debug-id = (lang:get-value $params debug-id)
@@ -66,7 +66,6 @@ fn register { |@arguments|
 
     var IN-AFTER-HOOK = in-after-hook
 
-
     var status = $OUT-OF-HOOKS-PAIR
 
     fn before-hook { |next-dir|
@@ -83,16 +82,16 @@ fn register { |@arguments|
       set status = $IN-BEFORE-HOOK
 
       try {
-        log &emoji=🚪 Running BEFORE block from $pwd to $next-dir... >&2
+        log &emoji=🚪 Running BEFORE block from '"'$pwd'"' to '"'$next-dir'"'... >&2
 
         $before-block $next-dir
-
-        log &emoji=🚪 Done BEFORE block from $pwd to $next-dir >&2
       } catch e {
         show $e
         set status = $OUT-OF-HOOKS-PAIR
       } else {
         set status = $BETWEEN-HOOKS
+      } finally {
+        log &emoji=🚪 Done BEFORE block from '"'$pwd'"' to '"'$next-dir'"' >&2
       }
     }
 
@@ -104,15 +103,15 @@ fn register { |@arguments|
       set status = $IN-AFTER-HOOK
 
       try {
-        log &emoji=🪟 Running AFTER block for $pwd... >&2
+        log &emoji=🪟 Running AFTER block for '"'$pwd'"'... >&2
 
         $after-block
-
-        log &emoji=🪟 Done AFTER block for $pwd >&2
       } catch e {
         show $e
       } finally {
-        set status = $IN-AFTER-HOOK
+        log &emoji=🪟 Done AFTER block for '"'$pwd'"' >&2
+
+        set status = $OUT-OF-HOOKS-PAIR
       }
     }
 
@@ -121,8 +120,12 @@ fn register { |@arguments|
     set after-chdir = (conj $after-chdir $after-hook~)
   }
 
-  if $run-after {
-    $after-block
+  {
+    var run-after = (lang:get-value &default=$true $params run-after)
+
+    if $run-after {
+      $after-block
+    }
   }
 }
 
