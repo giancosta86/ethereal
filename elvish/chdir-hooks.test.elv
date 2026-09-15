@@ -79,39 +79,80 @@ use ./chdir-hooks
     }
 
     >> 'registration' {
-        >> 'after-chdir automatic execution' {
-          >> 'by default' {
-            var called = $false
+      >> 'after-chdir automatic execution' {
+        >> 'by default' {
+          var called = $false
 
-            chdir-hooks:with-temp-reset {
-              chdir-hooks:register [
-                &before={ |_|
-                  fail 'This should not run!'
-                }
-                &after={
-                  set called = $true
-                }
-              ]
+          chdir-hooks:with-temp-reset {
+            chdir-hooks:register [
+              &before={ |_|
+                fail 'This should not run!'
+              }
+              &after={
+                set called = $true
+              }
+            ]
 
-              put $called |
-                should-be $true
-            }
+            put $called |
+              should-be $true
           }
+        }
 
-          >> 'when disabled' {
-            chdir-hooks:with-temp-reset {
-              chdir-hooks:register [
-                &before={ |_|
-                  fail 'This should not run!'
-                }
-                &after={
-                  fail 'This should not run!'
-                }
-                &run-after=$false
-              ]
-            }
+        >> 'when disabled' {
+          chdir-hooks:with-temp-reset {
+            chdir-hooks:register [
+              &before={ |_|
+                fail 'This should not run!'
+              }
+              &after={
+                fail 'This should not run!'
+              }
+              &run-after=$false
+            ]
           }
         }
       }
+    }
+
+    >> 'testing' {
+      chdir-hooks:with-temp-reset {
+        var source-dir = $nil
+        var target-dir = $nil
+
+        var before-hook-test = $nil
+        var after-hook-test = $nil
+
+        put [
+          &before={ |target-dir-in-hook|
+            var pwd-in-before = $pwd
+
+            set before-hook-test = {
+              put $pwd-in-before |
+                should-be $source-dir
+
+              put $target-dir-in-hook |
+                should-be $target-dir
+            }
+          }
+          &after={
+            var pwd-in-after = $pwd
+
+            set after-hook-test = {
+              put $pwd-in-after |
+                should-be $target-dir
+            }
+          }
+        ] |
+          chdir-hooks:test { |test-source-dir test-target-dir|
+            set source-dir = $test-source-dir
+
+            set target-dir = $test-target-dir
+          }
+
+        $before-hook-test
+
+        $after-hook-test
+      }
+    }
   }
 }

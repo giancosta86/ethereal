@@ -29,6 +29,8 @@ use ../lang
 #
 # * when moving to the current directory, they won't be triggered again;
 #
+# * all the output is redirected to stderr.
+#
 #
 fn register { |@arguments|
   var params = (lang:get-single-input $arguments)
@@ -49,7 +51,7 @@ fn register { |@arguments|
 
   var before-block = (
     lang:get-value $params before |
-      coalesce (all) { |next-dir| }
+      coalesce (all) { |target-dir| }
   )
 
   var after-block = (
@@ -68,51 +70,55 @@ fn register { |@arguments|
 
     var status = $OUT-OF-HOOKS-PAIR
 
-    fn before-hook { |next-dir|
-      if (not-eq $status $OUT-OF-HOOKS-PAIR) {
-        return
-      }
+    fn before-hook { |target-dir|
+      {
+        if (not-eq $status $OUT-OF-HOOKS-PAIR) {
+          return
+        }
 
-      set next-dir = (path:abs $next-dir)
+        set target-dir = (path:abs $target-dir)
 
-      if (eq $next-dir $pwd) {
-        return
-      }
+        if (eq $target-dir $pwd) {
+          return
+        }
 
-      set status = $IN-BEFORE-HOOK
+        set status = $IN-BEFORE-HOOK
 
-      try {
-        log &emoji=🚪 Running BEFORE block from '"'$pwd'"' to '"'$next-dir'"'... >&2
+        try {
+          log &emoji=🚪 Running BEFORE block from '"'$pwd'"' to '"'$target-dir'"'...
 
-        $before-block $next-dir
-      } catch e {
-        show $e
-        set status = $OUT-OF-HOOKS-PAIR
-      } else {
-        set status = $BETWEEN-HOOKS
-      } finally {
-        log &emoji=🚪 Done BEFORE block from '"'$pwd'"' to '"'$next-dir'"' >&2
-      }
+          $before-block $target-dir
+        } catch e {
+          show $e
+          set status = $OUT-OF-HOOKS-PAIR
+        } else {
+          set status = $BETWEEN-HOOKS
+        } finally {
+          log &emoji=🚪 Done BEFORE block from '"'$pwd'"' to '"'$target-dir'"'
+        }
+      } >&2
     }
 
     fn after-hook { |_|
-      if (not-eq $status $BETWEEN-HOOKS) {
-        return
-      }
+      {
+        if (not-eq $status $BETWEEN-HOOKS) {
+          return
+        }
 
-      set status = $IN-AFTER-HOOK
+        set status = $IN-AFTER-HOOK
 
-      try {
-        log &emoji=🪟 Running AFTER block for '"'$pwd'"'... >&2
+        try {
+          log &emoji=🪟 Running AFTER block for '"'$pwd'"'...
 
-        $after-block
-      } catch e {
-        show $e
-      } finally {
-        log &emoji=🪟 Done AFTER block for '"'$pwd'"' >&2
+          $after-block
+        } catch e {
+          show $e
+        } finally {
+          log &emoji=🪟 Done AFTER block for '"'$pwd'"'
 
-        set status = $OUT-OF-HOOKS-PAIR
-      }
+          set status = $OUT-OF-HOOKS-PAIR
+        }
+      } >&2
     }
 
     set before-chdir = (conj $before-chdir $before-hook~)
@@ -129,6 +135,9 @@ fn register { |@arguments|
   }
 }
 
+#
+# Temporary removes all the chdir hooks, while executing the given block.
+#
 fn with-temp-reset { |block|
   tmp before-chdir = []
 
@@ -137,15 +146,36 @@ fn with-temp-reset { |block|
   $block
 }
 
+#
+# Takes in input - via pipe or as first argument - the params map required by `register` -
+# and an init block as its (last) argument, then applies the following algorithm:
+#
+# 1. Temporarily reset all the chdir hooks.
+#
+# 2. Create a <source> temporary directory
+#
+# 3. Create a <target> temporary directory.
+#
+# 4. Run the init block, passing <source> and <target>.
+#
+# 5. Move into <source>.
+#
+# 6. Call `register` passing the given params - with `run-after` always set to $false.
+#
+# 7. Move into the <target> directory, thus triggering the hooks.
+#
+# Please, note: do **NOT** run Velvet assertions within hooks; instead, set up callbacks to be called
+# right after this function.
+#
 fn test { |@arguments|
-  with-temp-reset {
-    var params init-block = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
+  var params init-block = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
 
-    fs:with-temp-dir { |source-dir|
-      cd $source-dir
-
-      fs:with-temp-dir { |target-dir|
+  fs:with-temp-dir { |source-dir|
+    fs:with-temp-dir { |target-dir|
+      with-temp-reset {
         $init-block $source-dir $target-dir
+
+        cd $source-dir
 
         assoc $params run-after $false |
           register
