@@ -2,22 +2,46 @@ use os
 use path
 use re
 use str
+use ../lang
+use ../map
 
 pragma unknown-command = disallow
 
-var -which~ = (external which)
-
 var sdkman-home = (path:join ~ .sdkman)
 
-var sdkman-script = (path:join $sdkman-home bin sdkman-init.sh)
+var init-script = (path:join $sdkman-home bin sdkman-init.sh)
 
 var sdk-file = .sdkmanrc
 
 #
-# Returns the absolute path of the directory containing the requested SDK.
+# Emits the absolute path of the directory containing the requested SDK:
 #
-fn get-sdk-directory { |candidate version|
-  path:join $sdkman-home candidates $candidate $version
+# * if the &version flag is passed, the directory will be the one of that specific version;
+#
+# * otherwise, the root directory for the candidate will be emitted.
+#
+# The directory might well not exist - this is just a path manipulation function.
+#
+fn get-candidate-dir { |candidate &version=$nil|
+  var candidate-home = (
+    path:join $sdkman-home candidates $candidate
+  )
+
+  if $version {
+    path:join $candidate-home $version
+  } else {
+    put $candidate-home
+  }
+}
+
+#
+# Iterates over the candidates in the "candidates" directory,
+# passing each candidate name to the given block.
+#
+fn each-candidate { |candidate-consumer|
+  put $sdkman-home/candidates/*[type:dir][nomatch-ok] |
+    each $path:base~ |
+    each $candidate-consumer
 }
 
 #
@@ -28,21 +52,50 @@ fn get-candidate-home-var { |candidate|
 }
 
 #
-# Defines a *_HOME variable for each SDK candidate found in the PATH.
+# Given a path, emits the most suitable value for a *_HOME variable:
 #
-fn setup-sdk-homes {
-  put $sdkman-home/candidates/*[nomatch-ok][type:dir] | each { |candidate-root|
-    all $paths | each { |current-path|
-      if (str:has-prefix $current-path $candidate-root) {
-        var home-path = (path:dir $current-path)
+# * if the source path is a "bin" directory, emits its parent
+#
+# * otherwise, emits the directory itself
+#
+fn -get-home-path { |@arguments|
+  var path = (lang:get-single-input $arguments)
 
-        var candidate = (path:base $candidate-root)
+  if (eq (path:base $path) bin) {
+    path:dir $path
+  } else {
+    put $path
+  }
+}
 
-        get-candidate-home-var $candidate |
-          set-env (all) $home-path
-      }
+#
+# Given a candidate, sets its *_HOME variable to the related PATH entry;
+# if the given candidate has no PATH entries, the related *_HOME variable is unset.
+#
+fn -setup-candidate-home { |candidate|
+  var home-var = (get-candidate-home-var $candidate)
+
+  var candidate-root = (get-candidate-dir $candidate)
+
+  all $paths | each { |path|
+    if (str:has-prefix $path $candidate-root) {
+      -get-home-path $path |
+        set-env $home-var (all)
+
+      return
     }
   }
+
+  unset-env $home-var
+}
+
+#
+# Defines a *_HOME variable for each SDK candidate found in PATH.
+#
+# If a candidate has no related PATH entry, its *_HOME is unset.
+#
+fn setup-sdk-homes {
+  each-candidate $-setup-candidate-home~
 }
 
 #
@@ -69,4 +122,77 @@ fn get-sdkfile-candidates {
       }
     } |
         make-map
+}
+
+#
+# First removes from PATH every reference to SDKMAN candidates;
+# then, for each candidate found, prepends to PATH:
+#
+# * the "current/bin" file system object, if existing
+#
+# * the "current" file system object, if existing.
+#
+# The "overriding-versions" flag takes in input a <candidate><version> map - whose versions
+# will replace the default, "current"-based paths.
+#
+# Anyway, if no directory can be found for the requested version of a candidate,
+# such candidate won't be added to PATH.
+#
+fn -get-reset { |&overriding-versions=[&]|
+  var current-based-map = (
+    each-candidate { |candidate|
+      put [$candidate current]
+    } |
+      make-map
+  )
+
+  var actual-candidate-map = (
+    {
+      put $current-based-map
+      put $overriding-versions
+    } |
+      map:merge
+  )
+
+  var existing-candidate-paths = [(
+    map:iterate $actual-candidate-map { |candidate version|
+      var current-path = (get-candidate-dir $candidate &version=$version)
+
+      var bin-path = (path:join $current-path bin)
+
+      if (os:exists $bin-path) {
+        put $bin-path
+      } elif (os:exists $current-path) {
+        put $current-path
+      }
+    }
+  )]
+
+  var candidates-hub = (path:join $sdkman-home candidates)
+
+  var paths-without-candidates = [(
+    all $paths |
+      keep-if { |path|
+        not (str:has-prefix $path $candidates-hub)
+      }
+  )]
+
+  all $existing-candidate-paths
+  all $paths-without-candidates
+}
+
+#
+# Resets both the PATH and the *_HOME environment variables to the "current" version of each candidate,
+# provided its file-system entry exists.
+#
+# The "overriding-versions" flag takes in input a <candidate><version> map - whose versions
+# will replace the default, "current"-based paths.
+#
+# Anyway, only existing paths will be added to the PATH; similarly, if a candidate does not appear
+# in the path, its *_HOME variable will be unset.
+#
+fn reset-vars { |&overriding-versions=[&]|
+  set paths = [(-get-reset &overriding-versions=$overriding-versions)]
+
+  setup-sdk-homes
 }
