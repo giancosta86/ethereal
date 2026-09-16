@@ -17,9 +17,7 @@ fn -before-cd { |target-dir|
       os:is-regular (all)
   )
 
-  if (
-    and $current-dir-has-sdk-file (not $target-dir-has-sdk-file)
-  ) {
+  if $current-dir-has-sdk-file {
     wrapper:sdk env clear
   }
 }

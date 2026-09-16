@@ -102,7 +102,7 @@ use ./cd-hooks
               &after={
                 fail 'This should not run!'
               }
-              &run-after=$false
+              &after-now=$false
             ]
           }
         }
@@ -285,6 +285,40 @@ use ./cd-hooks
 
         put $after-calls |
           should-be 1
+      }
+
+      >> 'skipping missing directories' {
+        var before-called = $false
+        var after-called = $false
+
+        cd-hooks:with-reset {
+          fs:within-temp-dir {
+            cd-hooks:register [
+              &before={ |target-dir|
+                set before-called = $true
+              }
+              &after={
+                set after-called = $true
+              }
+              &after-now=$false
+            ]
+
+            try {
+              cd SOME-MISSING-DIR
+            } catch {
+              # Just do nothing
+            } finally {
+              set before-chdir = []
+              set after-chdir = []
+            }
+          }
+        }
+
+        put $before-called |
+          should-be $false
+
+        put $after-called |
+          should-be $false
       }
     }
   }

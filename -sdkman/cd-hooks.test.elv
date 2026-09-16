@@ -95,6 +95,7 @@ fn get-sdkman-runs { |pre-register|
           } > (path:join $target-dir $paths:sdk-file)
         } |
           should-be [
+            [env clear]
             [env install]
           ]
       }

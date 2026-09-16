@@ -1,3 +1,4 @@
+use os
 use path
 use ../fs
 use ../lang
@@ -13,7 +14,7 @@ use ../lang
 # * `after`: function running in the target directory and taking no inputs;
 #            if omitted, an empty implementation will be provided.
 #
-# * `run-after`: if set to $true (the default), runs the actual `after` implementation right at the
+# * `after-now`: if set to $true (the default), runs the actual `after` implementation right at the
 #                end of the registration process.
 #
 # * debug-id: when set to a value, shows debug information before and after running each hook.
@@ -30,6 +31,8 @@ use ../lang
 # * when moving to the current directory, they won't be triggered again;
 #
 # * all the byte output is redirected to stderr, while the value output is filtered out.
+#
+# * if the target directory does not exist, the hooks won't be called.
 #
 fn register { |@arguments|
   var params = (lang:get-single-input $arguments)
@@ -72,6 +75,10 @@ fn register { |@arguments|
         set target-dir = (path:abs $target-dir)
 
         if (eq $target-dir $pwd) {
+          return
+        }
+
+        if (not (os:is-dir $target-dir)) {
           return
         }
 
@@ -124,9 +131,9 @@ fn register { |@arguments|
   }
 
   {
-    var run-after = (lang:get-value &default=$true $params run-after)
+    var after-now = (lang:get-value &default=$true $params after-now)
 
-    if $run-after {
+    if $after-now {
       $after-block |
         only-bytes >&2
     }
@@ -164,7 +171,7 @@ fn with-reset { |block|
 #
 # 5. Move into <source>.
 #
-# 6. Call `register` passing the given params - with `run-after` always set to $false.
+# 6. Call `register` passing the given params - with `after-now` always set to $false.
 #
 # 7. Move into the <target> directory, thus triggering the hooks.
 #
@@ -190,7 +197,7 @@ fn test { |@arguments|
 
         cd $source-dir
 
-        assoc $params run-after $false |
+        assoc $params after-now $false |
           register
 
         cd $target-dir
