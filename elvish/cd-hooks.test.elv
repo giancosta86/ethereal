@@ -107,6 +107,32 @@ use ./cd-hooks
           }
         }
       }
+
+      >> 'should return a token' {
+        cd-hooks:with-reset {
+          var token = (cd-hooks:register [&])
+
+          has-key $token before-hook |
+            should-be $true
+
+          has-key $token after-hook |
+            should-be $true
+        }
+      }
+    }
+
+    >> 'unregistration' {
+      cd-hooks:with-reset {
+        var token = (cd-hooks:register [&])
+
+        cd-hooks:unregister $token
+
+        put $before-chdir |
+          should-be-empty
+
+        put $after-chdir |
+          should-be-empty
+      }
     }
 
     >> 'testing' {

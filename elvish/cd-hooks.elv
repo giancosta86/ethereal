@@ -34,6 +34,8 @@ use ../lang
 #
 # * if the target directory does not exist, the hooks won't be called.
 #
+# The function emits a token that can be passed to `unregister`.
+#
 fn register { |@arguments|
   var params = (lang:get-single-input $arguments)
 
@@ -128,16 +130,42 @@ fn register { |@arguments|
     set before-chdir = (conj $before-chdir $before-hook~)
 
     set after-chdir = (conj $after-chdir $after-hook~)
+
+    put [
+      &before-hook=$before-hook~
+      &after-hook=$after-hook~
+    ]
   }
 
   {
     var after-now = (lang:get-value &default=$true $params after-now)
 
-    if $after-now {
+    if (and $after-now $after-block) {
       $after-block |
         only-bytes >&2
     }
   }
+}
+
+#
+# Given the token emitted by `register`, unregisters the related hooks.
+#
+fn unregister { |@arguments|
+  var registration-token = (lang:get-single-input $arguments)
+
+  set before-chdir = [(
+    all $before-chdir |
+      keep-if { |hook|
+        not-eq $hook $registration-token[before-hook]
+      }
+  )]
+
+  set after-chdir = [(
+    all $after-chdir |
+      keep-if { |hook|
+        not-eq $hook $registration-token[after-hook]
+      }
+  )]
 }
 
 #
@@ -198,7 +226,8 @@ fn test { |@arguments|
         cd $source-dir
 
         assoc $params after-now $false |
-          register
+          register |
+          only-bytes
 
         cd $target-dir
 
