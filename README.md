@@ -75,6 +75,8 @@ As an interesting consequence, during an interactive session, when calling with 
 
 - [edit](edit.elv]): in-place file editing.
 
+- [elvish/chdir-hooks](elvish/chdir-hooks.elv): elegant API for registering **chdir hooks** in Elvish.
+
 - [exception](exception.elv): exception type checking and metadata.
 
 - [fake-git](fake-git.elv): tiny, customizable in-memory subset of the Git command.

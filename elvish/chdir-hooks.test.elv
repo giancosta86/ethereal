@@ -6,7 +6,7 @@ use ./chdir-hooks
       tmp before-chdir = [A B C]
       tmp after-chdir = [X Y Z]
 
-      chdir-hooks:with-temp-reset {
+      chdir-hooks:with-reset {
         put $before-chdir |
           should-be-empty
 
@@ -21,21 +21,20 @@ use ./chdir-hooks
         should-be [X Y Z]
     }
 
-    >> 'pair creation' {
+    >> 'registration' {
       >> 'should always provide both hooks' {
         >> 'with no handler' {
-          chdir-hooks:test [&] { |_ _| }
+          chdir-hooks:test [&]
         }
 
         >> 'with just before handler' {
           var called = $false
 
-          put [
+          chdir-hooks:test [
             &before={ |_|
               set called = $true
             }
-          ] |
-            chdir-hooks:test { |_ _| }
+          ]
 
           put $called |
             should-be $true
@@ -44,12 +43,11 @@ use ./chdir-hooks
         >> 'with just after handler' {
           var called = $false
 
-          put [
+          chdir-hooks:test [
             &after={
               set called = $true
             }
-          ] |
-            chdir-hooks:test { |_ _| }
+          ]
 
           put $called |
             should-be $true
@@ -59,15 +57,14 @@ use ./chdir-hooks
           var before-called = $false
           var after-called = $false
 
-          put [
+          chdir-hooks:test [
             &before={ |_|
               set before-called = $true
             }
             &after={
               set after-called = $true
             }
-          ] |
-            chdir-hooks:test { |_ _| }
+          ]
 
           put $before-called |
             should-be $true
@@ -76,14 +73,12 @@ use ./chdir-hooks
             should-be $true
         }
       }
-    }
 
-    >> 'registration' {
       >> 'after-chdir automatic execution' {
         >> 'by default' {
           var called = $false
 
-          chdir-hooks:with-temp-reset {
+          chdir-hooks:with-reset {
             chdir-hooks:register [
               &before={ |_|
                 fail 'This should not run!'
@@ -92,14 +87,14 @@ use ./chdir-hooks
                 set called = $true
               }
             ]
-
-            put $called |
-              should-be $true
           }
+
+          put $called |
+            should-be $true
         }
 
         >> 'when disabled' {
-          chdir-hooks:with-temp-reset {
+          chdir-hooks:with-reset {
             chdir-hooks:register [
               &before={ |_|
                 fail 'This should not run!'
@@ -115,43 +110,183 @@ use ./chdir-hooks
     }
 
     >> 'testing' {
-      chdir-hooks:with-temp-reset {
+      >> 'when passing empty params' {
+        chdir-hooks:test [&] |
+          should-emit []
+      }
+
+      >> 'by default' {
+        var before-called = $false
+
+        var after-called = $false
+
+        chdir-hooks:test [
+          &before={ |_|
+            set before-called = $true
+          }
+          &after={
+            set after-called = $true
+          }
+        ]
+
+        put $before-called |
+          should-be $true
+
+        put $after-called |
+          should-be $true
+      }
+
+      >> 'when passing pre-register' {
+        chdir-hooks:with-reset {
+          var source-dir = $nil
+          var target-dir = $nil
+
+          var before-hook-test = $nil
+          var after-hook-test = $nil
+
+          chdir-hooks:test [
+            &pre-register={ |test-source-dir test-target-dir|
+              set source-dir = $test-source-dir
+
+              set target-dir = $test-target-dir
+            }
+            &before={ |target-dir-in-hook|
+              var pwd-in-before = $pwd
+
+              set before-hook-test = {
+                put $pwd-in-before |
+                  should-be $source-dir
+
+                put $target-dir-in-hook |
+                  should-be $target-dir
+              }
+            }
+            &after={
+              var pwd-in-after = $pwd
+
+              set after-hook-test = {
+                put $pwd-in-after |
+                  should-be $target-dir
+              }
+            }
+          ]
+
+          $before-hook-test
+
+          $after-hook-test
+        }
+      }
+
+      >> 'when passing pre-unregister' {
         var source-dir = $nil
         var target-dir = $nil
 
-        var before-hook-test = $nil
-        var after-hook-test = $nil
+        chdir-hooks:test [
+          &before={ |target|
+            set source-dir = $pwd
+            set target-dir = $target
+          }
+          &pre-unregister={ |source target|
+            put $source |
+              should-be $source-dir
 
-        put [
-          &before={ |target-dir-in-hook|
-            var pwd-in-before = $pwd
+            put $target |
+              should-be $target-dir
+          }
+        ]
+      }
 
-            set before-hook-test = {
-              put $pwd-in-before |
-                should-be $source-dir
+      >> 'when passing both pre-register and pre-unregister' {
+        var source-dir = $nil
+        var target-dir = $nil
 
-              put $target-dir-in-hook |
-                should-be $target-dir
+        chdir-hooks:test [
+          &pre-register={ |source target|
+            set source-dir = $source
+            set target-dir = $target
+          }
+          &pre-unregister={ |source target|
+            put $source |
+              should-be $source-dir
+
+            put $target |
+              should-be $target-dir
+          }
+        ]
+      }
+
+      >> 'should emit the output of pre-register and pre-unregister' {
+        chdir-hooks:test [
+          &pre-register={ |_ _|
+            put 90
+            echo Hello
+          }
+          &pre-unregister={ |_ _|
+            put 92
+            echo Alpha
+          }
+        ] |
+          should-emit &any-order [
+            90
+            Hello
+            92
+            Alpha
+          ]
+      }
+    }
+
+    >> 'properties' {
+      >> 'non-reentrance' {
+        var before-calls = 0
+
+        var after-calls = 0
+
+        chdir-hooks:test [
+          &before={ |_|
+            set before-calls = (+ $before-calls 1)
+
+            fs:with-temp-dir { |another-temp-dir|
+              cd $another-temp-dir
             }
           }
           &after={
-            var pwd-in-after = $pwd
+            set after-calls = (+ $after-calls 1)
 
-            set after-hook-test = {
-              put $pwd-in-after |
-                should-be $target-dir
+            fs:with-temp-dir { |yet-another-temp-dir|
+              cd $yet-another-temp-dir
             }
           }
-        ] |
-          chdir-hooks:test { |test-source-dir test-target-dir|
-            set source-dir = $test-source-dir
+        ]
 
-            set target-dir = $test-target-dir
+        put $before-calls |
+          should-be 1
+
+        put $after-calls |
+          should-be 1
+      }
+
+      >> 'non-repetition on current directory' {
+        var before-calls = 0
+
+        var after-calls = 0
+
+        chdir-hooks:test [
+          &before={ |_|
+            set before-calls = (+ $before-calls 1)
           }
+          &after={
+            set after-calls = (+ $after-calls 1)
+          }
+          &pre-unregister={ |_ target-dir|
+            cd $target-dir
+          }
+        ]
 
-        $before-hook-test
+        put $before-calls |
+          should-be 1
 
-        $after-hook-test
+        put $after-calls |
+          should-be 1
       }
     }
   }

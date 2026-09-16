@@ -8,15 +8,15 @@ use ../lang
 # The parameters are the following:
 #
 # * `before`: function running in the source directory and taking as argument the target directory;
-#             if omitted, an empty implementation will be provided
+#             if omitted, an empty implementation will be provided.
 #
 # * `after`: function running in the target directory and taking no inputs;
-#            if omitted, an empty implementation will be provided
+#            if omitted, an empty implementation will be provided.
 #
 # * `run-after`: if set to $true (the default), runs the actual `after` implementation right at the
-#                end of the registration process
+#                end of the registration process.
 #
-# * debug-id: when set to a value, shows debug information before and after running each hook
+# * debug-id: when set to a value, shows debug information before and after running each hook.
 #
 #
 # As for the hooks, the following properties are guaranteed:
@@ -29,8 +29,7 @@ use ../lang
 #
 # * when moving to the current directory, they won't be triggered again;
 #
-# * all the output is redirected to stderr.
-#
+# * all the byte output is redirected to stderr, while the value output is filtered out.
 #
 fn register { |@arguments|
   var params = (lang:get-single-input $arguments)
@@ -49,15 +48,9 @@ fn register { |@arguments|
     }
   )
 
-  var before-block = (
-    lang:get-value $params before |
-      coalesce (all) { |target-dir| }
-  )
+  var before-block = (lang:get-value $params before)
 
-  var after-block = (
-    lang:get-value $params after |
-      coalesce (all) { }
-  )
+  var after-block = (lang:get-value $params after)
 
   {
     var OUT-OF-HOOKS-PAIR = out-of-hooks-pair
@@ -87,7 +80,9 @@ fn register { |@arguments|
         try {
           log &emoji=🚪 Running BEFORE block from '"'$pwd'"' to '"'$target-dir'"'...
 
-          $before-block $target-dir
+          if $before-block {
+            $before-block $target-dir
+          }
         } catch e {
           show $e
           set status = $OUT-OF-HOOKS-PAIR
@@ -96,7 +91,7 @@ fn register { |@arguments|
         } finally {
           log &emoji=🚪 Done BEFORE block from '"'$pwd'"' to '"'$target-dir'"'
         }
-      } >&2
+      } | only-bytes >&2
     }
 
     fn after-hook { |_|
@@ -110,7 +105,9 @@ fn register { |@arguments|
         try {
           log &emoji=🪟 Running AFTER block for '"'$pwd'"'...
 
-          $after-block
+          if $after-block {
+            $after-block
+          }
         } catch e {
           show $e
         } finally {
@@ -118,7 +115,7 @@ fn register { |@arguments|
 
           set status = $OUT-OF-HOOKS-PAIR
         }
-      } >&2
+      } | only-bytes >&2
     }
 
     set before-chdir = (conj $before-chdir $before-hook~)
@@ -130,7 +127,8 @@ fn register { |@arguments|
     var run-after = (lang:get-value &default=$true $params run-after)
 
     if $run-after {
-      $after-block
+      $after-block |
+        only-bytes >&2
     }
   }
 }
@@ -138,7 +136,7 @@ fn register { |@arguments|
 #
 # Temporary removes all the chdir hooks, while executing the given block.
 #
-fn with-temp-reset { |block|
+fn with-reset { |block|
   tmp before-chdir = []
 
   tmp after-chdir = []
@@ -147,16 +145,22 @@ fn with-temp-reset { |block|
 }
 
 #
-# Takes in input - via pipe or as first argument - the params map required by `register` -
-# and an init block as its (last) argument, then applies the following algorithm:
+# Takes in input - via pipe or as argument - the params map required by `register`,
+# which can take a few additional keys:
 #
-# 1. Temporarily reset all the chdir hooks.
+# * `pre-register`: a function taking as arguments the <source> dir and the <target> dir,
+#                   called right before registering the hooks. Any output is discarded.
 #
-# 2. Create a <source> temporary directory
+# * `pre-unregister`: a function taking as arguments the <source> dir and the <target> dir,
+#                     called right before unregistering the hooks. Any output is discarded.
 #
-# 3. Create a <target> temporary directory.
+# 1. Create a <source> temporary directory
 #
-# 4. Run the init block, passing <source> and <target>.
+# 2. Create a <target> temporary directory.
+#
+# 3. Temporarily reset all the chdir hooks.
+#
+# 4. Run <pre-register> - if declared - passing <source> and <target>.
 #
 # 5. Move into <source>.
 #
@@ -164,16 +168,25 @@ fn with-temp-reset { |block|
 #
 # 7. Move into the <target> directory, thus triggering the hooks.
 #
+# 8. Run <pre-unregister> - if declared - passing <source> and <target>
+#
+# 9. Restore the previous hook state
+#
+# The function emits the outputs of its <pre-register> and <pre-unregister> functions, if defined.
+#
 # Please, note: do **NOT** run Velvet assertions within hooks; instead, set up callbacks to be called
 # right after this function.
 #
 fn test { |@arguments|
-  var params init-block = (lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments)
+  var params = (lang:get-single-input $arguments)
 
   fs:with-temp-dir { |source-dir|
     fs:with-temp-dir { |target-dir|
-      with-temp-reset {
-        $init-block $source-dir $target-dir
+      with-reset {
+        var pre-register = (lang:get-value $params pre-register)
+        if $pre-register {
+          $pre-register $source-dir $target-dir
+        }
 
         cd $source-dir
 
@@ -181,6 +194,11 @@ fn test { |@arguments|
           register
 
         cd $target-dir
+
+        var pre-unregister = (lang:get-value $params pre-unregister)
+        if $pre-unregister {
+          $pre-unregister $source-dir $target-dir
+        }
       }
     }
   }

@@ -1,4 +1,3 @@
-use os
 use path
 use ../elvish/chdir-hooks elvish-hooks
 use ./chdir-hooks
@@ -6,17 +5,18 @@ use ./paths
 use ./test-shared
 use ./wrapper
 
-fn get-sdkman-runs { |init-block|
+fn get-sdkman-runs { |pre-register|
   var spy = (command:spy)
 
   tmp wrapper:sdk~ = $spy[command]
 
-  put [
+  elvish-hooks:test [
+    &pre-register=$pre-register
+
     &before=$chdir-hooks:-before-cd~
 
     &after=$chdir-hooks:-after-cd~
-  ] |
-    elvish-hooks:test $init-block
+  ]
 
   $spy[get-runs]
 }
@@ -53,7 +53,9 @@ fn get-sdkman-runs { |init-block|
     >> 'execution' {
       >> 'when source dir has no sdk file and target dir has no sdk file' {
         get-sdkman-runs { |_ _| } |
-          should-be []
+          should-emit [
+            []
+          ]
       }
 
       >> 'when source dir has its sdk file and target dir has no sdk file' {
