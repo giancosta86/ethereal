@@ -1,4 +1,4 @@
-use ./chdir-hooks
+use ./cd-hooks
 
 >> 'Elvish' {
   >> 'chdir hooks' {
@@ -6,7 +6,7 @@ use ./chdir-hooks
       tmp before-chdir = [A B C]
       tmp after-chdir = [X Y Z]
 
-      chdir-hooks:with-reset {
+      cd-hooks:with-reset {
         put $before-chdir |
           should-be-empty
 
@@ -24,13 +24,13 @@ use ./chdir-hooks
     >> 'registration' {
       >> 'should always provide both hooks' {
         >> 'with no handler' {
-          chdir-hooks:test [&]
+          cd-hooks:test [&]
         }
 
         >> 'with just before handler' {
           var called = $false
 
-          chdir-hooks:test [
+          cd-hooks:test [
             &before={ |_|
               set called = $true
             }
@@ -43,7 +43,7 @@ use ./chdir-hooks
         >> 'with just after handler' {
           var called = $false
 
-          chdir-hooks:test [
+          cd-hooks:test [
             &after={
               set called = $true
             }
@@ -57,7 +57,7 @@ use ./chdir-hooks
           var before-called = $false
           var after-called = $false
 
-          chdir-hooks:test [
+          cd-hooks:test [
             &before={ |_|
               set before-called = $true
             }
@@ -78,8 +78,8 @@ use ./chdir-hooks
         >> 'by default' {
           var called = $false
 
-          chdir-hooks:with-reset {
-            chdir-hooks:register [
+          cd-hooks:with-reset {
+            cd-hooks:register [
               &before={ |_|
                 fail 'This should not run!'
               }
@@ -94,8 +94,8 @@ use ./chdir-hooks
         }
 
         >> 'when disabled' {
-          chdir-hooks:with-reset {
-            chdir-hooks:register [
+          cd-hooks:with-reset {
+            cd-hooks:register [
               &before={ |_|
                 fail 'This should not run!'
               }
@@ -111,7 +111,7 @@ use ./chdir-hooks
 
     >> 'testing' {
       >> 'when passing empty params' {
-        chdir-hooks:test [&] |
+        cd-hooks:test [&] |
           should-emit []
       }
 
@@ -120,7 +120,7 @@ use ./chdir-hooks
 
         var after-called = $false
 
-        chdir-hooks:test [
+        cd-hooks:test [
           &before={ |_|
             set before-called = $true
           }
@@ -137,51 +137,49 @@ use ./chdir-hooks
       }
 
       >> 'when passing pre-register' {
-        chdir-hooks:with-reset {
-          var source-dir = $nil
-          var target-dir = $nil
+        var source-dir = $nil
+        var target-dir = $nil
 
-          var before-hook-test = $nil
-          var after-hook-test = $nil
+        var before-hook-test = $nil
+        var after-hook-test = $nil
 
-          chdir-hooks:test [
-            &pre-register={ |test-source-dir test-target-dir|
-              set source-dir = $test-source-dir
+        cd-hooks:test [
+          &pre-register={ |test-source-dir test-target-dir|
+            set source-dir = $test-source-dir
 
-              set target-dir = $test-target-dir
+            set target-dir = $test-target-dir
+          }
+          &before={ |target-dir-in-hook|
+            var pwd-in-before = $pwd
+
+            set before-hook-test = {
+              put $pwd-in-before |
+                should-be $source-dir
+
+              put $target-dir-in-hook |
+                should-be $target-dir
             }
-            &before={ |target-dir-in-hook|
-              var pwd-in-before = $pwd
+          }
+          &after={
+            var pwd-in-after = $pwd
 
-              set before-hook-test = {
-                put $pwd-in-before |
-                  should-be $source-dir
-
-                put $target-dir-in-hook |
-                  should-be $target-dir
-              }
+            set after-hook-test = {
+              put $pwd-in-after |
+                should-be $target-dir
             }
-            &after={
-              var pwd-in-after = $pwd
+          }
+        ]
 
-              set after-hook-test = {
-                put $pwd-in-after |
-                  should-be $target-dir
-              }
-            }
-          ]
+        $before-hook-test
 
-          $before-hook-test
-
-          $after-hook-test
-        }
+        $after-hook-test
       }
 
       >> 'when passing pre-unregister' {
         var source-dir = $nil
         var target-dir = $nil
 
-        chdir-hooks:test [
+        cd-hooks:test [
           &before={ |target|
             set source-dir = $pwd
             set target-dir = $target
@@ -200,7 +198,7 @@ use ./chdir-hooks
         var source-dir = $nil
         var target-dir = $nil
 
-        chdir-hooks:test [
+        cd-hooks:test [
           &pre-register={ |source target|
             set source-dir = $source
             set target-dir = $target
@@ -216,7 +214,7 @@ use ./chdir-hooks
       }
 
       >> 'should emit the output of pre-register and pre-unregister' {
-        chdir-hooks:test [
+        cd-hooks:test [
           &pre-register={ |_ _|
             put 90
             echo Hello
@@ -241,7 +239,7 @@ use ./chdir-hooks
 
         var after-calls = 0
 
-        chdir-hooks:test [
+        cd-hooks:test [
           &before={ |_|
             set before-calls = (+ $before-calls 1)
 
@@ -270,7 +268,7 @@ use ./chdir-hooks
 
         var after-calls = 0
 
-        chdir-hooks:test [
+        cd-hooks:test [
           &before={ |_|
             set before-calls = (+ $before-calls 1)
           }

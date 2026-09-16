@@ -1,6 +1,6 @@
 use path
-use ../elvish/chdir-hooks elvish-hooks
-use ./chdir-hooks
+use ../elvish/cd-hooks elvish-hooks
+use ./cd-hooks
 use ./paths
 use ./test-shared
 use ./wrapper
@@ -13,9 +13,9 @@ fn get-sdkman-runs { |pre-register|
   elvish-hooks:test [
     &pre-register=$pre-register
 
-    &before=$chdir-hooks:-before-cd~
+    &before=$cd-hooks:-before-cd~
 
-    &after=$chdir-hooks:-after-cd~
+    &after=$cd-hooks:-after-cd~
   ]
 
   $spy[get-runs]
@@ -24,8 +24,8 @@ fn get-sdkman-runs { |pre-register|
 >> 'SDKMAN' {
   >> 'hooks' {
     >> 'registration' {
-      tmp chdir-hooks:-before-cd~ = { |_| }
-      tmp chdir-hooks:-after-cd~ = { }
+      tmp cd-hooks:-before-cd~ = { |_| }
+      tmp cd-hooks:-after-cd~ = { }
 
       tmp paths = [X]
       tmp E:JAVA_HOME = dodo
@@ -33,7 +33,7 @@ fn get-sdkman-runs { |pre-register|
       test-shared:within-temp-sdkman-home {
         test-shared:install java 23-open &bin
 
-        chdir-hooks:register
+        cd-hooks:register
 
         >> 'should update PATH' {
           all $paths |

@@ -1,4 +1,4 @@
-use ./-sdkman/chdir-hooks
+use ./-sdkman/cd-hooks
 use ./-sdkman/paths
 use ./-sdkman/wrapper
 
@@ -38,6 +38,10 @@ fn sdkman { |@arguments|
   sdk $@arguments
 }
 
-var register-chdir-hooks~ = $chdir-hooks:register~
+var register-cd-hooks~ = $cd-hooks:register~
 
-var setup-env~ = $chdir-hooks:setup-env~
+fn register-chdir-hooks { |@arguments|
+  deprecate 'Please, call `register-cd-hooks` instead'
+}
+
+var setup-env~ = $cd-hooks:setup-env~

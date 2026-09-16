@@ -75,7 +75,7 @@ As an interesting consequence, during an interactive session, when calling with 
 
 - [edit](edit.elv]): in-place file editing.
 
-- [elvish/chdir-hooks](elvish/chdir-hooks.elv): elegant API for registering **chdir hooks** in Elvish.
+- [elvish/cd-hooks](elvish/cd-hooks.elv): elegant API for registering **chdir hooks** in Elvish.
 
 - [exception](exception.elv): exception type checking and metadata.
 
@@ -136,7 +136,7 @@ To enable them, you should add these lines to your **rc.elv** file:
 ```elvish
 use github.com/giancosta86/ethereal/v1/sdkman
 
-sdkman:register-chdir-hooks
+sdkman:register-cd-hooks
 ```
 
 **Please, note**: registering the hooks also takes care of the environment variables - like **PATH** and **\*\_HOME**; without the hooks, please add this line to your **rc.elv** script instead:

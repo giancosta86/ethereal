@@ -1,6 +1,6 @@
 use os
 use path
-use ../elvish/chdir-hooks
+use ../elvish/cd-hooks
 use ./paths
 use ./wrapper
 
@@ -42,7 +42,7 @@ fn -after-cd {
 fn register {
   paths:reset-vars
 
-  chdir-hooks:register [
+  cd-hooks:register [
     &before=$-before-cd~
 
     &after=$-after-cd~
