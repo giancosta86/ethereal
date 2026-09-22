@@ -7,7 +7,7 @@ var -pipx~ = (external pipx)
 #
 # * <package>==<version>, if <version> is passed
 #
-# * just <package> otherwise
+# * just <package> otherwise.
 #
 fn qualify { |package &version=$nil|
   var version-suffix = (
@@ -46,7 +46,7 @@ fn pipx { |@arguments|
 
 #
 # Utility function installing the given package at the given, optional version, using `pipx`;
-# as usual in this module, if pipx is not already on the system, it will be installed via `pip`.
+# as usual in this module, if `pipx` is not already on the system, it will be installed via `pip`.
 #
 fn install { |package &version=$nil|
   qualify $package &version=$version |
