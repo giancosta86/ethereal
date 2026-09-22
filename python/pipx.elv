@@ -2,6 +2,8 @@ pragma unknown-command = disallow
 
 var -pipx~ = (external pipx)
 
+var -python3~ = (external python3)
+
 #
 # Emits the qualified package string, according to the given version:
 #
@@ -28,7 +30,7 @@ fn -is-installed {
 fn -install {
   echo 📥 Installing pipx...
 
-  (external python3) -m pip install pipx
+  -python3 -m pip install pipx
 
   echo 🚀 pipx ready!
 }
