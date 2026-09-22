@@ -63,59 +63,69 @@ As an interesting consequence, during an interactive session, when calling with 
 
 ### Modules
 
-- [collection](collection.elv): unifying functions for sequences, maps and sets.
+- [collection](collection.elv): unifying functions for **sequences**, **maps** and **sets**.
 
-- [console](console.elv): enhanced console output.
+- [command](command.elv): **data** and **exception capturing** for commands and blocks, plus **inspection** functions.
 
-- [command](command.elv): data and exception capturing for commands and blocks, plus inspection functions.
+- [console](console.elv): enhanced **console** output.
 
 - [curl](curl.elv): utilities for the `curl` command-line client.
 
 - [diff](diff.elv): easy way to apply the **diff** system command to two arbitrary values.
 
-- [edit](edit.elv]): in-place file editing.
+- [edit](edit.elv]): in-place **file editing**.
 
 - [elvish/cd-hooks](elvish/cd-hooks.elv): elegant API for registering **chdir hooks** in Elvish.
 
-- [exception](exception.elv): exception type checking and metadata.
+- [exception](exception.elv): **exception** type checking and metadata.
 
-- [fake-git](fake-git.elv): tiny, customizable in-memory subset of the Git command.
+- [fake-git](fake-git.elv): tiny, customizable in-memory subset of the `git` command.
 
-- [fs](fs.elv): advanced file system management.
+- [fs](fs.elv): advanced **file system** management.
 
-- [git](git.elv): common utilities for Git.
+- [git](git.elv): common utilities for **Git**.
 
-- [highlight](highlight.elv): source code syntax highlighting.
+- [github](github.elv): command-line extensions for **GitHub**.
 
-- [image](image.elv): image transforms, mainly based on the `gm` command.
+- [highlight](highlight.elv): source code **syntax highlighting**.
 
-- [lang](lang.elv): core, almost language-related utilities.
+- [image](image.elv): **image transforms**, mainly based on the `gm` command.
 
-- [map](map.elv): functional-style map manipulation.
+- [lang](lang.elv): core, almost **language-related** utilities.
 
-- [operator](operator.elv): higher-order operator definition.
+- [map](map.elv): functional-style **map** manipulation.
 
-- [parallel](parallel.elv): parallelism constructs - such as `fork-join`.
+- [operator](operator.elv): higher-order **operator** definition.
 
-- [pdf](pdf.elv): operations with PDF documents.
+- [parallel](parallel.elv): **parallelism** constructs - such as `fork-join`.
 
-- [resources](resources.elv): convenient way to access the resources associated with a script file.
+- [pdf](pdf.elv): operations with **PDF** documents.
 
-- [semver](semver.elv): semantic versions - parsing, inspection and comparison.
+- [python](python.elv): general-purpose **Python** utilities.
 
-- [seq](seq.elv): functional-style sequence manipulation - especially `reduce` and fairly sophisticated ones, such as `split-by-chunk-count` and `equivalence-classes`.
+- [python/pipx](python/pipx.elv): utilities for the `pipx` command.
 
-- [set](set.elv): full-fledged set type, with dedicated operations.
+- [resources](resources.elv): convenient way to access the **resources** associated with a script file.
 
-- [sha](sha.elv): computation of SHA hash codes.
+- [rust](rust.elv): **Rust**-related tools.
 
-- [string](string.elv): advanced string editing.
+- [sdkman](sdkman.elv): smart wrapper for **SDKMAN**.
 
-- [tracer](tracer.elv): conditional text output to streams and files.
+- [semver](semver.elv): **semantic versions** - parsing, inspection and comparison.
 
-- [tracer/from-env-var](tracer/from-env-var.elv): tracer whose state depends on a given env var.
+- [seq](seq.elv): functional-style **sequence** manipulation - especially `reduce` and fairly sophisticated ones, such as `split-by-chunk-count` and `equivalence-classes`.
 
-- [tracer/on-off](tracer/on-off.elv): tracer with additional methods for enabling/disabling its output.
+- [set](set.elv): full-fledged **set type**, with dedicated operations.
+
+- [sha](sha.elv): computation of **SHA** hash codes.
+
+- [string](string.elv): advanced **string editing**.
+
+- [tracer](tracer.elv): conditional text **output to streams and files**.
+
+- [tracer/from-env-var](tracer/from-env-var.elv): tracer whose state depends on a given **env var**.
+
+- [tracer/on-off](tracer/on-off.elv): tracer with **additional methods** for enabling/disabling its output.
 
 - [writer](writer.elv): a writer takes _a no-arg block_ and writes its output to some destination - stdout, stderr, file...
 
