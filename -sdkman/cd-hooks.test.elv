@@ -1,3 +1,4 @@
+use os
 use path
 use ../elvish/cd-hooks elvish-hooks
 use ./cd-hooks
@@ -98,6 +99,38 @@ fn get-sdkman-runs { |pre-register|
             [env clear]
             [env install]
           ]
+      }
+
+      >> 'when an ancestor dir contains the sdk file' {
+        var target-ancestor-sdk-file = $nil
+
+        defer {
+          if $target-ancestor-sdk-file {
+            os:remove-all $target-ancestor-sdk-file
+          }
+        }
+
+        var target-sdk-file
+
+        get-sdkman-runs { |source-dir target-dir|
+          set target-ancestor-sdk-file = (
+            path:dir $target-dir |
+              path:join (all) $paths:sdk-file
+          )
+
+          {
+            echo java=8.0.502.fx-zulu
+            echo gradle=2.10
+          } > $target-ancestor-sdk-file
+
+          set target-sdk-file = (path:join $target-dir $paths:sdk-file)
+        } |
+          should-be [
+            [env install]
+          ]
+
+        put $target-sdk-file |
+          should-not-exist
       }
     }
   }

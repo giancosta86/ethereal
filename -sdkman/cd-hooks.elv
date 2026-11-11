@@ -1,34 +1,56 @@
 use os
 use path
 use ../elvish/cd-hooks
+use ../fs
 use ./paths
 use ./wrapper
 
 pragma unknown-command = disallow
 
 fn -before-cd { |target-dir|
-  var current-dir-has-sdk-file = (
-    path:join $pwd $paths:sdk-file |
-      os:is-regular (all)
+  var actual-sdk-file = (
+    fs:find-in-ancestors $pwd $paths:sdk-file
   )
 
-  var target-dir-has-sdk-file = (
-    path:join $target-dir $paths:sdk-file |
-      os:is-regular (all)
+  var should-clear-env = (
+    if $actual-sdk-file {
+      var target-sdk-file = (
+        fs:find-in-ancestors $target-dir $paths:sdk-file
+      )
+
+      not-eq $actual-sdk-file $target-sdk-file
+    } else {
+      put $false
+    }
   )
 
-  if $current-dir-has-sdk-file {
+  if $should-clear-env {
     wrapper:sdk env clear
   }
 }
 
 fn -after-cd {
-  var current-dir-has-sdk-file = (
-    path:join $pwd $paths:sdk-file |
-      os:is-regular (all)
+  var sdk-file-in-pwd-existed = (
+    os:is-regular $paths:sdk-file
   )
 
-  if $current-dir-has-sdk-file {
+  defer {
+    if (not $sdk-file-in-pwd-existed) {
+      os:remove-all $paths:sdk-file
+    }
+  }
+
+  if (not $sdk-file-in-pwd-existed) {
+    var actual-sdk-file = (
+      fs:find-in-ancestors (path:dir .) $paths:sdk-file
+    )
+
+    if $actual-sdk-file {
+      fs:cp $actual-sdk-file .
+    }
+  }
+
+  if (os:is-regular $paths:sdk-file) {
     wrapper:sdk env install
   }
 }
