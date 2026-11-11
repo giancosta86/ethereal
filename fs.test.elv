@@ -932,4 +932,44 @@ fn create-temp-tree { |temp-root|
         should-be $nil
     }
   }
+
+  >> 'processing ancestors recursively' {
+    >> 'when the processor returns a non-$nil value' {
+      var data-file-name = data.txt
+
+      var data = 'Hello, world!'
+
+      fs:within-temp-dir {
+        fs:mkcd alpha
+
+        fs:mkcd beta
+
+        var abs-beta = $pwd
+
+        print $data > $data-file-name
+
+        fs:mkcd gamma
+
+        fs:mkcd delta
+
+        put . |
+          fs:process-ancestors { |current-dir|
+            var data-file = (path:join $current-dir $data-file-name)
+
+            if (os:is-regular $data-file) {
+              slurp < $data-file |
+                put $current-dir' -- '(all)
+            }
+          } |
+            should-be $abs-beta' -- '$data
+      }
+    }
+
+    >> 'when the root directory is reached without the processor returning anything' {
+      fs:within-temp-dir {
+        fs:process-ancestors . { |current-dir| } |
+          should-be $nil
+      }
+    }
+  }
 }
