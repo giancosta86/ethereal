@@ -8,8 +8,8 @@ use ./seq
 
 pragma unknown-command = disallow
 
-var -cp~ = (external cp)
-var -mv~ = (external mv)
+var cp~ = (external cp)
+var mv~ = (external mv)
 var -cmp~ = (external cmp)
 
 #
@@ -190,7 +190,7 @@ fn clean-dir { |@arguments|
 fn copy { |@arguments|
   var from to = (lang:get-inputs $arguments)
 
-  -cp -r $from $to
+  cp -r $from $to
 }
 
 #
@@ -201,7 +201,7 @@ fn copy { |@arguments|
 fn move { |@arguments|
   var from to = (lang:get-inputs $arguments)
 
-  -mv $from $to
+  mv $from $to
 }
 
 #
