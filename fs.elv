@@ -392,3 +392,59 @@ fn get-external { |@arguments|
     put $nil
   }
 }
+
+#
+# Starting from the given `initial-directory`, runs the `directory-processor` argument on each ancestor directory, until:
+#
+# * `directory-processor` emits a non-$nil value - which will also be emitted by this function
+#
+# * the root directory has already been processed once - so this function will emit $nil.
+#
+fn process-ancestors { |@arguments|
+  var initial-directory directory-processor = (
+    lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments
+  )
+
+  var current-directory = (path:abs $initial-directory)
+
+  while $true {
+    var directory-result = (
+      $directory-processor $current-directory |
+        lang:ensure-put
+    )
+
+    if (not-eq $directory-result $nil) {
+      put $directory-result
+      return
+    }
+
+    var parent-directory = (path:dir $current-directory)
+
+    if (eq $parent-directory $current-directory) {
+      put $nil
+      return
+    }
+
+    set current-directory = $parent-directory
+  }
+}
+
+#
+# Starting from the given `initial-directory`, looks for the `name-to-find` argument:
+# if it could not be found, inspects the parent directory, recursively.
+#
+# Returns the full path of the detected path, or $nil if the given file or directory name could not be found.
+#
+fn find-in-ancestors { |@arguments|
+  var initial-directory name-to-find = (
+    lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments
+  )
+
+  process-ancestors $initial-directory { |processed-directory|
+    var path-to-find = (path:join $processed-directory $name-to-find)
+
+    if (os:exists $path-to-find) {
+      put $path-to-find
+    }
+  }
+}
