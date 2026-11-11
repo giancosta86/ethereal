@@ -972,4 +972,57 @@ fn create-temp-tree { |temp-root|
       }
     }
   }
+
+  >> 'looking for a path in ancestors recursively' {
+    >> 'when a file was found' {
+      fs:within-temp-dir {
+        var file-name = dodo.dat
+
+        fs:mkcd alpha
+
+        fs:mkcd beta
+
+        print hello > $file-name
+
+        var expected-file-path = (path:join $pwd $file-name)
+
+        fs:mkcd gamma
+
+        fs:mkcd delta
+
+        put . |
+          fs:find-in-ancestors $file-name |
+            should-be $expected-file-path
+      }
+    }
+
+    >> 'when a directory was found' {
+      fs:within-temp-dir {
+        var dir-name = omega
+
+        fs:mkcd alpha
+
+        fs:mkcd beta
+
+        os:mkdir $dir-name
+
+        var expected-dir-path = (path:join $pwd $dir-name)
+
+        fs:mkcd gamma
+
+        fs:mkcd delta
+
+        put . |
+          fs:find-in-ancestors $dir-name |
+            should-be $expected-dir-path
+      }
+    }
+
+    >> 'when no path was found' {
+      fs:within-temp-dir {
+        fs:find-in-ancestors . THIS-FILE-DEFINITELY-CANNOT-EXIST |
+          should-be $nil
+      }
+    }
+  }
 }

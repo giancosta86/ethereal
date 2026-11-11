@@ -428,3 +428,23 @@ fn process-ancestors { |@arguments|
     set current-directory = $parent-directory
   }
 }
+
+#
+# Starting from the given `initial-directory`, looks for the `name-to-find` argument:
+# if it could not be found, inspects the parent directory, recursively.
+#
+# Returns the full path of the detected path, or $nil if the given file or directory name could not be found.
+#
+fn find-in-ancestors { |@arguments|
+  var initial-directory name-to-find = (
+    lang:get-mixed-inputs &min-values=2 &max-values=2 &min-args=1 $arguments
+  )
+
+  process-ancestors $initial-directory { |processed-directory|
+    var path-to-find = (path:join $processed-directory $name-to-find)
+
+    if (os:exists $path-to-find) {
+      put $path-to-find
+    }
+  }
+}
