@@ -46,7 +46,7 @@ fn -after-cd {
     )
 
     if $actual-sdk-file {
-      fs:cp $actual-sdk-file .
+      fs:copy $actual-sdk-file .
     }
   }
 
